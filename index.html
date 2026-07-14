@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GATE DA - Coaching Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<!-- Inherit exact styling and CSS variables from the parent tracker[cite: 11, 15] -->
+<link rel="stylesheet" href="../styles.css">
+<style>
+  /* ENHANCEMENT: Override the parent tracker's 940px restriction to let content breathe[cite: 15] */
+  .wrap { max-width: 1400px !important; padding: 20px 24px !important; width: 100%; }
+  
+  /* ENHANCEMENT: Streamlined grid that maximizes the content area */
+  .hub-grid { display: grid; grid-template-columns: 240px 1fr; gap: 24px; margin-top: 16px; align-items: start; }
+  
+  .hub-sidebar { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto; }
+  .hub-sidebar h3 { font-family: 'Space Grotesk', sans-serif; font-size: calc(13px * var(--font-scale)); color: var(--muted); margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .hub-sidebar-item { padding: 10px 14px; margin-bottom: 4px; border-radius: 8px; cursor: pointer; font-size: calc(13px * var(--font-scale)); font-weight: 500; transition: all 0.2s; border-left: 3px solid transparent; color: var(--text); display: flex; justify-content: space-between; align-items: center; }
+  .hub-sidebar-item:hover { background: var(--surface-2); }
+  .hub-sidebar-item.active { background: rgba(232,162,61,0.1); border-left-color: var(--amber); color: var(--amber); }
+  .hub-sidebar-item .prog { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; opacity: 0.7; }
+  
+  /* ENHANCEMENT: Reduced padding to give more room for actual text and math */
+  .hub-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px 32px; min-height: auto; }
+  .hub-panel.hidden { display: none; }
+  
+  .module-header { margin-bottom: 4px !important; border: none !important; padding: 0 !important; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .module-header h2 { margin: 0 !important; font-size: calc(20px * var(--font-scale)) !important; }
+  .module-tag { font-size: calc(11px * var(--font-scale)); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; padding: 4px 10px; border-radius: 6px; white-space: nowrap; }
+  
+  /* Dashboard layout enhancements */
+  .dashboard-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .stat-box { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 16px; text-align: center; }
+  .stat-box .num { font-family: 'JetBrains Mono', monospace; font-size: calc(24px * var(--font-scale)); font-weight: 700; color: var(--amber); }
+  .stat-box .lbl { font-size: calc(11px * var(--font-scale)); color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 6px; }
+
+  /* Expanded cards to use available width better */
+  .subject-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .subject-card { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 16px 20px; cursor: pointer; transition: all 0.2s; border-left: 4px solid var(--line); display: flex; flex-direction: column; }
+  .subject-card:hover { border-color: var(--amber); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+  .subject-card .code { font-family: 'JetBrains Mono', monospace; font-size: calc(11px * var(--font-scale)); color: var(--muted); margin-bottom: 6px; }
+  .subject-card h4 { font-family: 'Space Grotesk', sans-serif; font-size: calc(15px * var(--font-scale)); margin: 0 0 10px; }
+  .subject-card .meta { font-size: calc(12px * var(--font-scale)); color: var(--muted); line-height: 1.5; margin-top: auto; }
+
+  .nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; border-top: 1px solid var(--line); padding-top: 16px; gap: 12px; flex-wrap: wrap;}
+  
+  .btn-primary { background: var(--amber); color: #000; border: none; border-radius: 10px; padding: 12px 24px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: calc(14px * var(--font-scale)); cursor: pointer; transition: transform .12s ease, box-shadow .12s ease; }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(232,162,61,0.25); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 12px 24px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: calc(14px * var(--font-scale)); cursor: pointer; transition: all 0.2s; }
+  .btn-secondary:hover { border-color: var(--line-dotted); }
+  
+  .back-to-app { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); text-decoration: none; font-size: calc(13px * var(--font-scale)); font-weight: 500; margin-bottom: 20px; transition: color 0.2s; }
+  .back-to-app:hover { color: var(--amber); }
+
+  .quiz-option { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; background: var(--surface-2); font-size: calc(14px * var(--font-scale)); }
+  .quiz-option:hover { border-color: var(--amber); }
+  .quiz-option input { margin: 0; transform: scale(1.2); accent-color: var(--amber); flex-shrink: 0; }
+  .quiz-option.correct { border-color: var(--green); background: rgba(53,208,127,0.08); }
+  .quiz-option.wrong { border-color: var(--flame); background: rgba(239,68,68,0.08); }
+  
+  .quiz-feedback { margin-top: 24px; padding: 20px; border-radius: 10px; border: 1px solid var(--line); font-size: calc(14px * var(--font-scale)); line-height: 1.6; display: none; }
+  .quiz-feedback.show { display: block; animation: slideDown 0.3s ease; }
+  .quiz-feedback.correct { border-color: var(--green); background: rgba(53,208,127,0.05); color: var(--text); }
+  .quiz-feedback.wrong { border-color: var(--flame); background: rgba(239,68,68,0.05); color: var(--text); }
+  
+  .progress-container { width: 100%; height: 6px; background: var(--surface-2); border-radius: 4px; overflow: hidden; margin: 12px 0 20px; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--amber), var(--green)); transition: width 0.4s ease; width: 0%; }
+  
+  .hub-panel h2 { font-family: 'Space Grotesk', sans-serif; font-size: calc(22px * var(--font-scale)); margin: 0 0 6px; color: var(--text); }
+  .hub-panel .sub { font-size: calc(13px * var(--font-scale)); color: var(--muted); margin: 0 0 20px; }
+
+  /* Sidebar search */
+  .sidebar-search { width: 100%; box-sizing: border-box; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-family: 'Inter', sans-serif; font-size: calc(12.5px * var(--font-scale)); color: var(--text); margin-bottom: 10px; outline: none; transition: border-color 0.2s; }
+  .sidebar-search:focus { border-color: var(--amber); }
+  .sidebar-empty { font-size: calc(12px * var(--font-scale)); color: var(--muted); padding: 8px 4px; }
+
+  /* Mistake indicator badge */
+  .mistake-dot { display: inline-flex; align-items: center; justify-content: center; background: var(--flame); color: #fff; border-radius: 999px; font-size: 0.75em; font-weight: 700; min-width: 16px; height: 16px; padding: 0 5px; font-family: 'JetBrains Mono', monospace; }
+
+  /* Review Mistakes banner on dashboard */
+  .review-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; background: rgba(239,68,68,0.07); border: 1px solid var(--flame); border-radius: 12px; padding: 14px 20px; margin-bottom: 24px; font-size: calc(13.5px * var(--font-scale)); flex-wrap: wrap; }
+  .review-bar.hidden { display: none; }
+
+  /* Per-card progress bar */
+  .card-progress { width: 100%; height: 4px; background: var(--surface); border-radius: 3px; overflow: hidden; margin-top: 12px; }
+  .card-progress-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+
+  /* Panel enter transition */
+  .panel-enter { animation: panelFadeIn 0.35s ease; }
+  @keyframes panelFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Shake feedback when no option is selected */
+  .shake { animation: shakeX 0.4s ease; }
+  @keyframes shakeX { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+  /* Keyboard-shortcut hint bubble on quiz options */
+  .opt-key { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 5px; background: var(--surface); border: 1px solid var(--line); font-family: 'JetBrains Mono', monospace; font-size: 0.7em; color: var(--muted); flex-shrink: 0; }
+  .quiz-option:hover .opt-key { border-color: var(--amber); color: var(--amber); }
+
+  /* Confetti celebration */
+  .confetti-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .confetti-piece { position: absolute; top: -10px; width: 8px; height: 8px; border-radius: 2px; opacity: 0.9; animation: confettiFall linear forwards; }
+  @keyframes confettiFall { to { transform: translateY(420px) rotate(540deg); opacity: 0; } }
+  #successPanel { position: relative; }
+
+  /* ENHANCEMENT: Mobile Responsive Optimization */
+  @media (max-width: 900px) {
+    .wrap { padding: 12px 16px !important; }
+    .hub-grid { grid-template-columns: 1fr; gap: 16px; margin-top: 0; }
+    
+    /* Convert sidebar into a sleek horizontal scrolling nav on mobile */
+    .hub-sidebar { position: relative; top: 0; max-height: none; display: flex; flex-direction: column; padding: 10px; gap: 8px; border-radius: 12px; }
+    .hub-sidebar h3 { display: none; }
+    #sidebarList { display: flex; flex-direction: row; overflow-x: auto; gap: 8px; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+    .hub-sidebar-item { margin-bottom: 0; flex: 0 0 auto; padding: 8px 16px; border-left: none; border-bottom: 3px solid transparent; justify-content: center; gap: 8px; }
+    .hub-sidebar-item.active { border-left-color: transparent; border-bottom-color: var(--amber); background: rgba(232,162,61,0.1); }
+    
+    .hub-panel { padding: 24px 20px; min-height: auto; }
+    .nav-row { flex-direction: column-reverse; gap: 12px; }
+    .nav-row button { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="../index.html" class="back-to-app">← Back to Main Tracker</a>
+  
+  <header>
+    <div class="eyebrow">GATE · Data Science &amp; AI</div>
+    <h1>Interactive Coaching</h1>
+    <p class="sub">Rigorous theoretical modules &amp; interactive assessments aligned with your tracker.</p>
+  </header>
+
+  <div class="hub-grid">
+    <div class="hub-sidebar" id="sidebar">
+      <!-- Sidebar injected via JS -->
+    </div>
+
+    <div class="hub-content">
+      <!-- Dashboard Panel -->
+      <div class="hub-panel" id="dashboardPanel">
+        <h2>Your Learning Dashboard</h2>
+        <p class="sub">Select a subject to begin deep-dive study modules and quizzes.</p>
+        
+        <div class="dashboard-stats" id="stats">
+          <!-- Stats injected via JS -->
+        </div>
+
+        <div class="review-bar hidden" id="reviewBar">
+          <!-- Injected via JS when there are flagged mistakes -->
+        </div>
+        
+        <div class="subject-cards" id="subjectGrid">
+          <!-- Subjects injected via JS -->
+        </div>
+      </div>
+
+      <!-- Lesson Panel -->
+      <div class="hub-panel hidden" id="lessonPanel">
+        <div class="module-header" style="margin-bottom: 8px; border:none; padding:0;">
+          <h2 id="lessonTitle">Lesson Title</h2>
+          <div class="module-tag" id="lessonTag">Subject</div>
+        </div>
+        <div class="sub" id="lessonSubtitle">Lesson 1 of X</div>
+        <div class="progress-container"><div class="progress-bar-fill" id="lessonProgress"></div></div>
+        
+        <div id="lessonContent" style="font-size: calc(14.5px * var(--font-scale)); line-height: 1.7;">
+           <!-- Uses parent's theorem-box, def-box, example-box styles automatically -->
+        </div>
+        
+        <div class="nav-row">
+          <button class="btn-secondary" id="prevBtn" onclick="previousLesson()">← Previous</button>
+          <button class="btn-primary" id="nextBtn" onclick="nextLesson()">Next Module →</button>
+        </div>
+      </div>
+
+      <!-- Quiz Panel -->
+      <div class="hub-panel hidden" id="quizPanel">
+        <div class="module-header" style="margin-bottom: 8px; border:none; padding:0;">
+          <h2 id="quizTitle">Knowledge Check</h2>
+          <div class="module-tag">Quiz</div>
+        </div>
+        <div class="sub" id="quizSubtitle">Question 1 of X</div>
+        <div class="progress-container"><div class="progress-bar-fill" id="quizProgress"></div></div>
+        
+        <div class="example-box" style="margin-bottom: 24px; border-left-color: var(--blue);">
+          <strong style="font-size: 1.15em; display:block; margin-bottom:0; color: var(--text);" id="qText">Question goes here?</strong>
+        </div>
+        
+        <div id="quizOpts">
+          <!-- Options injected via JS -->
+        </div>
+        
+        <div id="quizFeedback" class="quiz-feedback">
+           <!-- Feedback injected via JS -->
+        </div>
+        
+        <div class="nav-row">
+          <button class="btn-primary" id="submitBtn" onclick="submitQuiz()">Submit Answer</button>
+          <button class="btn-secondary" id="skipBtn" onclick="skipQuestion()">Skip</button>
+        </div>
+      </div>
+
+      <!-- Success Panel -->
+      <div class="hub-panel hidden" id="successPanel" style="text-align: center; padding-top: 64px;">
+        <div style="font-size: 64px; margin-bottom: 24px;">🎉</div>
+        <h2 id="successTitle" style="margin-bottom: 8px;">Module Complete!</h2>
+        <p class="sub">You have successfully mastered the concepts in this section.</p>
+        <button class="btn-primary" onclick="showDashboard()" style="margin-top: 24px;">Return to Dashboard</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="curriculum.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
