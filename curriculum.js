@@ -22,6 +22,13 @@ const CURRICULUM = {
             <p>Event A = "roll is even" = $\\{2, 4, 6\\}$</p>
             <p>$P(A) = 3/6 = 1/2$</p>
           </div>
+
+          <p><strong>Key properties:</strong></p>
+          <ul>
+            <li>$P(A) \\ge 0$ for all events A</li>
+            <li>$P(\\Omega) = 1$ (certain event)</li>
+            <li>$P(A^c) = 1 - P(A)$ (complement rule)</li>
+          </ul>
         `
       },
       {
@@ -66,6 +73,7 @@ const CURRICULUM = {
             <h5>Continuous: Normal Distribution</h5>
             <p>Bell-shaped curve defined by mean $\\mu$ and variance $\\sigma^2$.</p>
             <p><strong>Standard Normal (Z):</strong> $\\mu=0, \\sigma=1$. Conversion: $$Z = \\frac{X - \\mu}{\\sigma}$$</p>
+            <p><strong>68-95-99.7 Rule:</strong> ~68% of data falls within 1 standard deviation, 95% within 2, and 99.7% within 3.</p>
           </div>
         `
       }
@@ -107,6 +115,13 @@ const CURRICULUM = {
             <p>• If $v \\in V$ and $c$ is scalar, then $c\\cdot v \\in V$</p>
           </div>
 
+          <div class="example-box">
+            <h4>Example</h4>
+            <p>$v_1 = [1, 2], v_2 = [3, 4]$</p>
+            <p>$v_1 + v_2 = [4, 6]$ ✓ (still in $\\mathbb{R}^2$)</p>
+            <p>$2\\cdot v_1 = [2, 4]$ ✓ (still in $\\mathbb{R}^2$)</p>
+          </div>
+
           <p><strong>Linear Independence:</strong> Vectors $v_1, v_2, ..., v_n$ are linearly independent if the only solution to $c_1v_1 + ... + c_nv_n = 0$ is $c_1 = ... = c_n = 0$.</p>
         `
       },
@@ -118,6 +133,7 @@ const CURRICULUM = {
             <h4>Eigenvalues & Eigenvectors</h4>
             <p>For a square matrix A, a scalar $\\lambda$ is an <strong>eigenvalue</strong> and vector $v$ is an <strong>eigenvector</strong> if:</p>
             <p>$$Av = \\lambda v$$</p>
+            <p>This means A stretches/shrinks v by factor $\\lambda$ (no direction change).</p>
             <p><strong>How to find:</strong> Solve $\\det(A - \\lambda I) = 0$ for $\\lambda$.</p>
           </div>
 
@@ -140,6 +156,8 @@ const CURRICULUM = {
             <p>• $\\Sigma$: Diagonal matrix (singular values, $\\sigma_i \\ge 0$)</p>
             <p>• $V^T$: Orthogonal matrix ($n \\times n$, right singular vectors)</p>
           </div>
+
+          <p><strong>Rank of a Matrix:</strong> The rank of A is exactly equal to the number of non-zero singular values in $\\Sigma$.</p>
         `
       }
     ],
@@ -182,6 +200,13 @@ const CURRICULUM = {
           <div class="theorem-box">
             <h5>Continuity</h5>
             <p>f is continuous at $a$ if: $$\\lim_{x \\to a} f(x) = f(a)$$</p>
+            <p>No jumps, breaks, or holes at $a$.</p>
+          </div>
+
+          <div class="example-box">
+            <h4>Indeterminate Forms</h4>
+            <p>$$\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1$$</p>
+            <p>Direct substitution gives 0/0 (indeterminate). Handled via L'Hôpital's rule or Taylor series.</p>
           </div>
         `
       },
@@ -200,6 +225,7 @@ const CURRICULUM = {
             <p>$f(x) = x^2 - 4x + 5$. Start $x_0 = 0$, learning rate $\\alpha = 0.1$.</p>
             <p>$\\nabla f = 2x - 4$. At $x_0 = 0$: $\\nabla f = -4$.</p>
             <p>$x_1 = 0 - 0.1\\cdot(-4) = 0.4$</p>
+            <p>$x_2 = 0.4 - 0.1\\cdot(2\\cdot0.4 - 4) = 0.4 - 0.1\\cdot(-3.2) = 0.72$</p>
           </div>
         `
       },
@@ -207,6 +233,11 @@ const CURRICULUM = {
         id: 'co-03',
         title: 'Hessians',
         content: `
+          <div class="theorem-box">
+            <h5>Partial Derivatives & Gradient</h5>
+            <p>For a function $f(x,y)$, the gradient $\\nabla f$ is a vector of its partial derivatives: $$\\nabla f = \\begin{bmatrix} \\frac{\\partial f}{\\partial x} \\\\ \\frac{\\partial f}{\\partial y} \\end{bmatrix}$$</p>
+          </div>
+
           <div class="def-box">
             <h4>The Hessian Matrix</h4>
             <p>The Hessian H is the matrix of second-order partial derivatives. It describes local curvature.</p>
@@ -249,6 +280,16 @@ const CURRICULUM = {
           <div class="def-box">
             <h4>Big-O Notation</h4>
             <p>f(n) is O(g(n)) if there exist constants c, n₀ such that $f(n) \\le c\\cdot g(n)$ for all $n \\ge n_0$.</p>
+            <p><strong>Intuition:</strong> Describes worst-case growth rate, ignoring constants and lower-order terms.</p>
+          </div>
+
+          <div class="example-box">
+            <h4>Common Complexities</h4>
+            <p>$O(1)$ — constant (hash table lookup)</p>
+            <p>$O(\\log n)$ — binary search</p>
+            <p>$O(n)$ — linear search</p>
+            <p>$O(n \\log n)$ — merge sort, quicksort (avg)</p>
+            <p>$O(n^2)$ — bubble sort, nested loops</p>
           </div>
         `
       },
@@ -261,6 +302,12 @@ const CURRICULUM = {
             <p>A <strong>tree</strong> is a connected, acyclic graph with n nodes and n-1 edges.</p>
             <p><strong>Height:</strong> maximum distance from root to leaf.</p>
           </div>
+
+          <p><strong>Graph traversals:</strong></p>
+          <ul>
+            <li><strong>BFS (breadth-first):</strong> $O(V + E)$, layer by layer</li>
+            <li><strong>DFS (depth-first):</strong> $O(V + E)$, go deep first</li>
+          </ul>
         `
       },
       {
@@ -273,6 +320,12 @@ const CURRICULUM = {
             <p>Requires two properties:</p>
             <p>1. <strong>Optimal Substructure:</strong> Optimal solution to the problem contains optimal solutions to sub-problems.</p>
             <p>2. <strong>Overlapping Subproblems:</strong> Subproblems are repeated multiple times.</p>
+          </div>
+
+          <div class="example-box">
+            <h4>Memoization vs Tabulation</h4>
+            <p><strong>Memoization (Top-Down):</strong> Recursive approach that caches computed answers.</p>
+            <p><strong>Tabulation (Bottom-Up):</strong> Iterative approach building a table from the smallest subproblems up to the final answer.</p>
           </div>
         `
       }
@@ -307,6 +360,13 @@ const CURRICULUM = {
         id: 'ml-01',
         title: 'Supervised Learning',
         content: `
+          <div class="def-box">
+            <h4>Supervised Learning</h4>
+            <p>Given labeled data $\\{(x_i, y_i)\\}$, learn a function f such that $f(x) \\approx y$.</p>
+            <p><strong>Regression:</strong> y is continuous</p>
+            <p><strong>Classification:</strong> y is discrete</p>
+          </div>
+
           <div class="theorem-box">
             <h5>Loss Functions</h5>
             <p><strong>Regression:</strong> Mean Squared Error = $$\\frac{1}{n}\\sum (y_i - \\hat{y}_i)^2$$</p>
@@ -329,6 +389,7 @@ const CURRICULUM = {
           <div class="def-box">
             <h4>Support Vector Machine (SVM)</h4>
             <p>Find hyperplane with maximum <strong>margin</strong> between classes.</p>
+            <p>Margin = distance from hyperplane to nearest point.</p>
             <p>Kernel trick allows non-linear decision boundaries.</p>
           </div>
         `
@@ -339,8 +400,17 @@ const CURRICULUM = {
         content: `
           <div class="theorem-box">
             <h5>K-Means Clustering</h5>
-            <p>Goal: Partition data into K distinct, non-overlapping clusters by minimizing the Within-Cluster Sum of Squares (WCSS).</p>
+            <p>Goal: Partition data into K distinct, non-overlapping clusters.</p>
+            <p><strong>Algorithm:</strong></p>
+            <ol>
+              <li>Randomly initialize K cluster centroids.</li>
+              <li>Assign each data point to the nearest centroid.</li>
+              <li>Update centroids by calculating the mean of all points assigned to that cluster.</li>
+              <li>Repeat until convergence.</li>
+            </ol>
           </div>
+          
+          <p><strong>Optimization objective:</strong> Minimize the Within-Cluster Sum of Squares (WCSS).</p>
         `
       }
     ],
@@ -374,6 +444,12 @@ const CURRICULUM = {
         id: 'ai-01',
         title: 'Search Algorithms',
         content: `
+          <div class="def-box">
+            <h4>Uninformed Search</h4>
+            <p><strong>BFS:</strong> explores level by level. Optimal for unweighted graphs.</p>
+            <p><strong>DFS:</strong> explores deep first. Uses less memory than BFS.</p>
+          </div>
+
           <div class="theorem-box">
             <h5>Informed Search</h5>
             <p><strong>A* Search:</strong> uses heuristic h(n) to guide exploration.</p>
@@ -387,6 +463,11 @@ const CURRICULUM = {
         id: 'ai-02',
         title: 'Logic',
         content: `
+          <div class="def-box">
+            <h4>Propositional Logic</h4>
+            <p>Operators: $\\neg$ (not), $\\wedge$ (and), $\\vee$ (or), $\\rightarrow$ (implies), $\\leftrightarrow$ (iff)</p>
+          </div>
+
           <div class="def-box">
             <h4>First-Order Logic (FOL)</h4>
             <p>Extends propositional with objects and relations.</p>
@@ -402,6 +483,11 @@ const CURRICULUM = {
             <h5>The Markov Condition</h5>
             <p>In a Bayesian Network, a node is conditionally independent of its non-descendants, given its parents.</p>
             <p>Joint Probability Factorization: $$P(X_1, ..., X_n) = \\prod_{i=1}^n P(X_i | \\text{Parents}(X_i))$$</p>
+          </div>
+
+          <div class="example-box">
+            <h4>Example Application</h4>
+            <p>Modeling medical diagnosis: <em>Genetics</em> and <em>Diet</em> (Parents) influence <em>Heart Disease</em> (Child), which influences <em>Chest Pain</em> (Descendant).</p>
           </div>
         `
       }
