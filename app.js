@@ -536,41 +536,39 @@ function spawnConfetti() {
 }
 
 function renderMath() {
-  document.querySelectorAll('.katex-display, .hub-panel').forEach(el => {
-    try {
-      el.querySelectorAll('script[type="math/tex"]').forEach(script => {
-        const span = document.createElement('span');
-        katex.render(script.textContent, span, { displayMode: true });
-        script.replaceWith(span);
-      });
-    } catch (e) {}
-  });
+  // 1. Identify all containers that should hold math
+  const mathContainers = document.querySelectorAll(
+    '#lessonContent, .example-box, .theorem-box, .def-box, .quiz-feedback, #qText, .quiz-option'
+  );
 
-  try {
-    const elements = document.querySelectorAll('#lessonContent, .example-box, .theorem-box, .def-box, .quiz-feedback, #qText, .quiz-option');
-    elements.forEach(el => {
-      let html = el.innerHTML;
-      html = html.replace(/\$\$(.*?)\$\$/gs, (m, math) => {
-        try {
-          const div = document.createElement('div');
-          katex.render(math, div, { displayMode: true });
-          return div.innerHTML;
-        } catch (e) { return m; }
-      });
-      html = html.replace(/\$(.*?)\$/g, (m, math) => {
-        if (math.includes('\\')) {
-          try {
-            const span = document.createElement('span');
-            katex.render(math, span, { displayMode: false });
-            return span.innerHTML;
-          } catch (e) { return m; }
-        }
-        return m;
-      });
-      el.innerHTML = html;
+  mathContainers.forEach(el => {
+    // 2. Temporarily replace the HTML with a version that fixes escaped characters
+    // This ensures your $ signs are interpreted correctly by the browser before KaTeX grabs them
+    let html = el.innerHTML;
+    
+    // Replace double dollars $$...$$ with block-mode KaTeX
+    html = html.replace(/\$\$(.*?)\$\$/gs, (m, math) => {
+      try {
+        const span = document.createElement('span');
+        katex.render(math, span, { displayMode: true, throwOnError: false });
+        return span.outerHTML;
+      } catch (e) { return m; }
     });
-  } catch (e) {}
+
+    // Replace single dollars $...$ with inline-mode KaTeX
+    // We use a negative lookbehind/lookahead to avoid matching existing tags
+    html = html.replace(/(?<!\\)\$(.*?)(?<!\\)\$/g, (m, math) => {
+      try {
+        const span = document.createElement('span');
+        katex.render(math, span, { displayMode: false, throwOnError: false });
+        return span.outerHTML;
+      } catch (e) { return m; }
+    });
+
+    el.innerHTML = html;
+  });
 }
+       
 
 document.addEventListener('keydown', (e) => {
   if (state.mode !== 'quiz' && state.mode !== 'review') return;
