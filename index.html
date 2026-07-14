@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GATE DA - Coaching Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+  <a href="../index.html" class="back-to-app">← Back to Main Tracker</a>
+  
+  <header>
+    <div class="eyebrow">GATE · Data Science &amp; AI</div>
+    <h1>Interactive Coaching</h1>
+    <p class="sub">Rigorous theoretical modules &amp; interactive assessments aligned with your tracker.</p>
+  </header>
+
+  <div class="hub-grid">
+    <div class="hub-sidebar" id="sidebar">
+      <!-- Sidebar injected via JS -->
+    </div>
+
+    <div class="hub-content">
+      <!-- Dashboard Panel -->
+      <div class="hub-panel" id="dashboardPanel">
+        <h2>Your Learning Dashboard</h2>
+        <p class="sub">Select a subject to begin deep-dive study modules and quizzes.</p>
+        
+        <div class="dashboard-stats" id="stats">
+          <!-- Stats injected via JS -->
+        </div>
+
+        <div class="review-bar hidden" id="reviewBar">
+          <!-- Injected via JS when there are flagged mistakes -->
+        </div>
+        
+        <div class="subject-cards" id="subjectGrid">
+          <!-- Subjects injected via JS -->
+        </div>
+      </div>
+
+      <!-- Lesson Panel -->
+      <div class="hub-panel hidden" id="lessonPanel">
+        <div class="module-header" style="margin-bottom: 8px; border:none; padding:0;">
+          <h2 id="lessonTitle">Lesson Title</h2>
+          <div class="module-tag" id="lessonTag">Subject</div>
+        </div>
+        <div class="sub" id="lessonSubtitle">Lesson 1 of X</div>
+        <div class="progress-container"><div class="progress-bar-fill" id="lessonProgress"></div></div>
+        
+        <div id="lessonContent" style="font-size: calc(14.5px * var(--font-scale)); line-height: 1.7;">
+           <!-- Uses parent's theorem-box, def-box, example-box styles automatically -->
+        </div>
+        
+        <div class="nav-row">
+          <button class="btn-secondary" id="prevBtn" onclick="previousLesson()">← Previous</button>
+          <button class="btn-primary" id="nextBtn" onclick="nextLesson()">Next Module →</button>
+        </div>
+      </div>
+
+      <!-- Quiz Panel -->
+      <div class="hub-panel hidden" id="quizPanel">
+        <div class="module-header" style="margin-bottom: 8px; border:none; padding:0;">
+          <h2 id="quizTitle">Knowledge Check</h2>
+          <div class="module-tag">Quiz</div>
+        </div>
+        <div class="sub" id="quizSubtitle">Question 1 of X</div>
+        <div class="progress-container"><div class="progress-bar-fill" id="quizProgress"></div></div>
+        
+        <div class="example-box" style="margin-bottom: 24px; border-left-color: var(--blue);">
+          <strong style="font-size: 1.15em; display:block; margin-bottom:0; color: var(--text);" id="qText">Question goes here?</strong>
+        </div>
+        
+        <div id="quizOpts">
+          <!-- Options injected via JS -->
+        </div>
+        
+        <div id="quizFeedback" class="quiz-feedback">
+           <!-- Feedback injected via JS -->
+        </div>
+        
+        <div class="nav-row">
+          <button class="btn-primary" id="submitBtn" onclick="submitQuiz()">Submit Answer</button>
+          <button class="btn-secondary" id="skipBtn" onclick="skipQuestion()">Skip</button>
+        </div>
+      </div>
+
+      <!-- Success Panel -->
+      <div class="hub-panel hidden" id="successPanel" style="text-align: center; padding-top: 64px;">
+        <div style="font-size: 64px; margin-bottom: 24px;">🎉</div>
+        <h2 id="successTitle" style="margin-bottom: 8px;">Module Complete!</h2>
+        <p class="sub">You have successfully mastered the concepts in this section.</p>
+        <button class="btn-primary" onclick="showDashboard()" style="margin-top: 24px;">Return to Dashboard</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Load data first, then curriculum, then app logic -->
+<script src="data.js"></script>
+<script src="curriculum.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
