@@ -332,6 +332,7 @@ function renderMath() {
   } catch (e) {}
 }
 
+// Initialize on load
 syncTheme();
 loadState();
 render();
