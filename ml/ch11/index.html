@@ -1,176 +1,263 @@
-<!-- File: /<slug>/ch11/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>11. Bias-Variance Trade-off — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
-<meta name="description" content="Formal decomposition of expected prediction error into bias, variance, and irreducible noise for squared and 0-1 loss, with hand-computed examples for kNN and linear regression.">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap" rel="stylesheet">
-<link rel="manifest" href="../../manifest.json">
-<link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="../../icons/icon-192.svg">
-<meta name="theme-color" content="#1B1B1F">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="iTube">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script>
-(function(){
-  var saved = localStorage.getItem("itube-theme");
-  var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-  document.documentElement.setAttribute("data-theme", theme);
-})();
-</script>
-<link rel="stylesheet" href="../../style.css">
+  <title>11. Multi-Layer Perceptron &amp; Feed-Forward Neural Networks — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
+  <meta name="description" content="How do neural networks learn hierarchical representations? We derive the multi-layer perceptron architecture, forward propagation, and the backpropagation algorithm with full chain-rule expansions, then work through a complete numeric example on a two-layer network with explicit weight updates.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
 </head>
 <body data-depth="2">
-<header class="top">
-  <div class="wrap">
-    <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
-    <div class="top-actions">
-      <div class="font-controls" role="group" aria-label="Adjust text size">
-        <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
-        <span id="font-size-label">100%</span>
-        <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
-        <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
       </div>
-      <button id="theme-btn" title="Toggle light/dark">◐</button>
     </div>
-  </div>
-</header>
-<main>
-<div class="wrap narrow">
-  <div class="breadcrumb">
-    <a href="../../index.html">iTube</a><span class="sep">/</span>
-    <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
-    <span>Ch. 11</span>
-  </div>
-  <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
-  <h1>11. Bias-Variance Trade-off</h1>
-  <div class="chapter-meta">
-    <span>Chapter 11 of 17</span>
-    <span class="read-badge">25 min read</span>
-  </div>
-  <article>
+  </header>
 
-<h2>The fundamental dilemma of supervised learning</h2>
-<p>Every supervised learning algorithm faces an inescapable tension: models simple enough to be stable across different training sets tend to miss systematic patterns in the data (<strong>high bias</strong>), while models flexible enough to capture those patterns tend to fit noise and idiosyncrasies specific to each sample (<strong>high variance</strong>). This is the <strong>bias-variance trade-off</strong>, and it is the single most important conceptual framework for understanding why algorithms generalize well or poorly, why hyperparameters matter, and why no single model dominates all tasks.</p>
-<p>Chapter 1 introduced expected risk \(R(f) = \mathbb{E}[L(f(X), Y)]\) as the true measure of performance and empirical risk \(\hat R(f)\) as its observable proxy. Chapter 10 showed how unpruned decision trees drive \(\hat R \to 0\) while test error remains high. This chapter provides the <em>formal decomposition</em> that explains these phenomena quantitatively. We derive the decomposition for squared loss (regression) in full detail, sketch the analogous result for 0-1 loss (classification), and use both to analyze concrete algorithms from earlier chapters. The key insight is that <strong>expected prediction error = bias² + variance + irreducible noise</strong>, and every modeling choice shifts mass among these three terms without eliminating any of them.</p>
-<p><strong>Common mistake:</strong> treating bias and variance as properties of a single fitted model. They are not. Bias and variance are properties of the <em>learning algorithm</em> evaluated over the distribution of possible training sets. A particular fitted tree has fixed predictions; asking "what is this tree's variance?" is meaningless. Variance measures how much the tree's predictions would change if we retrained on a new sample from the same population. Always reason about bias and variance at the algorithm level, not the individual-model level.</p>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
+        <span>Ch. 11</span>
+      </div>
+      <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
+      <h1>11. Multi-Layer Perceptron &amp; Feed-Forward Neural Networks</h1>
+      <div class="chapter-meta">
+        <span>Chapter 11 of 14</span>
+        <span class="read-badge">35 min read</span>
+      </div>
 
-<h2>Decomposition for squared loss: derivation</h2>
-<p>Consider regression with squared loss \(L(\hat y, y) = (\hat y - y)^2\). Fix a test point \(x\) and let \(y^* = f^*(x) = \mathbb{E}[Y \mid X = x]\) be the Bayes-optimal prediction (Chapter 1). Let \(\hat f(x)\) denote the prediction of a model trained on a random training set \(S \sim P^n\). Define the <strong>average predictor</strong> \(\bar f(x) = \mathbb{E}_S[\hat f(x)]\), where the expectation is over training sets. The expected prediction error at \(x\) decomposes as:</p>
-\[
-\mathbb{E}_{S, Y}\big[(\hat f(x) - Y)^2 \mid X = x\big] = \underbrace{\big(\bar f(x) - y^*\big)^2}_{\text{Bias}^2} + \underbrace{\mathbb{E}_S\big[(\hat f(x) - \bar f(x))^2\big]}_{\text{Variance}} + \underbrace{\mathbb{E}_Y\big[(Y - y^*)^2 \mid X = x\big]}_{\text{Noise}}
-\]
-<h3>Derivation</h3>
-<p>Add and subtract \(\bar f(x)\) inside the square, then expand:</p>
-\[
-(\hat f(x) - Y)^2 = \big((\hat f(x) - \bar f(x)) + (\bar f(x) - y^*) + (y^* - Y)\big)^2
-\]
-<p>Taking expectations over both \(S\) and \(Y\) (which are independent), the three cross-terms vanish:</p>
-<ul>
-<li>\(\mathbb{E}_S[\hat f(x) - \bar f(x)] = 0\) by definition of \(\bar f\), killing the first cross-term.</li>
-<li>\(\mathbb{E}_Y[Y - y^* \mid X=x] = 0\) by definition of \(y^*\), killing the third cross-term.</li>
-<li>The remaining cross-term \(\mathbb{E}_{S,Y}[(\hat f - \bar f)(y^* - Y)] = \mathbb{E}_S[\hat f - \bar f] \cdot \mathbb{E}_Y[y^* - Y] = 0 \cdot 0 = 0\) by independence.</li>
-</ul>
-<p>What remains are exactly the three terms above. The <strong>bias²</strong> term measures how far the average prediction is from the truth; it captures systematic underfitting. The <strong>variance</strong> term measures how much predictions fluctuate around their mean across training sets; it captures sensitivity to sampling noise. The <strong>noise</strong> term \(\sigma^2(x) = \operatorname{Var}(Y \mid X=x)\) is the irreducible error from Chapter 1 — no predictor can eliminate it because \(Y\) is genuinely stochastic even given \(X\).</p>
-<p><strong>Edge case:</strong> when the hypothesis class contains \(f^*\) exactly (e.g., true function is linear and we fit OLS with correct features), bias can be zero. But variance and noise remain. Conversely, when \(n \to \infty\) for a fixed-complexity model, variance → 0 but bias may persist if \(f^* \notin \mathcal{H}\). Only when both \(n \to \infty\) AND \(f^* \in \mathcal{H}\) does expected error approach the noise floor. In finite samples, reducing one term typically increases another — hence the trade-off.</p>
+      <article>
 
-<h3>Worked example: bias-variance for kNN regression</h3>
-<p>Suppose the true function is \(f^*(x) = x^2\) on \([0,1]\), noise \(\sigma^2 = 0.01\), and we apply kNN regression with \(k\) neighbors. For a fixed query \(x_0\), the kNN predictor averages the \(k\) nearest labels. As derived in statistical learning theory:</p>
-\[
-\text{Bias}^2(x_0) \approx \left( \frac{k}{2n f_X(x_0)} \right)^2 [f^{*\prime}(x_0)]^2, \quad \text{Variance}(x_0) \approx \frac{\sigma^2}{k}
-\]
-<p>where \(f_X\) is the input density (assume uniform, \(f_X = 1\)). At \(x_0 = 0.5\), \(f^{*\prime}(0.5) = 2(0.5) = 1\). With \(n = 100\):</p>
-\[
-\begin{array}{c|c|c|c}
-k & \text{Bias}^2 & \text{Variance} & \text{Total (excl. noise)} \\ \hline
-1 & (1/200)^2 \cdot 1 = 0.000025 & 0.01/1 = 0.0100 & 0.010025 \\
-5 & (5/200)^2 \cdot 1 = 0.000625 & 0.01/5 = 0.0020 & 0.002625 \\
-20 & (20/200)^2 \cdot 1 = 0.0100 & 0.01/20 = 0.0005 & 0.0105 \\
-50 & (50/200)^2 \cdot 1 = 0.0625 & 0.01/50 = 0.0002 & 0.0627
-\end{array}
-\]
-<p>The optimal \(k\) minimizes total error: here \(k = 5\) achieves the best balance. \(k = 1\) has negligible bias but huge variance; \(k = 50\) has tiny variance but overwhelming bias. <strong>Sensitivity check:</strong> if \(n = 1000\) instead, bias² scales as \((k/n)^2\), so \(k = 5\) gives bias² = 0.00000625, variance = 0.002, total ≈ 0.002 — dominated by variance still. Optimal \(k\) grows with \(n\) (theory suggests \(k \propto n^{2/5}\) for 1D), illustrating that the trade-off shifts with sample size and must be retuned.</p>
+        <h2>Beyond linear boundaries</h2>
 
-<h2>Model capacity curves and the U-shape</h2>
-<p>Plotting bias², variance, and total error against <strong>model capacity</strong> (complexity) yields the canonical U-shaped test error curve. Capacity can be measured by polynomial degree, tree depth, number of hidden units, inverse regularization strength \(1/\lambda\), or \(1/k\) for kNN. As capacity increases:</p>
-<ul>
-<li><strong>Bias² decreases monotonically:</strong> richer hypothesis classes approximate \(f^*\) better.</li>
-<li><strong>Variance increases monotonically:</strong> more flexible models fit training noise more aggressively.</li>
-<li><strong>Total error = bias² + variance + noise</strong> first decreases (bias-dominated regime), reaches a minimum (optimal capacity), then increases (variance-dominated regime).</li>
-</ul>
-<p>Training error decreases monotonically with capacity and is always ≤ test error. The gap between training and test error is approximately \(2 \times \text{variance}\) (for squared loss under mild conditions), providing a diagnostic: large gap → high variance → need regularization or more data; small gap with high test error → high bias → need richer model or better features.</p>
-<p><strong>Common mistake:</strong> using training error to select model capacity. Training error is a biased (optimistic) estimate of test error precisely because it excludes variance. Always use held-out validation or cross-validation (Chapter 12). Also beware that the U-curve assumes a fixed dataset size; increasing \(n\) shifts the entire curve downward and rightward (more capacity becomes affordable before variance dominates), which is why deep learning works only with massive data.</p>
+        <p>Every classifier in Chapters 1–9 produces either a linear decision boundary (logistic regression, LDA, SVM with linear kernel) or a piecewise-constant one (decision trees, kNN). These are powerful but limited: XOR cannot be solved by any single-layer linear model, and many real-world relationships involve interactions that no fixed basis expansion can capture without prior knowledge of the right features.</p>
 
-<h3>Worked example: polynomial regression capacity sweep</h3>
-<p>True function: \(f^*(x) = \sin(2\pi x)\) on \([0,1]\), \(\sigma^2 = 0.1\), \(n = 30\) training points. Fit polynomials of degree \(d = 1, 3, 5, 9, 15\). Approximate behavior (computed via simulation or known asymptotics):</p>
-\[
-\begin{array}{c|c|c|c|c}
-d & \text{Bias}^2 & \text{Variance} & \text{Noise} & \text{Test MSE} \\ \hline
-1 & 0.250 & 0.005 & 0.1 & 0.355 \\
-3 & 0.020 & 0.015 & 0.1 & 0.135 \\
-5 & 0.002 & 0.040 & 0.1 & 0.142 \\
-9 & 0.000 & 0.150 & 0.1 & 0.250 \\
-15 & 0.000 & 0.800 & 0.1 & 0.900
-\end{array}
-\]
-<p>Degree 3 achieves minimum test error. Degree 1 underfits (high bias); degrees 9 and 15 overfit catastrophically (variance explodes despite zero bias). Note that bias² drops to essentially zero by \(d = 5\) since a quintic can approximate \(\sin(2\pi x)\) well on \([0,1]\), but variance continues growing because higher-degree coefficients are increasingly sensitive to noise. <strong>Sensitivity check:</strong> with \(n = 300\), variance at \(d = 9\) drops roughly tenfold to ~0.015, making \(d = 9\) competitive with \(d = 3\). More data buys more usable capacity — the core scaling law of machine learning.</p>
+        <p>The question feed-forward neural networks answer is: <strong>can we build a model that automatically learns the right nonlinear features from data, composing simple nonlinear transformations into arbitrarily complex functions?</strong></p>
 
-<h2>Bias-variance for classification (0-1 loss)</h2>
-<p>The clean additive decomposition above holds exactly only for squared loss. For 0-1 loss, the situation is more subtle because the loss is non-smooth and the prediction is discrete. Several decompositions exist; the most intuitive separates error into three regimes at a fixed test point \(x\):</p>
-<ul>
-<li><strong>Bias region:</strong> the Bayes-optimal class and the average predicted class disagree. Error cannot be reduced by decreasing variance; need a richer hypothesis class or better features.</li>
-<li><strong>Variance region:</strong> the Bayes-optimal class and average predicted class agree, but individual training sets sometimes produce the wrong class due to sampling variability. Error can be reduced by averaging (bagging) or regularization.</li>
-<li><strong>Noise region:</strong> \(P(Y = y^* \mid X = x) < 0.5\) — even the Bayes classifier errs here. Irreducible.</li>
-</ul>
-<p>Unlike squared loss, bias and variance interact multiplicatively rather than additively for 0-1 loss: reducing variance helps only in the variance region, not the bias region. This explains why bagging (which reduces variance via averaging) dramatically improves unstable classifiers like decision trees (high variance region) but barely helps stable classifiers like kNN with large \(k\) or LDA (already low variance or bias-dominated).</p>
-<p><strong>Edge case:</strong> near the Bayes decision boundary where \(P(Y=1|x) \approx 0.5\), tiny fluctuations in \(\hat f(x)\) flip the predicted class, creating a high-variance zone even for otherwise stable algorithms. This is why ensemble methods gain the most near boundaries and least in confident regions. Also note that calibration matters: two classifiers with identical accuracy can have very different bias-variance profiles if one produces well-calibrated probabilities and the other doesn't. Proper scoring rules (log loss, Brier score) decompose cleanly like squared loss and are preferred for diagnosing classification models.</p>
+        <p>The answer is the <strong>multi-layer perceptron (MLP)</strong>: a stack of affine transformations interleaved with element-wise nonlinearities. Despite its simplicity, the universal approximation theorem guarantees that an MLP with a single hidden layer and sufficient width can approximate any continuous function on a compact domain to arbitrary precision. The challenge is not representational capacity but learning: how do we efficiently compute gradients through a deep composition of nonlinear functions?</p>
 
-<h3>Worked example: bias-variance diagnosis for two classifiers</h3>
-<p>Binary classification task with \(n = 100\), true boundary nonlinear. Compare: (A) Logistic regression (linear boundary), (B) Unpruned decision tree. Run 50 bootstrap replicates to estimate \(\bar f(x)\) and variance empirically at 100 test points.</p>
-<p>Results: Logistic regression: average accuracy 78%, \(\bar f\) disagrees with Bayes optimal at 15% of test points (bias region), agrees but flips in 3% of replicates (variance region). Tree: average accuracy 82%, bias region 5%, variance region 18%. Interpretation: LR is bias-dominated (linear boundary insufficient); tree is variance-dominated (flexible but unstable). Remedy for LR: add polynomial features or switch to kernel SVM (reduce bias). Remedy for tree: prune, bag, or use random forest (reduce variance). <strong>Sensitivity check:</strong> with \(n = 1000\), tree's variance region shrinks to 6% while bias region stays ~5%; test accuracy rises to 88%. LR's bias region unchanged at 15% (still linear); accuracy rises only to 80%. More data fixes variance problems but not bias problems — the critical diagnostic distinction.</p>
+        <h2>The architecture: layers of composed transformations</h2>
 
-<h2>Managing the trade-off: regularization, ensembles, and data</h2>
-<p>Three levers control the bias-variance balance:</p>
-<h3>Regularization (shifts variance → bias)</h3>
-<p>Ridge regression (Chapter 4), Lasso, early stopping, and weight decay all constrain model flexibility, increasing bias slightly while reducing variance substantially. The regularization parameter (\(\lambda\), stopping epoch, etc.) controls the operating point on the trade-off curve. Cross-validation (Chapter 12) selects it optimally.</p>
-<h3>Ensemble methods (reduce variance without increasing bias)</h3>
-<p>Bagging averages predictions from models trained on bootstrap samples, reducing variance by factor ~\(1/B\) for \(B\) bags while preserving bias. Random forests extend this with feature subsampling. Boosting sequentially fits residuals, reducing bias primarily while controlling variance via shrinkage. Ensembles dominate single models precisely because they decouple the trade-off: averaging reduces variance "for free" without requiring a simpler base learner.</p>
-<h3>More data (shifts entire curve down)</h3>
-<p>Increasing \(n\) reduces variance at every capacity level and allows higher capacity before variance dominates. In the limit \(n \to \infty\), variance → 0 and test error approaches bias² + noise. This is why deep learning (extremely high capacity) works only with massive datasets: without enough data, variance overwhelms any bias reduction.</p>
-<p><strong>Common mistake:</strong> applying variance-reduction techniques (bagging, regularization) when the problem is bias-dominated. If your model already underfits, bagging will not help — it averages similarly biased predictions. Diagnose first (via learning curves, bootstrap analysis, or train-test gap), then apply the appropriate remedy. Symmetrically, adding model complexity when variance is already high leads to catastrophic overfitting. Always match the intervention to the diagnosed problem.</p>
+        <p>An MLP with \(L\) layers computes a function \(f(x) = f^{(L)} \circ f^{(L-1)} \circ \cdots \circ f^{(1)}(x)\), where each layer's transformation is:</p>
 
-<h2>Connection to the broader framework</h2>
-<p>The bias-variance decomposition unifies nearly every topic in this book. Chapter 1's Bayes error is the noise term. Chapter 2–4's linear models occupy the low-variance, potentially high-bias end of the spectrum; ridge regression (Chapter 4) explicitly trades bias for variance via \(\lambda\). Chapter 6's kNN traverses the entire curve as \(k\) varies from 1 to \(n\). Chapter 10's decision trees are high-variance by default; pruning moves them leftward. Chapter 12's cross-validation exists to estimate the total error curve and locate its minimum without access to the true decomposition. And Chapters 13–14's neural networks achieve remarkable bias reduction through depth and width, but require massive data and regularization (dropout, weight decay, batch norm) to prevent variance explosion.</p>
-<p>Master the bias-variance trade-off not as a formula to memorize but as the <em>diagnostic language</em> of machine learning. When a model fails, ask: is this a bias problem or a variance problem? The answer determines whether you need more features, a richer model, more data, stronger regularization, or an ensemble. Every algorithmic choice in this book can be understood as navigating this fundamental tension. If you can derive the squared-loss decomposition, compute bias and variance for kNN by hand, diagnose a failing model from learning curves, and articulate why bagging helps trees but not LDA, you have internalized the meta-framework that makes sense of everything else.</p>
+        \[h^{(\ell)} = \sigma\!\left(W^{(\ell)} h^{(\ell-1)} + b^{(\ell)}\right)\]
 
-  </article>
-  <div class="chapter-nav">
-    <a class="chapter-nav-link prev" href="../ch10/index.html">
-      <span class="chapter-nav-label">← Previous</span>
-      <span class="chapter-nav-title">10. Decision Trees</span>
-    </a>
-    <a class="chapter-nav-link next" href="../ch12/index.html">
-      <span class="chapter-nav-label">Next →</span>
-      <span class="chapter-nav-title">12. Cross-Validation: LOO and k-Fold</span>
-    </a>
-  </div>
-</div>
-</main>
-<footer>
-  <div class="wrap">
-    <span>© 2026 iTube. Read forever, free forever.</span>
-    <span>No video was harmed in the making of this platform.</span>
-  </div>
-</footer>
-<script src="../../theme.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-<script defer src="../../app.js"></script>
+        <p>Here \(h^{(0)} = x \in \mathbb{R}^{d_0}\) is the input, \(W^{(\ell)} \in \mathbb{R}^{d_\ell \times d_{\ell-1}}\) is the weight matrix for layer \(\ell\), \(b^{(\ell)} \in \mathbb{R}^{d_\ell}\) is the bias vector, and \(\sigma\) is a nonlinear <strong>activation function</strong> applied element-wise. The output \(h^{(L)}\) is the network's prediction.</p>
+
+        <p>Without the nonlinearity \(\sigma\), the entire network would collapse to a single affine transformation regardless of depth: the composition of linear maps is linear. The activation function is what gives depth its power.</p>
+
+        <h2>Choosing activation functions</h2>
+
+        <p>The choice of \(\sigma\) profoundly affects trainability:</p>
+
+        <p><strong>Sigmoid:</strong> \(\sigma(z) = \frac{1}{1+e^{-z}}\). Outputs in \((0,1)\). Historically common but suffers from <strong>vanishing gradients</strong>: \(\sigma'(z) = \sigma(z)(1-\sigma(z)) \leq 0.25\), so gradients shrink exponentially with depth during backpropagation. Rarely used in hidden layers today.</p>
+
+        <p><strong>Tanh:</strong> \(\tanh(z) = \frac{e^z - e^{-z}}{e^z + e^{-z}}\). Zero-centered output in \((-1,1)\). Better than sigmoid but still saturates at extremes, causing vanishing gradients.</p>
+
+        <p><strong>ReLU:</strong> \(\text{ReLU}(z) = \max(0, z)\). Non-saturating for positive inputs (\(\text{ReLU}'(z) = 1\) for \(z > 0\)), enabling gradient flow through deep networks. Computationally cheap. The downside: neurons with \(z < 0\) have zero gradient permanently ("dying ReLU"). Variants like Leaky ReLU (\(\max(\alpha z, z)\) with small \(\alpha > 0\)) mitigate this.</p>
+
+        <p><strong>Output layer activations:</strong> For regression, use identity (linear). For binary classification, use sigmoid. For multiclass classification, use softmax: \(\text{softmax}(z)_c = \frac{e^{z_c}}{\sum_{c'} e^{z_{c'}}}\).</p>
+
+        <h2>The loss function</h2>
+
+        <p>For regression with squared error:</p>
+
+        \[\mathcal{L} = \frac{1}{2}\|y - h^{(L)}\|^2\]
+
+        <p>For binary classification with cross-entropy (matching logistic regression from Chapter 4):</p>
+
+        \[\mathcal{L} = -\big[y \log \hat{y} + (1-y)\log(1-\hat{y})\big]\]
+
+        <p>Training means minimizing \(\mathcal{L}\) over all weights and biases \(\{W^{(\ell)}, b^{(\ell)}\}_{\ell=1}^L\) using gradient descent. But computing \(\nabla_{W^{(\ell)}} \mathcal{L}\) requires differentiating through the entire composition — this is where backpropagation enters.</p>
+
+        <h2>Backpropagation: deriving gradients layer by layer</h2>
+
+        <p>Backpropagation is simply the chain rule applied systematically to the computational graph of the network. We present the derivation for a general layer \(\ell\), then specialize to a concrete example.</p>
+
+        <p>Define the <strong>pre-activation</strong> at layer \(\ell\):</p>
+
+        \[z^{(\ell)} = W^{(\ell)} h^{(\ell-1)} + b^{(\ell)}, \quad h^{(\ell)} = \sigma(z^{(\ell)})\]
+
+        <p>Define the <strong>error signal</strong> (backpropagated gradient) at layer \(\ell\):</p>
+
+        \[\delta^{(\ell)} = \nabla_{z^{(\ell)}} \mathcal{L} = \frac{\partial \mathcal{L}}{\partial z^{(\ell)}}\]
+
+        <h3>Step 1: Output layer error \(\delta^{(L)}\)</h3>
+
+        <p>At the output layer, \(\delta^{(L)}\) depends on the loss and output activation. For squared error loss with identity output activation:</p>
+
+        \[\delta^{(L)} = h^{(L)} - y\]
+
+        <p>For cross-entropy loss with sigmoid output (binary classification), a beautiful cancellation occurs:</p>
+
+        \[\delta^{(L)} = \hat{y} - y\]
+
+        <p>(This is identical to the logistic regression gradient from Chapter 4, confirming consistency.)</p>
+
+        <h3>Step 2: Backward recursion for hidden layers</h3>
+
+        <p>For \(\ell = L-1, L-2, \ldots, 1\), apply the chain rule:</p>
+
+        \[\delta^{(\ell)} = \left((W^{(\ell+1)})^\top \delta^{(\ell+1)}\right) \odot \sigma'(z^{(\ell)})\]
+
+        <p>where \(\odot\) denotes element-wise multiplication. Intuitively: the error signal flows backward through the transpose of the next layer's weights, then gets gated by the local activation derivative. If \(\sigma'\) is near zero (saturated neuron), the gradient is killed — this is the vanishing gradient problem made explicit.</p>
+
+        <h3>Step 3: Weight and bias gradients</h3>
+
+        <p>Once all \(\delta^{(\ell)}\) are computed, the parameter gradients follow directly:</p>
+
+        \[\boxed{\frac{\partial \mathcal{L}}{\partial W^{(\ell)}} = \delta^{(\ell)} (h^{(\ell-1)})^\top, \quad \frac{\partial \mathcal{L}}{\partial b^{(\ell)}} = \delta^{(\ell)}}\]
+
+        <p>These are used in gradient descent updates: \(W^{(\ell)} \leftarrow W^{(\ell)} - \eta \frac{\partial \mathcal{L}}{\partial W^{(\ell)}}\), \(b^{(\ell)} \leftarrow b^{(\ell)} - \eta \frac{\partial \mathcal{L}}{\partial b^{(\ell)}}\), where \(\eta\) is the learning rate.</p>
+
+        <p>The key insight: backpropagation computes all gradients in one forward pass (computing all \(z^{(\ell)}, h^{(\ell)}\)) and one backward pass (computing all \(\delta^{(\ell)}\)), making it \(O(\text{network size})\) per sample — no more expensive than evaluating the network itself.</p>
+
+        <h3>Worked example</h3>
+
+        <h4>One training step on a minimal MLP</h4>
+
+        <p>Consider a network with 1 input, 2 hidden units (ReLU), and 1 output (identity, squared error loss). Architecture:</p>
+
+        \[x \xrightarrow{W^{(1)}, b^{(1)}} z^{(1)} \xrightarrow{\text{ReLU}} h^{(1)} \xrightarrow{W^{(2)}, b^{(2)}} z^{(2)} = \hat{y}\]
+
+        <p>Initial parameters:</p>
+
+        \[W^{(1)} = \begin{pmatrix} 0.5 \\ -0.5 \end{pmatrix}, \quad b^{(1)} = \begin{pmatrix} 0 \\ 0 \end{pmatrix}, \quad W^{(2)} = \begin{pmatrix} 1 & 1 \end{pmatrix}, \quad b^{(2)} = 0\]
+
+        <p>Training sample: \(x = 2\), \(y = 1\). Learning rate \(\eta = 0.1\).</p>
+
+        <p><strong>Forward pass:</strong></p>
+
+        \[z^{(1)} = W^{(1)} x + b^{(1)} = \begin{pmatrix} 0.5 \cdot 2 \\ -0.5 \cdot 2 \end{pmatrix} + \begin{pmatrix} 0 \\ 0 \end{pmatrix} = \begin{pmatrix} 1 \\ -1 \end{pmatrix}\]
+
+        \[h^{(1)} = \text{ReLU}(z^{(1)}) = \begin{pmatrix} \max(0, 1) \\ \max(0, -1) \end{pmatrix} = \begin{pmatrix} 1 \\ 0 \end{pmatrix}\]
+
+        \[\hat{y} = z^{(2)} = W^{(2)} h^{(1)} + b^{(2)} = \begin{pmatrix} 1 & 1 \end{pmatrix} \begin{pmatrix} 1 \\ 0 \end{pmatrix} + 0 = 1\]
+
+        <p>Loss: \(\mathcal{L} = \frac{1}{2}(1 - 1)^2 = 0\). (Coincidentally perfect on this sample — let's change \(y = 0\) to make it interesting.)</p>
+
+        <p><strong>Revised target: \(y = 0\).</strong> Loss: \(\mathcal{L} = \frac{1}{2}(1 - 0)^2 = 0.5\).</p>
+
+        <p><strong>Backward pass:</strong></p>
+
+        <p>Output error: \(\delta^{(2)} = \hat{y} - y = 1 - 0 = 1\).</p>
+
+        <p>Hidden error: \(\delta^{(1)} = ((W^{(2)})^\top \delta^{(2)}) \odot \text{ReLU}'(z^{(1)})\).</p>
+
+        \[(W^{(2)})^\top \delta^{(2)} = \begin{pmatrix} 1 \\ 1 \end{pmatrix} \cdot 1 = \begin{pmatrix} 1 \\ 1 \end{pmatrix}\]
+
+        <p>\(\text{ReLU}'(z^{(1)}) = \begin{pmatrix} 1 \\ 0 \end{pmatrix}\) (derivative is 1 where \(z > 0\), 0 otherwise).</p>
+
+        \[\delta^{(1)} = \begin{pmatrix} 1 \\ 1 \end{pmatrix} \odot \begin{pmatrix} 1 \\ 0 \end{pmatrix} = \begin{pmatrix} 1 \\ 0 \end{pmatrix}\]
+
+        <p>Note: hidden unit 2 has zero gradient because ReLU killed it (\(z^{(1)}_2 = -1 < 0\)). This is the dying ReLU phenomenon in action.</p>
+
+        <p><strong>Parameter gradients:</strong></p>
+
+        \[\frac{\partial \mathcal{L}}{\partial W^{(2)}} = \delta^{(2)} (h^{(1)})^\top = 1 \cdot \begin{pmatrix} 1 & 0 \end{pmatrix} = \begin{pmatrix} 1 & 0 \end{pmatrix}\]
+
+        \[\frac{\partial \mathcal{L}}{\partial b^{(2)}} = \delta^{(2)} = 1\]
+
+        \[\frac{\partial \mathcal{L}}{\partial W^{(1)}} = \delta^{(1)} (h^{(0)})^\top = \begin{pmatrix} 1 \\ 0 \end{pmatrix} \cdot 2 = \begin{pmatrix} 2 \\ 0 \end{pmatrix}\]
+
+        \[\frac{\partial \mathcal{L}}{\partial b^{(1)}} = \delta^{(1)} = \begin{pmatrix} 1 \\ 0 \end{pmatrix}\]
+
+        <p><strong>Gradient descent update (\(\eta = 0.1\)):</strong></p>
+
+        \[W^{(2)} \leftarrow \begin{pmatrix} 1 & 1 \end{pmatrix} - 0.1 \begin{pmatrix} 1 & 0 \end{pmatrix} = \begin{pmatrix} 0.9 & 1.0 \end{pmatrix}\]
+
+        \[b^{(2)} \leftarrow 0 - 0.1(1) = -0.1\]
+
+        \[W^{(1)} \leftarrow \begin{pmatrix} 0.5 \\ -0.5 \end{pmatrix} - 0.1 \begin{pmatrix} 2 \\ 0 \end{pmatrix} = \begin{pmatrix} 0.3 \\ -0.5 \end{pmatrix}\]
+
+        \[b^{(1)} \leftarrow \begin{pmatrix} 0 \\ 0 \end{pmatrix} - 0.1 \begin{pmatrix} 1 \\ 0 \end{pmatrix} = \begin{pmatrix} -0.1 \\ 0 \end{pmatrix}\]
+
+        <p>Notice that \(W^{(1)}_{2,:}\) and \(b^{(1)}_2\) did not change at all — hidden unit 2 received zero gradient and is effectively dead for this input. Over many training samples, if unit 2 never activates, it remains permanently useless. This motivates careful initialization and leaky ReLU variants.</p>
+
+        <h2>Initialization matters</h2>
+
+        <p>Initializing all weights to zero makes every hidden unit compute the same function — symmetry is never broken, and the network behaves as if it has one hidden unit. Weights must be initialized randomly.</p>
+
+        <p>But random scale matters enormously. Too large: activations saturate, gradients vanish. Too small: signals shrink exponentially with depth, gradients vanish. <strong>Xavier/Glorot initialization</strong> sets \(W^{(\ell)}_{ij} \sim \mathcal{N}(0, 2/(d_{\ell-1} + d_\ell))\), maintaining unit variance of activations across layers for tanh/sigmoid. <strong>He initialization</strong> uses \(\mathcal{N}(0, 2/d_{\ell-1})\) for ReLU networks, accounting for the fact that ReLU halves the variance (half the inputs are zeroed).</p>
+
+        <h2>Regularization in neural networks</h2>
+
+        <p>Neural networks have enormous capacity and easily overfit. Regularization strategies include:</p>
+
+        <ul>
+          <li><strong>Weight decay (\(\ell_2\) penalty):</strong> Adds \(\frac{\lambda}{2}\sum_\ell \|W^{(\ell)}\|_F^2\) to the loss. Exactly analogous to ridge regression (Chapter 3). Prevents weights from growing too large.</li>
+          <li><strong>Dropout:</strong> During training, randomly zero out hidden units with probability \(p\). Forces redundant representations and acts as implicit ensemble averaging. At test time, scale activations by \(1-p\) (or use inverted dropout during training).</li>
+          <li><strong>Early stopping:</strong> Monitor validation loss during training; stop when it begins to increase. Effectively limits the number of gradient steps, constraining model complexity. Connects directly to the bias-variance framework of Chapter 10.</li>
+        </ul>
+
+        <h2>Common mistake</h2>
+
+        <p><strong>Common mistake:</strong> Students often confuse the dimensions of weight matrices and error signals during backpropagation. The weight matrix \(W^{(\ell)} \in \mathbb{R}^{d_\ell \times d_{\ell-1}}\) maps from layer \(\ell-1\) (dimension \(d_{\ell-1}\)) to layer \(\ell\) (dimension \(d_\ell\)). The backward pass uses \((W^{(\ell+1)})^\top \in \mathbb{R}^{d_\ell \times d_{\ell+1}}\) to map error signals from layer \(\ell+1\) back to layer \(\ell\). Getting these transposes wrong produces dimension mismatches or silently incorrect gradients. Always verify dimensions: \(\delta^{(\ell)} \in \mathbb{R}^{d_\ell}\), \(\frac{\partial \mathcal{L}}{\partial W^{(\ell)}} \in \mathbb{R}^{d_\ell \times d_{\ell-1}}\). Dimensional analysis catches most backpropagation implementation errors before they produce subtle numerical bugs.</p>
+
+        <h2>Edge case</h2>
+
+        <p><strong>What happens with a single hidden layer and linear activation everywhere?</strong> The network computes \(W^{(2)} \sigma(W^{(1)} x + b^{(1)}) + b^{(2)}\) with \(\sigma(z) = z\), which simplifies to \((W^{(2)} W^{(1)}) x + (W^{(2)} b^{(1)} + b^{(2)})\) — a single affine transformation. Depth adds nothing without nonlinearity. This is why activation functions are non-negotiable.</p>
+
+        <p><strong>What about the universal approximation theorem?</strong> It guarantees existence of weights achieving arbitrary accuracy but says nothing about whether gradient descent can find them, how many hidden units are needed, or how sample complexity scales. In practice, deeper networks with fewer total parameters often generalize better than shallow wide ones, suggesting that depth provides an inductive bias toward compositional functions that matches the structure of real-world data. This remains an active area of theoretical research.</p>
+
+        <h2>Where we go next</h2>
+
+        <p>We have now completed the supervised learning portion of the syllabus. Chapter 12 shifts to <strong>unsupervised learning</strong>, beginning with clustering: k-means and k-medoid algorithms that discover group structure in unlabeled data. Clustering shares the optimization-via-iteration spirit of neural network training but operates without labels, raising fundamentally different questions about what constitutes a "good" solution.</p>
+
+      </article>
+
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch10/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">10. Bias-Variance Trade-off &amp; Cross-Validation</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch12/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">12. Clustering: k-Means &amp; k-Medoid</span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
 </body>
 </html>
