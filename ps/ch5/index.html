@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>5. Conditional Expectation and Variance — Probability &amp; Statistics — iTube</title>
+  <meta name="description" content="How do we summarize a random variable when we already know something about it? We derive conditional expectation as a projection, prove the law of iterated expectations step by step, and decompose variance into explained and unexplained components using concrete numeric examples.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Probability &amp; Statistics</a><span class="sep">/</span>
+        <span>Ch. 5</span>
+      </div>
+      <div class="eyebrow">Probability &amp; Statistics</div>
+      <h1>5. Conditional Expectation and Variance</h1>
+      <div class="chapter-meta">
+        <span>Chapter 5 of 12</span>
+        <span class="read-badge">20 min read</span>
+      </div>
+      <article>
+
+        <h2>What does it mean to "expect" something given partial information?</h2>
+        <p>In Chapter 4, we learned how to update probabilities when new evidence arrives. But probability distributions are rich objects — sometimes we don't need the full updated distribution, just a single summary number. If you know someone's height, what's your best guess for their weight? If you observe the first three flips of a coin, what's your best prediction for the total number of heads in ten flips? These questions ask for an <em>expected value</em> computed not over the entire sample space, but over the restricted world where certain information is already known.</p>
+        <p>This is <strong>conditional expectation</strong>. It is arguably the most important concept in all of statistics: regression is conditional expectation, prediction is conditional expectation, and the decomposition of variance that underlies ANOVA, R², and bias-variance tradeoffs all flow from it. Let's derive it carefully, starting from the discrete case where every step is concrete and verifiable.</p>
+
+        <h2>Conditional expectation: definition and intuition</h2>
+        <p>Suppose \(X\) and \(Y\) are discrete random variables defined on the same sample space. We already know how to compute the conditional probability mass function of \(Y\) given \(X = x\) from Chapter 4:</p>
+        \[
+        P(Y = y \mid X = x) = \frac{P(X = x, Y = y)}{P(X = x)}, \quad \text{provided } P(X = x) > 0
+        \]
+        <p>The conditional expectation of \(Y\) given \(X = x\) is simply the expected value computed with respect to this conditional distribution rather than the marginal one:</p>
+        \[
+        \mathbb{E}[Y \mid X = x] = \sum_{y} y \cdot P(Y = y \mid X = x)
+        \]
+        <p>This is a number — specifically, a weighted average of possible \(y\)-values, where the weights reflect our updated beliefs after learning \(X = x\). But here's the crucial conceptual shift: while \(\mathbb{E}[Y \mid X = x]\) is a number for each fixed \(x\), the quantity \(\mathbb{E}[Y \mid X]\) (without specifying a particular value) is itself a <strong>random variable</strong>. It takes the value \(\mathbb{E}[Y \mid X = x]\) whenever \(X\) happens to equal \(x\). This distinction between the number and the random variable is essential for everything that follows.</p>
+
+        <h3>Worked example: dice sum given first roll</h3>
+        <p>Roll two fair six-sided dice. Let \(X\) be the outcome of the first die and \(Y\) be the sum of both dice. What is \(\mathbb{E}[Y \mid X = 3]\)?</p>
+        <p>Given \(X = 3\), the sum \(Y = 3 + D_2\) where \(D_2\) is the second die. Since \(D_2\) is uniform on \(\{1,2,3,4,5,6\}\), the conditional distribution of \(Y\) given \(X=3\) is uniform on \(\{4,5,6,7,8,9\}\). Compute the expectation directly:</p>
+        \[
+        \mathbb{E}[Y \mid X = 3] = \sum_{d=1}^{6} (3 + d) \cdot \frac{1}{6}
+        \]
+        <p>Expand the sum term by term:</p>
+        \[
+        = \frac{1}{6}\big[(3+1) + (3+2) + (3+3) + (3+4) + (3+5) + (3+6)\big]
+        \]
+        \[
+        = \frac{1}{6}\big[4 + 5 + 6 + 7 + 8 + 9\big]
+        \]
+        <p>Sum the terms: \(4+5=9\), \(9+6=15\), \(15+7=22\), \(22+8=30\), \(30+9=39\). So:</p>
+        \[
+        = \frac{39}{6} = 6.5
+        \]
+        <p>Alternatively, use linearity of expectation inside the conditional: \(\mathbb{E}[Y \mid X=3] = \mathbb{E}[3 + D_2 \mid X=3] = 3 + \mathbb{E}[D_2] = 3 + 3.5 = 6.5\). Both methods agree. The conditional expected sum given the first die shows 3 is exactly 6.5.</p>
+        <p>Now notice: if we had conditioned on \(X = 1\) instead, we'd get \(1 + 3.5 = 4.5\). If \(X = 6\), we'd get \(6 + 3.5 = 9.5\). So \(\mathbb{E}[Y \mid X]\) is the random variable that equals \(X + 3.5\) — it varies with \(X\). This is what we mean when we say conditional expectation is a random variable: it's a <em>function of</em> \(X\).</p>
+
+        <h2>The law of iterated expectations</h2>
+        <p>A natural follow-up question: if \(\mathbb{E}[Y \mid X]\) is a random variable, what is its own expected value? Intuitively, if you average your conditional predictions across all possible values of the conditioning variable, you should recover the unconditional expectation. Let's prove this.</p>
+        <p>We want to show:</p>
+        \[
+        \mathbb{E}\big[\mathbb{E}[Y \mid X]\big] = \mathbb{E}[Y]
+        \]
+        <p>This is the <strong>law of iterated expectations</strong> (also called the tower property or Adam's law). For discrete \(X\), expand the outer expectation by summing over all possible values of \(X\):</p>
+        \[
+        \mathbb{E}\big[\mathbb{E}[Y \mid X]\big] = \sum_{x} \mathbb{E}[Y \mid X = x] \cdot P(X = x)
+        \]
+        <p>Now substitute the definition of conditional expectation for the inner term:</p>
+        \[
+        = \sum_{x} \left( \sum_{y} y \cdot P(Y = y \mid X = x) \right) \cdot P(X = x)
+        \]
+        <p>Multiply \(P(X=x)\) inside the inner sum (it doesn't depend on \(y\)):</p>
+        \[
+        = \sum_{x} \sum_{y} y \cdot P(Y = y \mid X = x) \cdot P(X = x)
+        \]
+        <p>Recall from Chapter 4 that \(P(Y=y \mid X=x) \cdot P(X=x) = P(X=x, Y=y)\) by the multiplication rule. Substitute:</p>
+        \[
+        = \sum_{x} \sum_{y} y \cdot P(X = x, Y = y)
+        \]
+        <p>Now swap the order of summation (valid for finite or absolutely convergent sums) and factor out \(y\):</p>
+        \[
+        = \sum_{y} y \sum_{x} P(X = x, Y = y)
+        \]
+        <p>The inner sum \(\sum_x P(X=x, Y=y)\) is exactly the marginal probability \(P(Y=y)\) by the law of total probability (Chapter 4). So:</p>
+        \[
+        = \sum_{y} y \cdot P(Y = y) = \mathbb{E}[Y]
+        \]
+        <p>Every step used only definitions and results from Chapter 4. No new assumptions were needed. The law of iterated expectations is a direct algebraic consequence of how conditional probability is defined.</p>
+
+        <h3>Worked example: verifying the tower property</h3>
+        <p>Using the two-dice example above, let's verify numerically that \(\mathbb{E}[\mathbb{E}[Y \mid X]] = \mathbb{E}[Y]\).</p>
+        <p>We already know \(\mathbb{E}[Y \mid X=x] = x + 3.5\) for each \(x \in \{1,\ldots,6\}\). Since \(X\) is uniform on \(\{1,\ldots,6\}\):</p>
+        \[
+        \mathbb{E}\big[\mathbb{E}[Y \mid X]\big] = \sum_{x=1}^{6} (x + 3.5) \cdot \frac{1}{6}
+        \]
+        <p>Split the sum using linearity:</p>
+        \[
+        = \frac{1}{6}\sum_{x=1}^{6} x + \frac{1}{6}\sum_{x=1}^{6} 3.5
+        \]
+        <p>Compute each part: \(\sum_{x=1}^6 x = 21\), so the first term is \(21/6 = 3.5\). The second term is \(6 \times 3.5 / 6 = 3.5\). Sum:</p>
+        \[
+        = 3.5 + 3.5 = 7
+        \]
+        <p>Now compute \(\mathbb{E}[Y]\) directly. Since \(Y = D_1 + D_2\) and both dice have mean 3.5, linearity gives \(\mathbb{E}[Y] = 3.5 + 3.5 = 7\). The two sides match exactly, confirming the law of iterated expectations on concrete numbers.</p>
+
+        <p><strong>Common mistake:</strong> treating \(\mathbb{E}[Y \mid X]\) as a constant rather than a random variable. Students often write \(\mathbb{E}[\mathbb{E}[Y \mid X]] = \mathbb{E}[Y \mid X]\), implicitly assuming the inner quantity can be pulled outside the outer expectation. This is wrong: \(\mathbb{E}[Y \mid X]\) varies with \(X\), so the outer expectation must average over that variation. The law of iterated expectations says the result of that averaging is \(\mathbb{E}[Y]\), not \(\mathbb{E}[Y \mid X]\) itself.</p>
+
+        <h2>Conditional variance and the variance decomposition</h2>
+        <p>Expectation tells us the center of a conditional distribution, but what about its spread? The <strong>conditional variance</strong> of \(Y\) given \(X = x\) is defined analogously to unconditional variance, but using the conditional distribution:</p>
+        \[
+        \operatorname{Var}(Y \mid X = x) = \mathbb{E}\big[(Y - \mathbb{E}[Y \mid X=x])^2 \mid X=x\big]
+        \]
+        <p>Equivalently, by the same computational shortcut used for unconditional variance:</p>
+        \[
+        \operatorname{Var}(Y \mid X = x) = \mathbb{E}[Y^2 \mid X=x] - \big(\mathbb{E}[Y \mid X=x]\big)^2
+        \]
+        <p>Like conditional expectation, \(\operatorname{Var}(Y \mid X)\) is a random variable — a function of \(X\) that reports the residual uncertainty in \(Y\) after \(X\) is known.</p>
+        <p>Now comes one of the most important identities in statistics. How does the total variance of \(Y\) relate to the conditional variance and the variability of the conditional mean? The answer is the <strong>law of total variance</strong> (also called Eve's law or the variance decomposition formula):</p>
+        \[
+        \operatorname{Var}(Y) = \mathbb{E}\big[\operatorname{Var}(Y \mid X)\big] + \operatorname{Var}\big(\mathbb{E}[Y \mid X]\big)
+        \]
+        <p>In words: total variance equals expected conditional variance plus variance of the conditional expectation. The first term captures the average remaining uncertainty after knowing \(X\); the second captures how much the conditional mean itself varies across different values of \(X\). Together they account for all variability in \(Y\).</p>
+
+        <h3>Deriving the variance decomposition</h3>
+        <p>Let's prove this step by step. Define \(\mu(X) = \mathbb{E}[Y \mid X]\) for brevity. Start from the definition of unconditional variance:</p>
+        \[
+        \operatorname{Var}(Y) = \mathbb{E}[Y^2] - (\mathbb{E}[Y])^2
+        \]
+        <p>Apply the law of iterated expectations to \(\mathbb{E}[Y^2]\):</p>
+        \[
+        \mathbb{E}[Y^2] = \mathbb{E}\big[\mathbb{E}[Y^2 \mid X]\big]
+        \]
+        <p>Inside the conditional expectation, add and subtract \(\mu(X)^2\):</p>
+        \[
+        \mathbb{E}[Y^2 \mid X] = \underbrace{\mathbb{E}[Y^2 \mid X] - \mu(X)^2}_{\operatorname{Var}(Y \mid X)} + \mu(X)^2
+        \]
+        <p>This is just the computational variance formula applied conditionally. Now take the outer expectation of both sides:</p>
+        \[
+        \mathbb{E}[Y^2] = \mathbb{E}\big[\operatorname{Var}(Y \mid X)\big] + \mathbb{E}\big[\mu(X)^2\big]
+        \]
+        <p>Next, handle the \((\mathbb{E}[Y])^2\) term in the variance definition. By the law of iterated expectations, \(\mathbb{E}[Y] = \mathbb{E}[\mu(X)]\). So:</p>
+        \[
+        (\mathbb{E}[Y])^2 = \big(\mathbb{E}[\mu(X)]\big)^2
+        \]
+        <p>Substitute both pieces back into \(\operatorname{Var}(Y) = \mathbb{E}[Y^2] - (\mathbb{E}[Y])^2\):</p>
+        \[
+        \operatorname{Var}(Y) = \mathbb{E}\big[\operatorname{Var}(Y \mid X)\big] + \mathbb{E}\big[\mu(X)^2\big] - \big(\mathbb{E}[\mu(X)]\big)^2
+        \]
+        <p>Recognize the last two terms as the definition of \(\operatorname{Var}(\mu(X)) = \mathbb{E}[\mu(X)^2] - (\mathbb{E}[\mu(X)])^2\). Therefore:</p>
+        \[
+        \operatorname{Var}(Y) = \mathbb{E}\big[\operatorname{Var}(Y \mid X)\big] + \operatorname{Var}\big(\mathbb{E}[Y \mid X]\big)
+        \]
+        <p>Every step used only the definition of variance, the law of iterated expectations, and algebra. No additional assumptions were required.</p>
+
+        <h3>Worked example: decomposing dice variance</h3>
+        <p>Return to the two-dice example: \(Y = D_1 + D_2\), \(X = D_1\). We know \(\operatorname{Var}(Y) = \operatorname{Var}(D_1) + \operatorname{Var}(D_2) = 35/12 + 35/12 = 70/12 \approx 5.833\) (since independent dice have additive variance, and \(\operatorname{Var}(\text{fair die}) = 35/12\)).</p>
+        <p>Now compute the two decomposition terms. First, \(\operatorname{Var}(Y \mid X=x) = \operatorname{Var}(x + D_2 \mid X=x) = \operatorname{Var}(D_2) = 35/12\) for every \(x\). Since this is constant, \(\mathbb{E}[\operatorname{Var}(Y \mid X)] = 35/12\).</p>
+        <p>Second, \(\mathbb{E}[Y \mid X] = X + 3.5\), so \(\operatorname{Var}(\mathbb{E}[Y \mid X]) = \operatorname{Var}(X + 3.5) = \operatorname{Var}(X) = 35/12\).</p>
+        <p>Sum: \(35/12 + 35/12 = 70/12\). This matches \(\operatorname{Var}(Y)\) exactly. Half the total variance comes from residual uncertainty in the second die; half comes from variation in the first die's contribution to the conditional mean. The decomposition accounts for everything.</p>
+
+        <p><strong>Edge case:</strong> what if \(X\) determines \(Y\) completely (e.g., \(Y = f(X)\) for some function \(f\))? Then \(\operatorname{Var}(Y \mid X) = 0\) for every \(X\), so the first term vanishes entirely. All variance is explained: \(\operatorname{Var}(Y) = \operatorname{Var}(\mathbb{E}[Y \mid X]) = \operatorname{Var}(f(X))\). Conversely, if \(X\) and \(Y\) are independent, then \(\mathbb{E}[Y \mid X] = \mathbb{E}[Y]\) (a constant), so \(\operatorname{Var}(\mathbb{E}[Y \mid X]) = 0\). All variance is unexplained: \(\operatorname{Var}(Y) = \mathbb{E}[\operatorname{Var}(Y \mid X)] = \operatorname{Var}(Y)\). These boundary cases confirm the decomposition behaves correctly at both extremes of dependence.</p>
+
+        <h2>Why this matters: connecting to descriptive statistics and beyond</h2>
+        <p>The variance decomposition is the theoretical foundation for concepts you'll encounter throughout this book. In Chapter 6, the correlation coefficient measures the fraction of variance explained by a linear conditional expectation. In Chapter 8, the coefficient of determination \(R^2\) in regression is exactly \(\operatorname{Var}(\mathbb{E}[Y \mid X]) / \operatorname{Var}(Y)\) when the conditional expectation is linear. In Chapter 11, confidence intervals for predictions must account for both sources of variance: estimation uncertainty in the conditional mean and irreducible noise in the conditional variance.</p>
+        <p>Conditional expectation also connects directly to Chapter 4's Bayes' theorem: the posterior mean \(\mathbb{E}[\theta \mid \text{data}]\) is the Bayes-optimal point estimate under squared error loss, by the same derivation that showed the unconditional mean minimizes expected squared error (see the worked reference example in Section 9 of the Content Generation Guide). Every time you see "best predictor" or "minimum mean squared error estimator" in later chapters, it is conditional expectation doing the work.</p>
+
+        <p><strong>Common mistake:</strong> assuming \(\mathbb{E}[Y \mid X]\) is always linear in \(X\). It isn't. Linearity holds for jointly normal distributions and for the dice example above, but in general \(\mathbb{E}[Y \mid X]\) can be any function of \(X\). Linear regression estimates the best <em>linear</em> approximation to the true conditional expectation; the gap between the two is model misspecification, which we'll quantify in Chapters 6 and 8.</p>
+
+      </article>
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch4/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">4. Marginal, Conditional, and Joint Probability; Bayes' Theorem</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch6/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">6. Descriptive Statistics: Mean, Median, Mode, Standard Deviation, Correlation, and Covariance</span>
+        </a>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
+</body>
+</html>
