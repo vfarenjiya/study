@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>4. Systems of Linear Equations and Gaussian Elimination — Linear Algebra — iTube</title>
+    <meta name="description" content="Rigorous treatment of linear systems, Gaussian elimination, RREF, consistency, and solution structure with full derivations and exam-focused worked examples.">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+    <link rel="manifest" href="../../manifest.json">
+    <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+    <meta name="theme-color" content="#1B1B1F">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="iTube">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script>
+        (function(){
+            var saved = localStorage.getItem("itube-theme");
+            var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+            document.documentElement.setAttribute("data-theme", theme);
+        })();
+    </script>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+    <header class="top">
+        <div class="wrap">
+            <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+            <div class="top-actions">
+                <div class="font-controls" role="group" aria-label="Adjust text size">
+                    <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+                    <span id="font-size-label">100%</span>
+                    <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+                    <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+                </div>
+                <button id="theme-btn" title="Toggle light/dark">◐</button>
+            </div>
+        </div>
+    </header>
+    <main>
+        <div class="wrap narrow">
+            <div class="breadcrumb"><a href="../../index.html">iTube</a><span class="sep">/</span><a href="../index.html">Linear Algebra</a><span class="sep">/</span><span>Ch. 4</span></div>
+            <div class="eyebrow">Linear Algebra</div>
+            <h1>4. Systems of Linear Equations and Gaussian Elimination</h1>
+            <div class="chapter-meta">
+                <span>Chapter 4 of 14</span>
+                <span class="read-badge">20 min read</span>
+            </div>
+            <article>
+                <h2>From equations to matrices: why representation matters</h2>
+                <p>A system of \(m\) linear equations in \(n\) unknowns is traditionally written as a collection of scalar equations. But this notation obscures the underlying structure: each equation is a dot product between a coefficient vector and the unknown vector, and the entire system encodes a single matrix-vector equation \(Ax = b\). This shift from scalar to matrix representation is not merely cosmetic—it reveals that solving linear systems is equivalent to understanding the geometry of linear maps, the algebra of matrix factorizations, and the combinatorics of pivot positions. Every algorithm for solving systems (Gaussian elimination, LU decomposition, iterative methods) operates on the matrix form, never on individual equations.</p>
+                <p>The central questions for any system \(Ax = b\) are: Does a solution exist? If so, is it unique? If not unique, what is the structure of the solution set? The answers depend entirely on the relationship between the coefficient matrix \(A\) and the augmented matrix \([A \mid b]\), specifically on their ranks and pivot structures. This chapter develops the complete machinery—row operations, echelon forms, consistency criteria, and parametric solution descriptions—that answers these questions definitively. Mastery here is prerequisite for rank-nullity (Chapter 5), determinants (Chapter 6), eigenvalues (Chapter 7), and every matrix factorization in later chapters.</p>
+
+                <h2>Row operations and equivalence</h2>
+                <p>Three <strong>elementary row operations</strong> transform a matrix without changing its solution set:</p>
+                \[
+                \begin{aligned}
+                &\text{(R1)} && R_i \leftrightarrow R_j \quad \text{(swap rows)} \\
+                &\text{(R2)} && R_i \gets c R_i, \quad c \neq 0 \quad \text{(scale row)} \\
+                &\text{(R3)} && R_i \gets R_i + c R_j, \quad i \neq j \quad \text{(add multiple of row)}
+                \end{aligned}
+                \]
+                <p>Each operation corresponds to left-multiplication by an invertible <strong>elementary matrix</strong> (Chapter 3). Since elementary matrices are invertible, applying a sequence of row operations to \([A \mid b]\) produces a new augmented matrix \([A' \mid b']\) where \(A' = EA\) and \(b' = Eb\) for some invertible \(E\). Thus \(Ax = b \iff EAx = Eb \iff A'x = b'\): the solution sets are identical. This equivalence is the theoretical foundation of Gaussian elimination—we can simplify the system freely without altering its solutions.</p>
+                <p><strong>Common mistake:</strong> Students sometimes apply column operations to the augmented matrix, believing they preserve solutions. They do not. Column operations change the meaning of the variables (they correspond to variable substitutions, not equation manipulations). Only row operations preserve the solution set of \(Ax = b\). Column operations are valid for computing determinant or rank of \(A\) alone, but never on \([A \mid b]\).</p>
+
+                <h3>Worked example: verifying row equivalence preserves solutions</h3>
+                <p>Consider the system:</p>
+                \[
+                \begin{cases}
+                x + 2y = 5 \\
+                3x + 4y = 11
+                \end{cases}
+                \quad \Longleftrightarrow \quad
+                \left[\begin{array}{cc|c} 1 & 2 & 5 \\ 3 & 4 & 11 \end{array}\right].
+                \]
+                <p><strong>Step 1 (Apply R3: \(R_2 \gets R_2 - 3R_1\)):</strong></p>
+                \[
+                \left[\begin{array}{cc|c} 1 & 2 & 5 \\ 0 & -2 & -4 \end{array}\right].
+                \]
+                <p><strong>Step 2 (Apply R2: \(R_2 \gets -\tfrac{1}{2}R_2\)):</strong></p>
+                \[
+                \left[\begin{array}{cc|c} 1 & 2 & 5 \\ 0 & 1 & 2 \end{array}\right].
+                \]
+                <p><strong>Step 3 (Back-substitute):</strong> From row 2: \(y = 2\). From row 1: \(x + 2(2) = 5 \Rightarrow x = 1\). Solution: \((x,y) = (1,2)\).</p>
+                <p><strong>Step 4 (Verify in original system):</strong> \(1 + 2(2) = 5\) ✓; \(3(1) + 4(2) = 3 + 8 = 11\) ✓.</p>
+                <p><strong>Sensitivity check:</strong> If the right-hand side were \((5, 12)\) instead of \((5, 11)\), Step 1 would yield \(\left[\begin{smallmatrix}1&2&5\\0&-2&-3\end{smallmatrix}\right]\), giving \(y = 1.5\) and \(x = 2\). The solution changes continuously with \(b\), confirming that row operations track perturbations correctly. Had we obtained a row \([0\; 0 \mid c]\) with \(c \neq 0\), the system would be inconsistent—a case treated in Section 4.</p>
+
+                <h2>Echelon forms and pivot structure</h2>
+                <p>A matrix is in <strong>row echelon form (REF)</strong> if: (1) all nonzero rows are above zero rows, (2) each leading entry (pivot) is strictly to the right of the pivot above it, and (3) entries below each pivot are zero. A matrix is in <strong>reduced row echelon form (RREF)</strong> if additionally: (4) each pivot equals 1, and (5) each pivot is the only nonzero entry in its column.</p>
+                <p>Every matrix has a <em>unique</em> RREF (proved via induction on pivot positions), though REF is not unique. The RREF is the canonical representative of the row-equivalence class and directly reveals the solution structure. Pivot columns correspond to <strong>basic variables</strong>; non-pivot columns correspond to <strong>free variables</strong>. The number of pivots is the <strong>rank</strong> of \(A\), denoted \(\operatorname{rank}(A)\), which equals the dimension of both the row space and column space (Chapter 5).</p>
+                <p><strong>Derivation: uniqueness of RREF sketch.</strong> Suppose \(R\) and \(R'\) are two RREFs of the same matrix \(A\). Since they are row-equivalent, they have the same row space. The first nonzero row of an RREF is uniquely determined as the unique vector in the row space with a leading 1 in the leftmost possible position and zeros elsewhere in that column. By induction, each subsequent pivot row is uniquely determined by the requirement of being in the row space, having a leading 1 in the next available pivot column, and having zeros in all other pivot columns. Thus \(R = R'\). ∎</p>
+                <p><strong>Edge case:</strong> The zero matrix is already in RREF (vacuously satisfies all conditions). A matrix with no zero rows may still have free variables if \(\operatorname{rank}(A) < n\). For example, \(\begin{pmatrix} 1 & 2 & 3 \\ 0 & 0 & 0 \end{pmatrix}\) has rank 1, one pivot (column 1), and two free variables (\(x_2, x_3\)). Never assume “number of rows = number of pivots.”</p>
+
+                <h3>Worked example: reducing to RREF with full arithmetic</h3>
+                <p>Reduce \(A = \begin{pmatrix} 1 & 2 & 3 \\ 2 & 4 & 7 \\ 3 & 6 & 10 \end{pmatrix}\) to RREF.</p>
+                <p><strong>Step 1 (Eliminate below pivot in col 1):</strong></p>
+                \[
+                R_2 \gets R_2 - 2R_1: \begin{pmatrix} 1 & 2 & 3 \\ 0 & 0 & 1 \\ 3 & 6 & 10 \end{pmatrix}, \quad
+                R_3 \gets R_3 - 3R_1: \begin{pmatrix} 1 & 2 & 3 \\ 0 & 0 & 1 \\ 0 & 0 & 1 \end{pmatrix}.
+                \]
+                <p><strong>Step 2 (Identify next pivot):</strong> Column 2 has no nonzero entry below row 1, so skip to column 3. Pivot at (2,3).</p>
+                <p><strong>Step 3 (Eliminate below pivot in col 3):</strong></p>
+                \[
+                R_3 \gets R_3 - R_2: \begin{pmatrix} 1 & 2 & 3 \\ 0 & 0 & 1 \\ 0 & 0 & 0 \end{pmatrix}.
+                \]
+                <p><strong>Step 4 (Scale pivots to 1):</strong> Already done.</p>
+                <p><strong>Step 5 (Eliminate above pivots):</strong></p>
+                \[
+                R_1 \gets R_1 - 3R_2: \begin{pmatrix} 1 & 2 & 0 \\ 0 & 0 & 1 \\ 0 & 0 & 0 \end{pmatrix}.
+                \]
+                <p><strong>Result:</strong> RREF is \(\begin{pmatrix} 1 & 2 & 0 \\ 0 & 0 & 1 \\ 0 & 0 & 0 \end{pmatrix}\). Pivots in columns 1 and 3; free variable: \(x_2\). Rank = 2.</p>
+                <p><strong>Interpretation:</strong> The system \(Ax = b\) has solutions iff the augmented matrix reduces consistently (Section 4). When consistent, solutions take the form \(x = p + t v\) where \(p\) is a particular solution and \(v\) spans the null space. Here, setting \(x_2 = t\), we get \(x_3 = b_2'\) (from row 2) and \(x_1 = b_1' - 2t\) (from row 1), yielding a line of solutions in \(\mathbb{R}^3\).</p>
+
+                <h2>Consistency and the Rouché-Capelli theorem</h2>
+                <p>The system \(Ax = b\) is <strong>consistent</strong> (has at least one solution) if and only if \(b\) lies in the column space of \(A\). Computationally, this is equivalent to the <strong>Rouché-Capelli theorem</strong>:</p>
+                \[
+                Ax = b \text{ is consistent} \iff \operatorname{rank}(A) = \operatorname{rank}([A \mid b]).
+                \]
+                <p>If the ranks differ, then \(\operatorname{rank}([A \mid b]) = \operatorname{rank}(A) + 1\), meaning the augmented matrix has a pivot in the last column—a row of the form \([0 \cdots 0 \mid c]\) with \(c \neq 0\) in RREF, which encodes the impossible equation \(0 = c\). This is the definitive inconsistency test.</p>
+                <p>When consistent, the number of free variables equals \(n - \operatorname{rank}(A)\). Thus:</p>
+                \[
+                \begin{cases}
+                \operatorname{rank}(A) = n & \implies \text{unique solution}, \\
+                \operatorname{rank}(A) < n & \implies \text{infinitely many solutions (affine subspace of dim } n - \operatorname{rank}(A)\text{)}.
+                \end{cases}
+                \]
+                <p>For homogeneous systems (\(b = \mathbf{0}\)), consistency is automatic (\(\operatorname{rank}(A) = \operatorname{rank}([A \mid \mathbf{0}])\) always). Nontrivial solutions exist iff \(\operatorname{rank}(A) < n\), i.e., iff the columns of \(A\) are linearly dependent (Chapter 2). This links back to the invertibility equivalences in Chapter 3: \(A\) is invertible iff \(Ax = \mathbf{0}\) has only the trivial solution iff \(\operatorname{rank}(A) = n\).</p>
+                <p><strong>Common mistake:</strong> Students sometimes conclude “no solution” when they see a zero row in REF. Zero rows alone do not imply inconsistency; only a zero row with a nonzero augmented entry does. The system \(\begin{pmatrix} 1 & 1 \\ 0 & 0 \end{pmatrix} x = \begin{pmatrix} 2 \\ 0 \end{pmatrix}\) is consistent (solution: \(x_1 + x_2 = 2\)), while \(\begin{pmatrix} 1 & 1 \\ 0 & 0 \end{pmatrix} x = \begin{pmatrix} 2 \\ 1 \end{pmatrix}\) is not. Always check the augmented column.</p>
+
+                <h3>Worked example: diagnosing consistency and solution structure</h3>
+                <p>Analyze the system:</p>
+                \[
+                \begin{cases}
+                x + y + z = 2 \\
+                2x + 2y + 2z = 4 \\
+                x + y + 2z = 3
+                \end{cases}
+                \quad \Longleftrightarrow \quad
+                \left[\begin{array}{ccc|c} 1 & 1 & 1 & 2 \\ 2 & 2 & 2 & 4 \\ 1 & 1 & 2 & 3 \end{array}\right].
+                \]
+                <p><strong>Step 1 (Eliminate below pivot col 1):</strong></p>
+                \[
+                R_2 \gets R_2 - 2R_1: \left[\begin{array}{ccc|c} 1 & 1 & 1 & 2 \\ 0 & 0 & 0 & 0 \\ 1 & 1 & 2 & 3 \end{array}\right], \quad
+                R_3 \gets R_3 - R_1: \left[\begin{array}{ccc|c} 1 & 1 & 1 & 2 \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 1 & 1 \end{array}\right].
+                \]
+                <p><strong>Step 2 (Swap \(R_2 \leftrightarrow R_3\) to move zero row down):</strong></p>
+                \[
+                \left[\begin{array}{ccc|c} 1 & 1 & 1 & 2 \\ 0 & 0 & 1 & 1 \\ 0 & 0 & 0 & 0 \end{array}\right].
+                \]
+                <p><strong>Step 3 (Eliminate above pivot in col 3):</strong></p>
+                \[
+                R_1 \gets R_1 - R_2: \left[\begin{array}{ccc|c} 1 & 1 & 0 & 1 \\ 0 & 0 & 1 & 1 \\ 0 & 0 & 0 & 0 \end{array}\right].
+                \]
+                <p><strong>Step 4 (Read off solution):</strong> Pivots in cols 1 and 3; free variable: \(y = t\). From row 2: \(z = 1\). From row 1: \(x + t = 1 \Rightarrow x = 1 - t\). Solution set: \(\{(1-t, t, 1) : t \in \mathbb{R}\} = (1,0,1)^\top + t(-1,1,0)^\top\).</p>
+                <p><strong>Step 5 (Consistency check):</strong> \(\operatorname{rank}(A) = 2\), \(\operatorname{rank}([A \mid b]) = 2\). Equal ⇒ consistent. Free variables = \(3 - 2 = 1\) ⇒ line of solutions.</p>
+                <p><strong>Sensitivity check:</strong> Change the third equation to \(x + y + 2z = 4\). Then after Step 1, \(R_3\) becomes \([0\; 0\; 1 \mid 2]\), and RREF yields \(z = 2\), \(x + y = 0\), so solution: \((-t, t, 2)\). Still consistent. But if changed to \(x + y + 2z = 3\) and second equation to \(2x + 2y + 2z = 5\), then \(R_2\) becomes \([0\; 0\; 0 \mid 1]\) after elimination—inconsistent. The boundary between consistency and inconsistency is sharp and detectable solely from the augmented column in RREF.</p>
+
+                <h2>Gaussian and Gauss-Jordan elimination algorithms</h2>
+                <p><strong>Gaussian elimination</strong> reduces \([A \mid b]\) to REF via forward elimination (creating zeros below pivots), then uses back-substitution to find solutions. <strong>Gauss-Jordan elimination</strong> continues to RREF via backward elimination (creating zeros above pivots and scaling pivots to 1), yielding the solution directly without back-substitution. Both algorithms require \(O(mn^2)\) operations for an \(m \times n\) system; Gauss-Jordan requires roughly 50% more operations but provides the canonical form.</p>
+                <p>In practice, partial pivoting (swapping rows to place the largest-magnitude entry in the pivot position) is essential for numerical stability. Without it, small rounding errors can amplify catastrophically when dividing by near-zero pivots. Partial pivoting produces a factorization \(PA = LU\) where \(P\) is a permutation matrix, \(L\) is unit lower triangular, and \(U\) is upper triangular—this is the <strong>LU decomposition</strong> explored in Chapter 12. For exact arithmetic (rational numbers, symbolic computation), pivoting is optional but still useful for maintaining sparsity.</p>
+                <p><strong>Edge case:</strong> When all entries in a pivot column below the current row are zero, the algorithm skips to the next column without incrementing the row index. This produces a free variable and reduces the rank. Algorithms must handle this gracefully; naive implementations that assume a nonzero pivot exists will divide by zero. Robust implementations search for the next nonzero entry in the current row across remaining columns before declaring a free variable.</p>
+
+                <h3>Worked example: Gaussian elimination with partial pivoting</h3>
+                <p>Solve:</p>
+                \[
+                \begin{cases}
+                0.001x + y = 1 \\
+                x + y = 2
+                \end{cases}
+                \quad \Longleftrightarrow \quad
+                \left[\begin{array}{cc|c} 0.001 & 1 & 1 \\ 1 & 1 & 2 \end{array}\right].
+                \]
+                <p><strong>Step 1 (Partial pivoting):</strong> \(|1| > |0.001|\), so swap \(R_1 \leftrightarrow R_2\):</p>
+                \[
+                \left[\begin{array}{cc|c} 1 & 1 & 2 \\ 0.001 & 1 & 1 \end{array}\right].
+                \]
+                <p><strong>Step 2 (Eliminate below pivot):</strong> \(R_2 \gets R_2 - 0.001 R_1\):</p>
+                \[
+                \left[\begin{array}{cc|c} 1 & 1 & 2 \\ 0 & 0.999 & 0.998 \end{array}\right].
+                \]
+                <p><strong>Step 3 (Back-substitute):</strong> \(y = 0.998 / 0.999 \approx 0.999\). \(x = 2 - y \approx 1.001\).</p>
+                <p><strong>Without pivoting (catastrophic cancellation):</strong> Original order: eliminate using \(0.001\) as pivot. \(R_2 \gets R_2 - (1/0.001)R_1 = R_2 - 1000 R_1\):</p>
+                \[
+                \left[\begin{array}{cc|c} 0.001 & 1 & 1 \\ 0 & -999 & -998 \end{array}\right].
+                \]
+                <p>Then \(y = 998/999 \approx 0.999\), \(x = (1 - y)/0.001 \approx 1\). In exact arithmetic both give the same answer, but in floating-point with limited precision, subtracting nearly equal large numbers (\(1000 \times 1 = 1000\) vs. actual value) loses significant digits. Partial pivoting avoids this by ensuring the pivot dominates the elimination multiplier. This is why production solvers (LAPACK, NumPy) always use pivoting—numerical stability is not optional.</p>
+
+                <h2>Solution structure: particular plus homogeneous</h2>
+                <p>When \(Ax = b\) is consistent, the complete solution set has the form:</p>                \[                \{ x_p + x_h : x_h \in \operatorname{null}(A) \},                \]                <p>where \(x_p\) is any <strong>particular solution</strong> (obtained by setting free variables to zero in RREF) and \(\operatorname{null}(A) = \{ x : Ax = \mathbf{0} \}\) is the <strong>null space</strong>. This is an affine subspace parallel to \(\operatorname{null}(A)\), translated by \(x_p\). The dimension of the solution set equals \(\dim(\operatorname{null}(A)) = n - \operatorname{rank}(A)\) (the nullity, Chapter 5).</p>                <p>This decomposition explains why homogeneous systems are foundational: the non-homogeneous solution set is just a shifted copy of the homogeneous one. Computing a basis for \(\operatorname{null}(A)\) from RREF is mechanical: for each free variable, set it to 1 and others to 0, then solve for basic variables. The resulting vectors form a basis for the null space. This procedure is used in rank-nullity proofs (Chapter 5), eigenspace computations (Chapter 7), and SVD (Chapter 13).</p>                <p><strong>Common mistake:</strong> Students sometimes forget to include the particular solution when writing the general solution to a non-homogeneous system, reporting only the null space basis. The general solution must include both components. Conversely, for homogeneous systems, there is no particular solution (or rather, \(x_p = \mathbf{0}\)), so the solution set is exactly the null space. Distinguish these cases explicitly.</p>                <h3>Worked example: constructing general solution from RREF</h3>                <p>Given RREF of \([A \mid b]\):</p>                \[                \left[\begin{array}{cccc|c} 1 & 2 & 0 & -1 & 3 \\ 0 & 0 & 1 & 4 & -2 \\ 0 & 0 & 0 & 0 & 0 \end{array}\right].                \]                <p><strong>Step 1 (Identify variables):</strong> Basic: \(x_1, x_3\). Free: \(x_2 = s, x_4 = t\).</p>                <p><strong>Step 2 (Express basics in terms of frees):</strong></p>                \[                x_3 = -2 - 4t, \quad x_1 = 3 - 2s + t.                \]                <p><strong>Step 3 (Write vector form):</strong></p>                \[                x = \begin{pmatrix} x_1 \\ x_2 \\ x_3 \\ x_4 \end{pmatrix} =                 \begin{pmatrix} 3 \\ 0 \\ -2 \\ 0 \end{pmatrix} +                 s \begin{pmatrix} -2 \\ 1 \\ 0 \\ 0 \end{pmatrix} +                 t \begin{pmatrix} 1 \\ 0 \\ -4 \\ 1 \end{pmatrix}.                \]                <p><strong>Step 4 (Identify components):</strong> Particular solution: \(x_p = (3, 0, -2, 0)^\top\). Null space basis: \(\{(-2,1,0,0)^\top, (1,0,-4,1)^\top\}\). Dimension of solution set = 2 = \(4 - \operatorname{rank}(A)\).</p>                <p><strong>Verification:</strong> Check \(Ax_p = b\) and \(Av_1 = Av_2 = \mathbf{0}\) using original \(A\) (not shown here, but routine). The key insight is that the RREF directly encodes both the particular solution (constants in augmented column) and the null space basis (coefficients of free variables in basic-variable rows). No additional solving is needed once RREF is computed.</p>                <h2>Connections forward and exam strategy</h2>                <p>Gaussian elimination is the computational engine of linear algebra. Rank and nullity (Chapter 5) are defined via pivot counts from REF/RREF. Determinants (Chapter 6) can be computed via elimination (product of pivots, adjusted for row swaps). Eigenvalues (Chapter 7) require solving \(\det(A - \lambda I) = 0\), but eigenspaces are null spaces of \(A - \lambda I\), found via elimination. LU decomposition (Chapter 12) is Gaussian elimination stored as matrices. SVD (Chapter 13) uses orthogonal transformations that generalize elimination to numerically stable rank-revealing factorizations. Every later chapter assumes fluency with the material here.</p>                <p>On exams, expect questions testing: (1) reducing a matrix to RREF with full arithmetic, (2) diagnosing consistency from augmented matrix, (3) writing general solutions in parametric vector form, (4) identifying basic/free variables and rank from REF, (5) explaining why row operations preserve solutions. For each, show every intermediate step—not just final answers. Graders look for correct pivot identification, proper handling of free variables, and explicit consistency checks. Practice the worked examples above until you can reproduce them without reference; then vary coefficients to build robustness against sign errors and arithmetic slips.</p>                <p><strong>Edge case reminder:</strong> Overdetermined systems (\(m > n\)) are typically inconsistent unless \(b\) lies exactly in \(\operatorname{col}(A)\). Underdetermined systems (\(m < n\)) always have either no solution or infinitely many (never unique, since \(\operatorname{rank}(A) \leq m < n\)). Square systems (\(m = n\)) may have unique, infinite, or no solutions depending on rank. These dimensional heuristics guide intuition but never replace computation—always reduce to confirm.</p>            </article>            <div class="chapter-nav">                <a class="chapter-nav-link prev" href="../ch3/index.html">                    <span class="chapter-nav-label">← Previous</span>                    <span class="chapter-nav-title">3. Matrices, Operations, and Special Types</span>                </a>                <a class="chapter-nav-link next" href="../ch5/index.html">                    <span class="chapter-nav-label">Next →</span>                    <span class="chapter-nav-title">5. Rank, Nullity, and Solution Structure</span>                </a>            </div>        </div>    </main>    <footer>        <div class="wrap">            <span>© 2026 iTube. Read forever, free forever.</span>            <span>No video was harmed in the making of this platform.</span>        </div>    </footer>    <script src="../../theme.js"></script>    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>    <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>    <script defer src="../../app.js"></script></body></html>
