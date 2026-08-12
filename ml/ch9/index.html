@@ -1,163 +1,257 @@
-<!-- File: /<slug>/ch9/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>9. Support Vector Machine — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
-<meta name="description" content="SVM derived from margin maximization, primal and dual formulations, kernels, soft margin with slack variables, and a hand-computed linear SVM example identifying support vectors.">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap" rel="stylesheet">
-<link rel="manifest" href="../../manifest.json">
-<link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="../../icons/icon-192.svg">
-<meta name="theme-color" content="#1B1B1F">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="iTube">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script>
-(function(){
-  var saved = localStorage.getItem("itube-theme");
-  var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-  document.documentElement.setAttribute("data-theme", theme);
-})();
-</script>
-<link rel="stylesheet" href="../../style.css">
+  <title>9. Decision Trees — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
+  <meta name="description" content="How do we learn interpretable, nonparametric classifiers by recursively partitioning feature space? We derive Gini impurity and information gain from first principles, work through a complete tree-building example with explicit split evaluations, and explain pruning as regularization.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
 </head>
 <body data-depth="2">
-<header class="top">
-  <div class="wrap">
-    <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
-    <div class="top-actions">
-      <div class="font-controls" role="group" aria-label="Adjust text size">
-        <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
-        <span id="font-size-label">100%</span>
-        <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
-        <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
       </div>
-      <button id="theme-btn" title="Toggle light/dark">◐</button>
     </div>
-  </div>
-</header>
-<main>
-<div class="wrap narrow">
-  <div class="breadcrumb">
-    <a href="../../index.html">iTube</a><span class="sep">/</span>
-    <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
-    <span>Ch. 9</span>
-  </div>
-  <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
-  <h1>9. Support Vector Machine</h1>
-  <div class="chapter-meta">
-    <span>Chapter 9 of 17</span>
-    <span class="read-badge">26 min read</span>
-  </div>
-  <article>
+  </header>
 
-<h2>The maximum-margin principle</h2>
-<p>The <strong>Support Vector Machine</strong> (SVM) approaches binary classification from a geometric perspective fundamentally different from the probabilistic models of Chapters 5, 7, and 8. Rather than modeling distributions or minimizing average loss, SVM seeks the hyperplane that <em>maximizes the margin</em> — the distance to the nearest training point on either side. This principle is motivated by statistical learning theory: among all separating hyperplanes, the one with largest margin has the tightest generalization bound, independent of the ambient dimensionality \(p\).</p>
-<p>For linearly separable data with labels \(y_i \in \{-1, +1\}\), a hyperplane is defined by \(\{\mathbf{x} : \mathbf{w}^\top \mathbf{x} + b = 0\}\). The signed distance from point \(\mathbf{x}_i\) to this hyperplane is \((\mathbf{w}^\top \mathbf{x}_i + b) / \|\mathbf{w}\|\). Correct classification requires \(y_i(\mathbf{w}^\top \mathbf{x}_i + b) > 0\). The <strong>geometric margin</strong> is the minimum such distance across all training points:</p>
-\[
-\gamma = \min_i \frac{y_i(\mathbf{w}^\top \mathbf{x}_i + b)}{\|\mathbf{w}\|}
-\]
-<p>We can rescale \(\mathbf{w}, b\) without changing the hyperplane so that the closest points satisfy \(y_i(\mathbf{w}^\top \mathbf{x}_i + b) = 1\). Under this canonical scaling, the margin becomes \(1/\|\mathbf{w}\|\), and maximizing it is equivalent to minimizing \(\|\mathbf{w}\|^2\). This yields the <strong>hard-margin SVM primal problem</strong>:</p>
-\[
-\min_{\mathbf{w}, b} \frac{1}{2} \|\mathbf{w}\|^2 \quad \text{subject to} \quad y_i(\mathbf{w}^\top \mathbf{x}_i + b) \geq 1, \; i = 1, \dots, n
-\]
-<p>This is a convex quadratic program with linear constraints. Its solution defines the unique maximum-margin separator when data are separable.</p>
-<p><strong>Common mistake:</strong> confusing functional margin \(y_i(\mathbf{w}^\top \mathbf{x}_i + b)\) with geometric margin \(y_i(\mathbf{w}^\top \mathbf{x}_i + b)/\|\mathbf{w}\|\). Functional margin depends on the arbitrary scaling of \(\mathbf{w}\); geometric margin does not. The constraint \(y_i(\mathbf{w}^\top \mathbf{x}_i + b) \geq 1\) fixes the functional margin at 1 for support vectors, which implicitly sets the geometric margin to \(1/\|\mathbf{w}\|\). Always reason about generalization in terms of geometric margin; functional margin alone is meaningless without normalization.</p>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
+        <span>Ch. 9</span>
+      </div>
+      <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
+      <h1>9. Decision Trees</h1>
+      <div class="chapter-meta">
+        <span>Chapter 9 of 14</span>
+        <span class="read-badge">25 min read</span>
+      </div>
 
-<h2>The dual formulation and support vectors</h2>
-<p>Solving the primal directly is possible but obscures the structure that makes SVMs powerful. The <strong>Lagrangian</strong> introduces multipliers \(\alpha_i \geq 0\) for each constraint:</p>
-\[
-\mathcal{L}(\mathbf{w}, b, \boldsymbol\alpha) = \frac{1}{2}\|\mathbf{w}\|^2 - \sum_{i=1}^{n} \alpha_i \big[y_i(\mathbf{w}^\top \mathbf{x}_i + b) - 1\big]
-\]
-<p>Setting derivatives w.r.t. \(\mathbf{w}\) and \(b\) to zero gives stationarity conditions:</p>
-\[
-\mathbf{w} = \sum_{i=1}^{n} \alpha_i y_i \mathbf{x}_i, \qquad \sum_{i=1}^{n} \alpha_i y_i = 0
-\]
-<p>Substituting back eliminates \(\mathbf{w}\) and \(b\), yielding the <strong>dual problem</strong>:</p>
-\[
-\max_{\boldsymbol\alpha} \sum_{i=1}^{n} \alpha_i - \frac{1}{2} \sum_{i=1}^{n} \sum_{j=1}^{n} \alpha_i \alpha_j y_i y_j \mathbf{x}_i^\top \mathbf{x}_j \quad \text{s.t.} \quad \alpha_i \geq 0, \; \sum_i \alpha_i y_i = 0
-\]
-<p>Critically, the data appear only through inner products \(\mathbf{x}_i^\top \mathbf{x}_j\). By complementary slackness, \(\alpha_i > 0\) only for points satisfying \(y_i(\mathbf{w}^\top \mathbf{x}_i + b) = 1\) — these are the <strong>support vectors</strong>, the training points lying exactly on the margin boundary. All other points have \(\alpha_i = 0\) and do not influence the solution. The optimal hyperplane depends only on this typically small subset, giving SVM its name and its computational efficiency at prediction time.</p>
-<p><strong>Edge case:</strong> when data are not linearly separable, the hard-margin primal is infeasible (no \(\mathbf{w}, b\) satisfy all constraints). The dual would be unbounded. Soft-margin SVM (next section) resolves this by allowing violations. Also note that support vectors are not unique when multiple points lie exactly on the margin; the solution \(\mathbf{w}\) is unique, but the set of active \(\alpha_i\) may not be. Degenerate cases (e.g., duplicate points on opposite margins) require careful implementation to avoid numerical instability.</p>
+      <article>
 
-<h3>Worked example: hand-computed hard-margin SVM</h3>
-<p>Consider four points in \(\mathbb{R}^2\): class +1 at \((2,3)\) and \((3,3)\); class −1 at \((1,1)\) and \((2,1)\). These are linearly separable. By inspection, the optimal separating line is horizontal between \(y=1\) and \(y=3\), i.e., \(w_2 y + b = 0\) with \(w_1 = 0\). Let’s derive it formally.</p>
-<p><strong>Step 1: Identify candidate support vectors.</strong> The closest cross-class pairs are \((2,1)\)↔\((2,3)\) and \((1,1)\)↔\((2,3)\) etc. Vertical gap between \(y=1\) and \(y=3\) is 2; margin = 1. Guess support vectors: \((2,3)\) (+1) and \((2,1)\) (−1). Check if others satisfy margin ≥ 1 under resulting hyperplane.</p>
-<p><strong>Step 2: Solve for \(\mathbf{w}, b\) using support vector conditions.</strong> For SVs, \(y_i(\mathbf{w}^\top \mathbf{x}_i + b) = 1\):</p>
-\[
-+(w_1 \cdot 2 + w_2 \cdot 3 + b) = 1, \qquad -(w_1 \cdot 2 + w_2 \cdot 1 + b) = 1
-\]
-<p>Adding: \(2w_2 = 2 \Rightarrow w_2 = 1\). Subtracting second from first: \(2w_2 + 2b = 0 \Rightarrow 2 + 2b = 0 \Rightarrow b = -1\). From symmetry, expect \(w_1 = 0\); verify: plug into first equation: \(0 + 3 - 1 = 2 \neq 1\). Contradiction! Our guess was wrong — \((2,3)\) and \((2,1)\) alone don’t determine the max-margin plane because \((3,3)\) might be closer to some tilted boundary.</p>
-<p><strong>Step 3: Re-examine geometry.</strong> Midpoint between classes vertically is \(y=2\). Horizontal line \(y=2\) gives margin 1 to both \((2,3)\) and \((2,1)\), and also to \((3,3)\) (distance 1) and \((1,1)\) (distance 1). So ALL FOUR points are support vectors! Margin = 1, \(\|\mathbf{w}\| = 1\) (since margin = \(1/\|\mathbf{w}\|\)). Hyperplane: \(0 \cdot x_1 + 1 \cdot x_2 - 2 = 0\), i.e., \(x_2 = 2\). Verify: \(y_i(w^\top x_i + b) = +1(3-2)=1\), \(+1(3-2)=1\), \(-1(1-2)=1\), \(-1(1-2)=1\). All equal 1 ✓. \(\|\mathbf{w}\|^2 = 1\), objective = 0.5.</p>
-<p><strong>Sensitivity check:</strong> move \((3,3)\) to \((3,4)\). Now vertical distances: \((3,4)\) is 2 above \(y=2\), \((2,3)\) is 1 above. New optimum tilts slightly to increase margin toward \((3,4)\) at expense of \((2,3)\)? Actually no — \((2,3)\) and \((2,1)/(1,1)\) still constrain margin to ≤1. Moving \((3,3)\) outward doesn’t change the bottleneck; support vectors remain the three original closest points. But if we moved \((2,3)\) to \((2,4)\), then \((3,3)\) becomes the new bottleneck SV, and the boundary shifts. This illustrates that only the <em>closest</em> points matter — adding distant points never changes the SVM solution, a key robustness property.</p>
+        <h2>Learning by asking questions</h2>
 
-<h2>Soft margin and the regularization parameter C</h2>
-<p>Real data are rarely perfectly separable. <strong>Soft-margin SVM</strong> introduces slack variables \(\xi_i \geq 0\) measuring constraint violation:</p>
-\[
-\min_{\mathbf{w}, b, \boldsymbol\xi} \frac{1}{2}\|\mathbf{w}\|^2 + C \sum_{i=1}^{n} \xi_i \quad \text{s.t.} \quad y_i(\mathbf{w}^\top \mathbf{x}_i + b) \geq 1 - \xi_i, \; \xi_i \geq 0
-\]
-<p>The parameter \(C > 0\) controls the trade-off: large \(C\) penalizes misclassifications heavily (approaching hard margin); small \(C\) prioritizes wide margins even at the cost of more errors. The dual becomes identical to the hard-margin case except for box constraints \(0 \leq \alpha_i \leq C\). Points with \(\alpha_i = C\) are either misclassified (\(\xi_i > 1\)) or on the wrong side of the margin (\(0 < \xi_i \leq 1\)); points with \(0 < \alpha_i < C\) lie exactly on the margin (\(\xi_i = 0\)); points with \(\alpha_i = 0\) are correctly classified beyond the margin.</p>
-<p>This reveals SVM as ERM with <strong>hinge loss</strong> plus \(\ell_2\) regularization (connecting to Chapter 1 and Chapter 4):</p>
-\[
-\min_{\mathbf{w}, b} \frac{1}{2}\|\mathbf{w}\|^2 + C \sum_{i=1}^{n} \max(0, 1 - y_i(\mathbf{w}^\top \mathbf{x}_i + b))
-\]
-<p>Hinge loss is zero when \(y_i f(\mathbf{x}_i) \geq 1\) (correct with sufficient margin), linear otherwise. Unlike logistic loss (Chapter 5), it provides no gradient signal once a point is safely classified, leading to sparse solutions where only support vectors matter.</p>
-<p><strong>Common mistake:</strong> interpreting \(C\) as “number of allowed errors.” It is a continuous penalty weight, not a count. Small \(C\) allows many small violations or few large ones depending on data geometry. Also, \(C\) must be tuned via cross-validation (Chapter 12); there is no universal default. A common heuristic is \(C = 1/n\) or grid search over powers of 10, but optimal values vary widely across datasets.</p>
+        <p>Every classifier we have studied so far represents its decision rule as a mathematical function: a linear combination of features (logistic regression, LDA, SVM), a weighted vote of neighbours (kNN), or a product of conditional probabilities (Naive Bayes). These representations are powerful but opaque — explaining why a particular prediction was made requires tracing through coefficients, distances, or probability tables.</p>
 
-<h2>The kernel trick and nonlinear boundaries</h2>
-<p>The dual depends on data only through inner products \(\mathbf{x}_i^\top \mathbf{x}_j\). The <strong>kernel trick</strong> replaces these with a function \(K(\mathbf{x}_i, \mathbf{x}_j)\) that computes an inner product in some (possibly infinite-dimensional) feature space \(\mathcal{F}\) without explicitly mapping \(\mathbf{x} \mapsto \phi(\mathbf{x})\):</p>
-\[
-K(\mathbf{x}, \mathbf{x}') = \langle \phi(\mathbf{x}), \phi(\mathbf{x}') \rangle_{\mathcal{F}}
-\]
-<p>Common kernels include:</p>
-<ul>
-<li><strong>Polynomial:</strong> \(K(\mathbf{x}, \mathbf{x}') = (\mathbf{x}^\top \mathbf{x}' + c)^d\) — captures interactions up to degree \(d\).</li>
-<li><strong>RBF (Gaussian):</strong> \(K(\mathbf{x}, \mathbf{x}') = \exp(-\gamma \|\mathbf{x} - \mathbf{x}'\|^2)\) — corresponds to infinite-dimensional \(\mathcal{F}\); most widely used.</li>
-<li><strong>Sigmoid:</strong> \(K(\mathbf{x}, \mathbf{x}') = \tanh(\kappa \mathbf{x}^\top \mathbf{x}' + c)\) — neural network-inspired; not always positive definite.</li>
-</ul>
-<p>Mercer’s theorem guarantees that any symmetric positive semidefinite kernel corresponds to some valid inner product space. The SVM dual with kernel \(K\) finds the maximum-margin separator in \(\mathcal{F}\), which corresponds to a potentially highly nonlinear decision boundary in input space — all while solving the same finite-dimensional QP.</p>
-<p><strong>Edge case:</strong> RBF kernel with very large \(\gamma\) makes \(K(\mathbf{x}_i, \mathbf{x}_j) \approx 0\) for \(i \neq j\), causing every training point to become a support vector and the decision function to interpolate training labels (overfitting). Very small \(\gamma\) makes \(K \approx 1\) everywhere, collapsing to a constant predictor (underfitting). Both \(\gamma\) and \(C\) must be jointly tuned; typical practice uses log-grid search with cross-validation. Also note that kernel SVM prediction costs \(O(n_{SV} \cdot p)\) per test point since \(K(\mathbf{x}_{test}, \mathbf{x}_i)\) must be evaluated for every support vector — potentially slow for large \(n_{SV}\). Approximation methods (Nyström, random Fourier features) address this.</p>
+        <p>The question decision trees answer is: <strong>can we build a classifier whose structure directly mirrors human reasoning — a sequence of simple yes/no questions about individual features — while still being learned automatically from data?</strong></p>
 
-<h3>Worked example: polynomial kernel expansion</h3>
-<p>Take the four-point dataset from earlier but add a non-separable point: class +1 at \((2,3), (3,3), (1,2)\); class −1 at \((1,1), (2,1)\). Point \((1,2)\) lies between the original classes, breaking linear separability in \(\mathbb{R}^2\). Use degree-2 polynomial kernel \(K(\mathbf{x}, \mathbf{x}') = (\mathbf{x}^\top \mathbf{x}' + 1)^2\).</p>
-<p>The implicit feature map for \(d=2, p=2\) is \(\phi(x_1,x_2) = (x_1^2, x_2^2, \sqrt{2}x_1 x_2, \sqrt{2}x_1, \sqrt{2}x_2, 1)\) (6D). In this space, the previously non-separable configuration may become separable because quadratic terms capture curvature. Without solving the full dual (tedious by hand), note that \(K((1,2),(1,1)) = (1+2+1)^2 = 16\) while \(K((1,2),(2,1)) = (2+2+1)^2 = 25\) — the kernel distinguishes proximity in ways Euclidean distance cannot. The SVM in \(\mathcal{F}\) finds a linear separator corresponding to a conic section (ellipse, parabola, hyperbola) in \(\mathbb{R}^2\). <strong>Sensitivity check:</strong> with linear kernel \(K = \mathbf{x}^\top \mathbf{x}'\), soft-margin SVM would place \((1,2)\) as a misclassified support vector with \(\alpha_i = C\); with RBF kernel and appropriate \(\gamma\), it could wrap around \((1,2)\) correctly. Kernel choice fundamentally determines the hypothesis class complexity.</p>
+        <p>The answer is yes, and the resulting model is one of the most interpretable in machine learning. A decision tree partitions feature space into axis-aligned rectangular regions by recursively splitting on single features. Each internal node asks a question ("Is age &gt; 30?"), each branch corresponds to an answer, and each leaf assigns a class label. Prediction for a new point means traversing the tree from root to leaf, answering questions along the way.</p>
 
-<h2>Connection to other classifiers and practical considerations</h2>
-<p>SVM occupies a distinct niche among supervised learners. Compared to logistic regression (Chapter 5), SVM optimizes margin rather than likelihood, yielding sparser solutions (only SVs matter) but no probabilistic outputs (Platt scaling approximates posteriors post-hoc). Compared to LDA (Chapter 8), SVM makes no distributional assumptions and handles non-separability gracefully via soft margin, but loses interpretability of coefficients. Compared to kNN (Chapter 6), SVM learns a compact parametric boundary rather than storing all data, enabling faster prediction but losing adaptivity to local density. Compared to neural networks (Chapters 13–14), SVM offers stronger theoretical guarantees and easier hyperparameter tuning for small-to-medium datasets, but scales worse to massive data and lacks representation learning.</p>
-<p>Practical tips: always standardize features before applying SVM (margin is scale-sensitive); use RBF kernel as default unless domain knowledge suggests otherwise; tune \(C\) and \(\gamma\) jointly via cross-validation; prefer libsvm/liblinear implementations over custom solvers; consider linear SVM (liblinear) for high-dimensional sparse data (text) where kernel SVM is unnecessary and slow. For multiclass, use one-vs-one (preferred) or one-vs-rest strategies.</p>
-<p><strong>Common mistake:</strong> applying SVM to massive datasets (\(n > 10^5\)) without considering scalability. Standard SVM training is \(O(n^2)\) to \(O(n^3)\); use linear SVM with SGD, approximate kernels, or switch to neural networks. Also beware that SVM’s margin-based theory assumes i.i.d. data; under distribution shift or adversarial perturbation, max-margin solutions can be brittle despite good test accuracy.</p>
+        <h2>Recursive partitioning: the greedy algorithm</h2>
 
-<h2>Connection to the broader framework</h2>
-<p>SVM synthesizes several core themes from this book. Chapter 1 introduced hinge loss as a surrogate for 0-1 loss; SVM is ERM with hinge loss plus \(\ell_2\) regularization, directly paralleling ridge regression (Chapter 4) but with a different loss. Chapter 3’s projection geometry reappears in the margin derivation and dual formulation. Chapter 5’s logistic regression shares the linear-in-parameters structure but differs in optimization objective and sparsity properties. Chapter 11’s bias-variance trade-off manifests in \(C\): large \(C\) reduces bias (fits tightly) at cost of variance (sensitive to SVs); small \(C\) increases bias (wider margin) but reduces variance. Chapter 12’s cross-validation is essential for tuning \(C\) and kernel parameters. And Chapter 17’s PCA connects via kernel PCA, which applies the kernel trick to unsupervised dimensionality reduction, showing how SVM’s mathematical machinery transcends classification.</p>
-<p>Master SVM not merely as a classifier but as the paradigmatic example of convex optimization in machine learning, duality theory in action, and the power of implicit feature spaces. If you can derive the dual from the primal, identify support vectors geometrically, explain why kernels enable nonlinearity without explicit mapping, and articulate when SVM beats logistic regression (and vice versa), you have internalized the optimization-centric view of learning that complements the probabilistic view of earlier chapters.</p>
+        <p>Building an optimal decision tree (one that minimizes test error or tree size) is NP-hard. Instead, all practical algorithms use a <strong>greedy top-down</strong> strategy: at each node, choose the single best split according to some criterion, partition the data, and recurse on each child. No backtracking occurs.</p>
 
-  </article>
-  <div class="chapter-nav">
-    <a class="chapter-nav-link prev" href="../ch8/index.html">
-      <span class="chapter-nav-label">← Previous</span>
-      <span class="chapter-nav-title">8. Linear Discriminant Analysis</span>
-    </a>
-    <a class="chapter-nav-link next" href="../ch10/index.html">
-      <span class="chapter-nav-label">Next →</span>
-      <span class="chapter-nav-title">10. Decision Trees</span>
-    </a>
-  </div>
-</div>
-</main>
-<footer>
-  <div class="wrap">
-    <span>© 2026 iTube. Read forever, free forever.</span>
-    <span>No video was harmed in the making of this platform.</span>
-  </div>
-</footer>
-<script src="../../theme.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-<script defer src="../../app.js"></script>
+        <p>The algorithm skeleton is:</p>
+        <ol>
+          <li>Start with all training data at the root.</li>
+          <li>If a stopping condition is met (pure node, minimum size, maximum depth), make this node a leaf labeled with the majority class.</li>
+          <li>Otherwise, evaluate every candidate split across all features. Select the split that maximizes a chosen <strong>split quality measure</strong>.</li>
+          <li>Partition the data according to the selected split. Recurse on each child subset.</li>
+        </ol>
+
+        <p>The entire art of decision tree learning lies in step 3: how do we quantify which split is "best"? Two measures dominate the literature: <strong>Gini impurity</strong> (used by CART) and <strong>information gain</strong> (used by ID3/C4.5).</p>
+
+        <h2>Gini impurity</h2>
+
+        <p>Suppose a node contains \(n\) samples, of which \(n_c\) belong to class \(c \in \{1, \ldots, C\}\). The proportion of class \(c\) is \(\hat{p}_c = n_c / n\). The <strong>Gini impurity</strong> of this node is:</p>
+
+        \[G = 1 - \sum_{c=1}^{C} \hat{p}_c^2\]
+
+        <p>What does this measure? Imagine drawing two samples independently from the node's distribution. The probability they have the same class is \(\sum_c \hat{p}_c^2\). Gini impurity is the probability they have <em>different</em> classes. A pure node (all one class) has \(G = 0\); maximum impurity occurs when classes are equally represented.</p>
+
+        <p>For binary classification with proportions \(p\) and \(1-p\):</p>
+
+        \[G = 1 - p^2 - (1-p)^2 = 2p(1-p)\]
+
+        <p>This is a concave parabola peaking at \(p = 0.5\) with value \(0.5\) and reaching zero at \(p = 0\) and \(p = 1\).</p>
+
+        <h2>Information gain (entropy-based)</h2>
+
+        <p>An alternative measure uses Shannon entropy:</p>
+
+        \[H = -\sum_{c=1}^{C} \hat{p}_c \log_2 \hat{p}_c\]
+
+        <p>(With the convention \(0 \log 0 = 0\).) Entropy measures the expected number of bits needed to encode the class label of a randomly drawn sample from the node. Pure nodes have \(H = 0\); uniform distributions have maximum entropy \(\log_2 C\).</p>
+
+        <p>For a candidate split that partitions the node into left and right children with \(n_L\) and \(n_R\) samples respectively, the <strong>information gain</strong> is:</p>
+
+        \[\text{IG} = H_{\text{parent}} - \left(\frac{n_L}{n} H_L + \frac{n_R}{n} H_R\right)\]
+
+        <p>This is the reduction in entropy achieved by the split. Higher IG means the split produces purer children. The analogous quantity for Gini impurity is the <strong>Gini gain</strong>:</p>
+
+        \[\Delta G = G_{\text{parent}} - \left(\frac{n_L}{n} G_L + \frac{n_R}{n} G_R\right)\]
+
+        <p>Both measures prefer splits that create homogeneous children. In practice, Gini and entropy produce very similar trees; Gini is slightly faster to compute (no logarithms) and is the default in most implementations.</p>
+
+        <h3>Worked example</h3>
+
+        <h4>Building a tree on a small dataset</h4>
+
+        <p>Consider \(n = 8\) samples with two binary features (\(A\) and \(B\)) and binary labels:</p>
+
+        <table style="border-collapse:collapse; margin:1em 0;">
+          <tr style="border-bottom:2px solid var(--stone);">
+            <th style="padding:4px 8px; text-align:center;">Sample</th>
+            <th style="padding:4px 8px; text-align:center;">\(A\)</th>
+            <th style="padding:4px 8px; text-align:center;">\(B\)</th>
+            <th style="padding:4px 8px; text-align:center;">Label</th>
+          </tr>
+          <tr><td style="padding:4px 8px; text-align:center;">1</td><td style="text-align:center;">0</td><td style="text-align:center;">0</td><td style="text-align:center;">−</td></tr>
+          <tr><td style="padding:4px 8px; text-align:center;">2</td><td style="text-align:center;">0</td><td style="text-align:center;">0</td><td style="text-align:center;">−</td></tr>
+          <tr><td style="padding:4px 8px; text-align:center;">3</td><td style="text-align:center;">0</td><td style="text-align:center;">1</td><td style="text-align:center;">−</td></tr>
+          <tr><td style="padding:4px 8px; text-align:center;">4</td><td style="text-align:center;">0</td><td style="text-align:center;">1</td><td style="text-align:center;">+</td></tr>
+          <tr><td style="padding:4px 8px; text-align:center;">5</td><td style="text-align:center;">1</td><td style="text-align:center;">0</td><td style="text-align:center;">+</td></tr>
+          <tr><td style="padding:4px 8px; text-align:center;">6</td><td style="text-align:center;">1</td><td style="text-align:center;">0</td><td style="text-align:center;">+</td></tr>
+          <tr><td style="padding:4px 8px; text-align:center;">7</td><td style="text-align:center;">1</td><td style="text-align:center;">1</td><td style="text-align:center;">+</td></tr>
+          <tr><td style="padding:4px 8px; text-align:center;">8</td><td style="text-align:center;">1</td><td style="text-align:center;">1</td><td style="text-align:center;">+</td></tr>
+        </table>
+
+        <p>Class distribution at root: 3 negative, 5 positive. \(\hat{p}_+ = 5/8\), \(\hat{p}_- = 3/8\).</p>
+
+        <p><strong>Step 1: Compute root Gini impurity.</strong></p>
+
+        \[G_{\text{root}} = 1 - \left(\frac{5}{8}\right)^2 - \left(\frac{3}{8}\right)^2 = 1 - \frac{25}{64} - \frac{9}{64} = 1 - \frac{34}{64} = \frac{30}{64} = 0.46875\]
+
+        <p><strong>Step 2: Evaluate split on feature \(A\).</strong></p>
+
+        <p>\(A = 0\): samples {1, 2, 3, 4} → 3 negative, 1 positive. \(\hat{p}_+ = 1/4\).</p>
+        \[G_L = 1 - (1/4)^2 - (3/4)^2 = 1 - 1/16 - 9/16 = 6/16 = 0.375\]
+
+        <p>\(A = 1\): samples {5, 6, 7, 8} → 0 negative, 4 positive. \(\hat{p}_+ = 1\).</p>
+        \[G_R = 1 - 1^2 - 0^2 = 0\]
+
+        <p>Weighted child impurity:</p>
+        \[\frac{4}{8}(0.375) + \frac{4}{8}(0) = 0.1875\]
+
+        <p>Gini gain for \(A\):</p>
+        \[\Delta G_A = 0.46875 - 0.1875 = 0.28125\]
+
+        <p><strong>Step 3: Evaluate split on feature \(B\).</strong></p>
+
+        <p>\(B = 0\): samples {1, 2, 5, 6} → 2 negative, 2 positive. \(\hat{p}_+ = 1/2\).</p>
+        \[G_L = 1 - (1/2)^2 - (1/2)^2 = 1 - 1/4 - 1/4 = 0.5\]
+
+        <p>\(B = 1\): samples {3, 4, 7, 8} → 1 negative, 3 positive. \(\hat{p}_+ = 3/4\).</p>
+        \[G_R = 1 - (3/4)^2 - (1/4)^2 = 1 - 9/16 - 1/16 = 6/16 = 0.375\]
+
+        <p>Weighted child impurity:</p>
+        \[\frac{4}{8}(0.5) + \frac{4}{8}(0.375) = 0.25 + 0.1875 = 0.4375\]
+
+        <p>Gini gain for \(B\):</p>
+        \[\Delta G_B = 0.46875 - 0.4375 = 0.03125\]
+
+        <p><strong>Step 4: Choose the best split.</strong></p>
+
+        <p>\(\Delta G_A = 0.28125 > \Delta G_B = 0.03125\). Feature \(A\) is selected as the root split.</p>
+
+        <p><strong>Step 5: Recurse on children.</strong></p>
+
+        <p>Right child (\(A = 1\)): all 4 samples are positive. Node is pure → leaf labeled "+".</p>
+
+        <p>Left child (\(A = 0\)): 3 negative, 1 positive. Not pure. Evaluate remaining feature \(B\):</p>
+        <ul>
+          <li>\(B = 0\): samples {1, 2} → 2 negative, 0 positive. Pure (−).</li>
+          <li>\(B = 1\): samples {3, 4} → 1 negative, 1 positive. Impure.</li>
+        </ul>
+
+        <p>Gini of left child before split: \(G = 1 - (1/4)^2 - (3/4)^2 = 0.375\).</p>
+
+        <p>Split on \(B\): weighted impurity = \(\frac{2}{4}(0) + \frac{2}{4}(0.5) = 0.25\). Gain = \(0.375 - 0.25 = 0.125 > 0\). Split is beneficial.</p>
+
+        <p>After splitting: \(B=0\) leaf is "−"; \(B=1\) node has 1+, 1−. With no remaining features, this becomes a leaf labeled by majority. Tie → typically resolved by parent majority or random choice. Assuming we break ties toward "+": leaf is "+".</p>
+
+        <p><strong>Final tree:</strong></p>
+        <ul>
+          <li>Root: Is \(A = 1\)?</li>
+          <li>Yes → "+"</li>
+          <li>No → Is \(B = 1\)?</li>
+          <li>Yes → "+" (tie-broken)</li>
+          <li>No → "−"</li>
+        </ul>
+
+        <p>This tree correctly classifies 7 of 8 training samples (sample 4 is misclassified due to the tie). The tree has depth 2 and 3 leaves.</p>
+
+        <h2>Overfitting and pruning</h2>
+
+        <p>Decision trees grown to purity always achieve zero training error (unless identical features have conflicting labels). But deep trees memorize noise and generalize poorly. This is the classic overfitting problem, and decision trees are especially prone to it because each split can isolate individual outliers.</p>
+
+        <p>Two strategies combat overfitting:</p>
+
+        <p><strong>Pre-pruning (early stopping):</strong> Stop growing when a node has fewer than a minimum number of samples, when the impurity reduction falls below a threshold, or when maximum depth is reached. Simple but myopic — a split that looks unhelpful now might enable highly informative splits deeper in the subtree.</p>
+
+        <p><strong>Post-pruning:</strong> Grow the full tree, then prune back using a validation set or cost-complexity criterion. Cost-complexity pruning (used by CART) defines:</p>
+
+        \[R_\alpha(T) = R(T) + \alpha |T|\]
+
+        <p>where \(R(T)\) is the training misclassification rate and \(|T|\) is the number of leaves. The parameter \(\alpha \geq 0\) penalizes complexity. For each \(\alpha\), there is an optimal subtree found by weakest-link pruning. Cross-validation (Chapter 10) selects \(\alpha\). Post-pruning generally outperforms pre-pruning because it considers the global tree structure before simplifying.</p>
+
+        <h2>Common mistake</h2>
+
+        <p><strong>Common mistake:</strong> Students often evaluate split quality using raw impurity of children rather than the <em>weighted</em> average. An unweighted comparison would favor splits that create one tiny pure child and one large impure child over splits that moderately improve both children. The weighting by child size (\(n_L/n\) and \(n_R/n\)) ensures that improvements on larger subsets count more, reflecting their greater impact on overall classification accuracy. Always use the weighted formula: \(\frac{n_L}{n} G_L + \frac{n_R}{n} G_R\), never \(G_L + G_R\) or \(\max(G_L, G_R)\).</p>
+
+        <h2>Edge case</h2>
+
+        <p><strong>What happens when all features are identical across samples?</strong> No split can reduce impurity. Every candidate split produces children with the same class distribution as the parent, yielding zero gain. The algorithm terminates immediately with a single leaf labeled by the majority class. This is correct behavior: if features carry no discriminative information, no tree structure can help.</p>
+
+        <p><strong>What about continuous features?</strong> Binary splits on continuous features take the form "\(x_j \leq t\)" for some threshold \(t\). Candidate thresholds are typically midpoints between consecutive sorted unique values of \(x_j\). Each candidate is evaluated using the same Gini/entropy criterion. This makes tree construction \(O(pn \log n)\) per node (sorting dominates), which is efficient enough for moderate datasets but motivates ensemble methods (random forests, gradient boosting) for large-scale problems.</p>
+
+        <h2>Where we go next</h2>
+
+        <p>Decision trees are powerful but unstable: small changes in training data can produce radically different trees. Chapter 10 introduces the <strong>bias-variance tradeoff</strong> as the unifying framework for understanding this instability, and presents <strong>cross-validation</strong> (LOO and k-fold) as the principled method for estimating generalization error and selecting hyperparameters across all models studied so far. The concepts in Chapter 10 connect every preceding chapter into a coherent evaluation methodology.</p>
+
+      </article>
+
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch8/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">8. Support Vector Machines</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch10/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">10. Bias-Variance Trade-off &amp; Cross-Validation</span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
 </body>
 </html>
