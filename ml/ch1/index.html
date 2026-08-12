@@ -1,223 +1,328 @@
-<!-- File: /<slug>/ch1/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>1. Supervised Learning: Regression and Classification Problems — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
-<meta name="description" content="Labeled data, hypothesis classes, expected and empirical risk, loss functions for regression and classification, the Bayes-optimal predictor, and decision boundaries.">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap" rel="stylesheet">
-<link rel="manifest" href="../../manifest.json">
-<link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="../../icons/icon-192.svg">
-<meta name="theme-color" content="#1B1B1F">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="iTube">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script>
-(function(){
-  var saved = localStorage.getItem("itube-theme");
-  var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-  document.documentElement.setAttribute("data-theme", theme);
-})();
-</script>
-<link rel="stylesheet" href="../../style.css">
+  <title>1. The Learning Problem &amp; Simple Linear Regression — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
+  <meta name="description" content="What does it mean to learn from data? We pose the prediction problem, distinguish regression from classification, and derive simple linear regression from first principles using least squares.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
 </head>
 <body data-depth="2">
-<header class="top">
-  <div class="wrap">
-    <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
-    <div class="top-actions">
-      <div class="font-controls" role="group" aria-label="Adjust text size">
-        <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
-        <span id="font-size-label">100%</span>
-        <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
-        <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
       </div>
-      <button id="theme-btn" title="Toggle light/dark">◐</button>
     </div>
-  </div>
-</header>
-<main>
-<div class="wrap narrow">
-  <div class="breadcrumb">
-    <a href="../../index.html">iTube</a><span class="sep">/</span>
-    <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
-    <span>Ch. 1</span>
-  </div>
-  <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
-  <h1>1. Supervised Learning: Regression and Classification Problems</h1>
-  <div class="chapter-meta">
-    <span>Chapter 1 of 17</span>
-    <span class="read-badge">19 min read</span>
-  </div>
-  <article>
+  </header>
 
-<h2>What supervised learning means</h2>
-<p><strong>Supervised learning</strong> is the problem of learning a function from inputs to outputs using labeled examples. We observe a <strong>training set</strong> of \(n\) input–output pairs,</p>
-\[
-S = \big\{(x_1, y_1),\ (x_2, y_2),\ \dots,\ (x_n, y_n)\big\},
-\]
-<p>where each input \(x_i\) (also called a <strong>feature vector</strong> or covariate) is typically a point in \(\mathbb{R}^d\) — a list of \(d\) measured quantities — and each output \(y_i\) is the <strong>label</strong> (target, response) we want the learner to predict. A patient's age, blood pressure, and cholesterol readings might form \(x_i\); whether they develop heart disease within five years is \(y_i\). The word "supervised" refers to the presence of these labels: they act as a teacher's answer key, supplying the correct output for every training input.</p>
-<p>The learner searches a family of candidate functions, called the <strong>hypothesis class</strong> \(\mathcal{H}\), and returns one <strong>hypothesis</strong> \(f : \mathcal{X} \to \mathcal{Y}\) chosen from it. The algorithms in this book differ almost entirely in three ingredients: the hypothesis class \(\mathcal{H}\) (linear functions in Chapters 2–5, trees in Chapter 10, neural networks in Chapters 13–14), a <strong>loss function</strong> \(L\) that scores how wrong a prediction is, and an optimization procedure that searches \(\mathcal{H}\) for the hypothesis with the smallest loss.</p>
-<p>The goal is not to reproduce the training labels. It is <strong>generalization</strong>: small loss on new inputs drawn from the same process that produced the training data. We formalize that process as an unknown joint distribution \(P(X, Y)\) from which the training pairs are drawn independently and identically — the <strong>i.i.d. assumption</strong>. Every guarantee and every pathology discussed in this book flows from the tension between fitting the observed sample and approximating the unobserved distribution.</p>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
+        <span>Ch. 1</span>
+      </div>
+      <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
+      <h1>1. The Learning Problem &amp; Simple Linear Regression</h1>
+      <div class="chapter-meta">
+        <span>Chapter 1 of 14</span>
+        <span class="read-badge">35 min read</span>
+      </div>
 
-<h2>Regression and classification: two output spaces</h2>
-<p>The cleanest way to split supervised problems is by the nature of the label space \(\mathcal{Y}\).</p>
-<ul>
-<li><p><strong>Regression</strong>: \(\mathcal{Y}\) is continuous, usually \(\mathbb{R}\) or \(\mathbb{R}^m\). The prediction is a quantity — a price, a temperature, a probability estimate. Errors have magnitude and direction: predicting \(102\) when the truth is \(100\) is twice as bad as predicting \(101\). Chapters 2–5 are devoted to regression models.</p></li>
-<li><p><strong>Classification</strong>: \(\mathcal{Y}\) is a finite set of discrete <strong>classes</strong>. When \(|\mathcal{Y}| = 2\) the task is <strong>binary classification</strong>, and we will almost always encode the two labels as \(\{-1, +1\}\), because products like \(y\,f(x)\) then carry a clean geometric meaning (positive means correct sign). When \(|\mathcal{Y}| = K \geq 3\) it is <strong>multiclass classification</strong> with \(\mathcal{Y} = \{1, \dots, K\}\). Chapters 5–10 cover classifiers.</p></li>
-</ul>
-<p>This distinction lives in the <em>output space and the loss function</em>, not in the algorithm's internals. Many learners come in both flavors: a linear model always computes a real number; whether we call the result a regressor or a classifier depends on what we do with that number and how we penalize mistakes. Chapters 2 and 5 make this precise — ordinary least squares and logistic regression share the same weighted sum of features, but use different label spaces and different losses.</p>
-<p><strong>Common mistake:</strong> students often file algorithms into "regression algorithms" and "classification algorithms", then are surprised when logistic regression (a classification method) is built on a regression-like score, or when a regression output is thresholded into a classifier. The task is defined by \(\mathcal{Y}\) and \(L\); the algorithm is merely the mechanism. Ask "what kind of label am I predicting, and what does an error cost?" before asking "which algorithm do I use?"</p>
-<h3>Worked example</h3>
-<p>A spam filter outputs a real-valued score \(s \in [0, 1]\) for each message; the true label of a certain message is \(y = 1\) (spam). Suppose the filter outputs \(s = 0.72\). Framed as <em>regression</em>, the squared error is \((0.72 - 1)^2 = (-0.28)^2 = 0.0784\). Framed as <em>classification</em> with threshold \(0.5\), the prediction is \(\hat y = 1\), which is correct, so the 0–1 loss is \(0\). Now suppose the filter instead outputs \(s = 0.43\) for a truly spam message. The regression view reports squared error \((0.43 - 1)^2 = (-0.57)^2 = 0.3249\) — worse than before, but still partial credit. The classification view predicts \(\hat y = 0\), which is simply wrong: the 0–1 loss is \(1\), with no partial credit at all. Same model, same numbers — but the two task framings produce two different notions of "how wrong", and therefore two different optimization targets.</p>
+      <article>
 
-<h2>Risk, empirical risk, and empirical risk minimization</h2>
-<p>We assume the data is drawn i.i.d. from an unknown joint distribution \(P(X, Y)\). The quantity we truly care about is the <strong>expected risk</strong> — the average loss a hypothesis incurs over the entire population of possible inputs, not just the sample we happened to observe:</p>
-\[
-R(f) = \mathbb{E}_{(X, Y) \sim P}\big[\, L(f(X), Y) \,\big]
-\]
-<p>Here \(L\) is the loss function (next section) and the expectation is over the true, unknown distribution. If we could evaluate \(R(f)\) for every candidate \(f \in \mathcal{H}\), learning would be trivial: pick the minimizer. The entire difficulty of the subject is that \(P\) is unknown, so \(R(f)\) cannot be computed.</p>
-<p>The standard workaround is to replace the population expectation by a sample average. Formally, replace \(P\) by the <em>empirical distribution</em> that places probability \(1/n\) on each observed pair; the expectation of \(L\) under that discrete distribution is exactly the <strong>empirical risk</strong>:</p>
-\[
-\hat R(f) = \frac{1}{n} \sum_{i=1}^{n} L\big(f(x_i), y_i\big)
-\]
-<p>This substitution is justified by the law of large numbers: for any fixed \(f\), \(\hat R(f) \to R(f)\) as \(n \to \infty\). Choosing the hypothesis that minimizes \(\hat R(f)\) is called <strong>empirical risk minimization</strong> (ERM), and it is the template that every concrete algorithm in this book instantiates — ordinary least squares (Chapter 2), logistic regression (Chapter 5), support vector machines (Chapter 9), and neural network training (Chapter 14) are all ERM with a particular \(\mathcal{H}\) and \(L\).</p>
-<p><strong>Common mistake:</strong> treating "small training error" and "small true risk" as interchangeable. They are not. A hypothesis class rich enough can drive \(\hat R(f)\) all the way to zero while \(R(f)\) remains large — the model memorizes the sample instead of learning the generating process. This gap is <em>overfitting</em>, and managing it is the subject of Chapters 4, 11, and 12 (regularization, the bias–variance trade-off, and cross-validation respectively).</p>
-<h3>Worked example</h3>
-<p>Take five emails, each described by a single feature \(x\) = number of exclamation marks, labeled \(y = 1\) for spam and \(y = 0\) otherwise:</p>
-\[
-(x_i, y_i) \in \{(1, 0),\ (2, 0),\ (4, 1),\ (5, 1),\ (6, 0)\}
-\]
-<p>Consider the threshold classifier \(f(x) = 1\) if \(x \gt 3\), else \(0\). Evaluating each term of the 0–1 empirical risk \(\hat R(f) = \frac{1}{5}\sum_i \mathbb{1}[f(x_i) \neq y_i]\):</p>
-\[
-f(1) = 0 = y_1 \Rightarrow 0,\quad f(2) = 0 = y_2 \Rightarrow 0,\quad f(4) = 1 = y_3 \Rightarrow 0
-\]
-\[
-f(5) = 1 = y_4 \Rightarrow 0,\quad f(6) = 1 \neq y_5 = 0 \Rightarrow 1
-\]
-<p>The sum of indicators is \(0 + 0 + 0 + 0 + 1 = 1\), so \(\hat R(f) = 1/5 = 0.2\). Now compare \(g(x) = 1\) if \(x \gt 5.5\), else \(0\): \(g\) predicts \((0, 0, 0, 0, 1)\), which errs at \(x = 4\), at \(x = 5\), and at \(x = 6\), giving \(\hat R(g) = 3/5 = 0.6\). ERM prefers \(f\). Notice what ERM did <em>not</em> tell us: whether either rule will classify tomorrow's email well. That depends on \(R(f)\), which neither we nor the algorithm can compute — only estimate, which is exactly what Chapter 12 shows.</p>
+        <h2>What does it mean to learn from data?</h2>
 
-<h2>Loss functions for regression and classification</h2>
-<p>The loss function \(L(\hat y, y)\) encodes what an error costs, and the choice of loss shapes everything downstream: whether the risk is convex, whether it is differentiable, and what the risk-minimizing prediction even is.</p>
-<h3>Regression losses</h3>
-<p>The two canonical choices are <strong>squared error</strong> and <strong>absolute error</strong>:</p>
-\[
-L_{\text{sq}}(\hat y, y) = (\hat y - y)^2 , \qquad L_{\text{abs}}(\hat y, y) = \lvert \hat y - y \rvert
-\]
-<p>Squared error penalizes large errors disproportionately (an error of \(4\) costs \(16\) times as much as an error of \(1\), not \(4\) times), is differentiable everywhere, and leads to closed-form solutions for linear models — which is why Chapters 2–4 build on it. Absolute error is more robust to outliers but non-differentiable at zero error, complicating optimization. <strong>Edge case:</strong> under squared loss a single extreme outlier can dominate the sum and drag the fitted function toward it; when robustness matters more than optimality under light-tailed noise, absolute or Huber losses are preferred. We derive in the next section exactly why squared loss targets the conditional mean rather than any other statistic.</p>
-<h3>Classification losses</h3>
-<p>The natural classification loss is the <strong>0–1 loss</strong>, which simply counts mistakes:</p>
-\[
-L_{0/1}(\hat y, y) = \mathbb{1}[\hat y \neq y]
-\]
-<p>It is exactly what accuracy measures, since \(\text{accuracy} = 1 - \hat R_{0/1}\). Unfortunately \(L_{0/1}\) is discontinuous and non-convex as a function of a real-valued score, so directly minimizing its risk over most hypothesis classes is computationally intractable. Every major classifier in this book therefore minimizes a convex <em>surrogate</em> loss on a score \(s = f(x) \in \mathbb{R}\), writing the labels as \(y \in \{-1, +1\}\):</p>
-\[
-\text{logistic: } \log\big(1 + e^{-y s}\big) \qquad \text{hinge: } \max\big(0,\ 1 - y s\big)
-\]
-<p>Logistic regression (Chapter 5) minimizes the logistic loss and support vector machines (Chapter 9) the hinge loss; boosting methods use an exponential loss. Each surrogate upper-bounds the 0–1 loss in the sense that zero surrogate loss implies a correct classification, so minimizing the surrogate pushes toward correct classifications while remaining optimizable. <strong>Edge case:</strong> the hinge loss reaches \(0\) as soon as \(y s \geq 1\) — once a point is classified correctly with sufficient margin, further improvements contribute nothing to the risk. This is the mathematical origin of the SVM's sparse set of <em>support vectors</em> in Chapter 9.</p>
-<h3>Worked example</h3>
-<p>Let \(y = +1\) and suppose a scoring model outputs \(s = -0.4\), so the sign rule misclassifies the point. The three losses disagree dramatically:</p>
-\[
-L_{0/1} = \mathbb{1}[\operatorname{sign}(-0.4) \neq +1] = \mathbb{1}[-1 \neq +1] = 1
-\]
-\[
-L_{\text{sq}} = (s - y)^2 = (-0.4 - 1)^2 = (-1.4)^2 = 1.96
-\]
-\[
-L_{\text{log}} = \log\big(1 + e^{-y s}\big) = \log\big(1 + e^{0.4}\big) = \log(1 + 1.4918) = \log(2.4918) \approx 0.913
-\]
-<p>The 0–1 loss reports only "wrong". The other two report <em>how confidently</em> wrong: if the score had been \(s = -2\) instead, the 0–1 loss would remain exactly \(1\), but the logistic loss would grow to \(\log(1 + e^{2}) = \log(8.389) \approx 2.127\). This is precisely why gradient-based optimization can work with surrogates but not with the 0–1 loss: the 0–1 risk is flat almost everywhere and provides no signal about how to adjust the score, while surrogates penalize confidently-wrong predictions heavily and nearly-correct ones lightly, supplying a useful gradient at every point.</p>
+        <p>Imagine you are a doctor. You have records of 200 patients: their age, blood pressure, cholesterol, and whether they developed heart disease within five years. A new patient walks in with age 54, blood pressure 140, cholesterol 220. You need to answer: <em>will this patient develop heart disease?</em></p>
 
-<h2>The Bayes-optimal predictor</h2>
-<p>What is the best predictor possible, even with unlimited knowledge of \(P(X, Y)\)? The answer is the <strong>Bayes-optimal predictor</strong>, and its form is worth deriving once because every supervised algorithm in this book can be read as an attempt to estimate it from finite data.</p>
-<h3>Regression: the conditional mean</h3>
-<p>Under squared loss, fix an input \(x\) and minimize the conditional expected loss over the prediction \(c\). Expanding the square inside the expectation:</p>
-\[
-g(c) = \mathbb{E}\big[(c - Y)^2 \mid X = x\big] = c^2 - 2c\,\mathbb{E}[Y \mid X = x] + \mathbb{E}[Y^2 \mid X = x]
-\]
-<p>Differentiating, \(g'(c) = 2c - 2\,\mathbb{E}[Y \mid X = x]\), which vanishes at \(c = \mathbb{E}[Y \mid X = x]\); the second derivative is \(2 \gt 0\), confirming a minimum. Therefore:</p>
-\[
-f^*(x) = \mathbb{E}[Y \mid X = x]
-\]
-<p>Linear regression (Chapter 2) is the special case where this conditional mean is assumed to be a linear function of \(x\); everything else in that chapter follows from estimating this object by least squares.</p>
-<h3>Classification: the most probable label</h3>
-<p>Under 0–1 loss, again fix \(x\) and suppose we predict class \(c\). The conditional expected loss is</p>
-\[
-\mathbb{E}\big[L_{0/1}(c, Y) \mid X = x\big] = \sum_{y} \mathbb{1}[c \neq y]\, P(Y = y \mid X = x) = 1 - P(Y = c \mid X = x)
-\]
-<p>Minimizing over \(c\) means maximizing the posterior class probability, giving the <strong>Bayes classifier</strong>:</p>
-\[
-f^*(x) = \arg\max_{y}\; P(Y = y \mid X = x)
-\]
-<p>Its risk, the <strong>Bayes error rate</strong> \(R^* = \mathbb{E}_X\big[1 - \max_y P(Y = y \mid X)\big]\), is the lowest error any classifier can achieve. It is generally nonzero: if two classes genuinely overlap at some \(x\), no rule can always be right there. This <em>irreducible error</em> is why chasing zero test error is usually a mistake, and why Chapter 11 decomposes the excess error \(R(f) - R^*\) into bias and variance rather than demanding \(R(f) = 0\).</p>
-<p><strong>Common mistake:</strong> treating the Bayes classifier as an algorithm one can run. It is not — it requires knowing \(P(Y \mid X)\), which is exactly the unknown object of the problem. It is an ideal benchmark: every classifier estimates it in some way (k-nearest neighbours by local voting in Chapter 6, naive Bayes by a factored likelihood in Chapter 7, LDA by Gaussian class densities in Chapter 8).</p>
-<p><strong>Edge case:</strong> consider the two extremes of label uncertainty. Where two classes tie, \(P(Y = 1 \mid X = x) = P(Y = 0 \mid X = x) = 0.5\), every tie-breaking choice errs half the time and the local contribution to the Bayes error is \(0.5\) — maximum uncertainty. At the opposite extreme, when labels are a deterministic function of \(x\) (one posterior probability equals \(1\)), the Bayes error is \(0\) and a sufficiently flexible learner can in principle achieve perfect accuracy. Also beware the imbalanced extreme: if \(95\%\) of the population is class \(0\), the trivial constant classifier \(\hat y = 0\) has error only \(0.05\), so "95% accuracy" can indicate a useless model. Accuracy on imbalanced data must always be read against the majority-class baseline.</p>
-<h3>Worked example</h3>
-<p>Suppose the joint distribution of weather \(X \in \{\text{sunny}, \text{rain}\}\) and delivery outcome \(Y \in \{0 = \text{on time},\ 1 = \text{late}\}\) is:</p>
-\[
-\begin{array}{c|cc}
- & Y = 0 & Y = 1 \\ \hline
-X = \text{sunny} & 0.3 & 0.2 \\
-X = \text{rain} & 0.1 & 0.4
-\end{array}
-\]
-<p>Marginals: \(P(X = \text{sunny}) = 0.3 + 0.2 = 0.5\) and \(P(X = \text{rain}) = 0.1 + 0.4 = 0.5\). Conditionals at sunny:</p>
-\[
-P(Y = 1 \mid \text{sunny}) = \frac{0.2}{0.5} = 0.4, \qquad P(Y = 0 \mid \text{sunny}) = \frac{0.3}{0.5} = 0.6
-\]
-<p>so the Bayes rule predicts \(0\) (on time) on sunny days, contributing error \(P(\text{sunny}) \cdot (1 - 0.6) = 0.5 \times 0.4 = 0.2\). At rain:</p>
-\[
-P(Y = 1 \mid \text{rain}) = \frac{0.4}{0.5} = 0.8, \qquad P(Y = 0 \mid \text{rain}) = \frac{0.1}{0.5} = 0.2
-\]
-<p>so the Bayes rule predicts \(1\) (late) when it rains, contributing \(0.5 \times (1 - 0.8) = 0.1\). The Bayes classifier is therefore "predict late if and only if rain", and the Bayes error rate is \(0.2 + 0.1 = 0.3\). No classifier — no matter how clever, no matter how much data — can push the error below \(30\%\) under this distribution; a model measured at \(35\%\) is already close to optimal, and further tuning buys almost nothing.</p>
+        <p>You have never seen this exact combination of numbers before. You cannot look it up. All you have are those 200 past records. The question machine learning asks is: <strong>can we write a rule — a function — that takes the new patient's numbers and outputs a useful prediction, learned entirely from the 200 examples?</strong></p>
 
-<h2>Decision boundaries and the geometry of classifiers</h2>
-<p>Many classifiers work by computing a real-valued <strong>score function</strong> \(s(x)\) and thresholding: \(\hat y = \operatorname{sign}(s(x))\). The set \(\{x : s(x) = 0\}\) is the <strong>decision boundary</strong>, the surface that partitions the input space into predicted-class regions. A <em>linear</em> score \(s(x) = w^\top x + b\) produces a hyperplane boundary; Chapter 3 studies these in dimension \(d \gt 1\), Chapter 9 (SVMs) chooses among many separating hyperplanes the one with maximum margin, and Chapter 10 (decision trees) builds piecewise axis-aligned boundaries instead.</p>
-<h3>Worked example</h3>
-<p>Let \(s(x) = 2x_1 - x_2 - 3\), i.e. \(w = (2, -1)\) and \(b = -3\), and classify by the sign of the score. For \(x^{(1)} = (1, 1)\):</p>
-\[
-s(x^{(1)}) = 2(1) - 1(1) - 3 = 2 - 1 - 3 = -2 \lt 0 \;\Rightarrow\; \hat y = -1
-\]
-<p>For \(x^{(2)} = (3, 2)\):</p>
-\[
-s(x^{(2)}) = 2(3) - 1(2) - 3 = 6 - 2 - 3 = +1 \gt 0 \;\Rightarrow\; \hat y = +1
-\]
-<p>The boundary is the line \(2x_1 - x_2 - 3 = 0\), or \(x_2 = 2x_1 - 3\): points above it (large \(x_2\)) get negative scores, points below it positive scores. <em>Sensitivity check:</em> changing only the intercept to \(b = 0\) gives \(s(x^{(1)}) = 2 - 1 = 1 \gt 0\), flipping \(x^{(1)}\)'s predicted class — the intercept translates the boundary parallel to itself, and points near the boundary are exactly the ones whose classification is fragile. This observation, that only points near the boundary matter, is the seed of the maximum-margin idea in Chapter 9.</p>
+        <p>Formally, we call the inputs <strong>features</strong> and collect them into a vector \(x\). The output we want to predict is the <strong>target</strong> \(y\). We observe \(n\) training pairs:</p>
 
-<h2>How this book fits together</h2>
-<p>Every remaining chapter instantiates the four objects defined here — \(\mathcal{H}\), \(L\), the optimization of \(\hat R\), and the implicit estimate of \(f^*\).</p>
-<ul>
-<li><p><strong>Chapters 2–5 (linear supervised models).</strong> Simple and multiple linear regression minimize squared risk over linear functions; ridge regression adds a penalty on coefficient size to control overfitting; logistic regression swaps squared loss for logistic loss and targets \(P(Y = 1 \mid X)\) directly.</p></li>
-<li><p><strong>Chapters 6–10 (beyond linearity).</strong> k-nearest neighbours estimates \(\mathbb{E}[Y \mid X = x]\) by local voting; naive Bayes and linear discriminant analysis model the class-conditional distributions \(P(X \mid Y)\) and invert them with Bayes' rule; support vector machines maximize the geometric margin; decision trees recursively partition the input space.</p></li>
-<li><p><strong>Chapters 11–12 (evaluation).</strong> The bias–variance trade-off decomposes \(R(f) - R^*\); cross-validation (LOO and k-fold) estimates \(R(f)\) from data alone — exactly the missing piece flagged in this chapter.</p></li>
-<li><p><strong>Chapters 13–14 (neural networks)</strong> enlarge \(\mathcal{H}\) to composed nonlinear maps trained by gradient descent; <strong>Chapters 15–17 (unsupervised)</strong> drop the labels entirely — there is no \(y\), no risk of the form above, and "correct answer" is replaced by structure: clusters or directions of variance.</p></li>
-</ul>
-<p>Keep the template — hypothesis class, loss, empirical risk, Bayes target — in mind as you read: it turns thirteen seemingly different algorithms into thirteen settings of the same four dials.</p>
+        \[\{(x_1, y_1),\; (x_2, y_2),\; \ldots,\; (x_n, y_n)\}\]
 
-  </article>
-  <div class="chapter-nav">
-    <div class="chapter-nav-empty"></div>
-    <a class="chapter-nav-link next" href="../ch2/index.html">
-      <span class="chapter-nav-label">Next →</span>
-      <span class="chapter-nav-title">2. Simple Linear Regression</span>
-    </a>
-  </div>
-</div>
-</main>
-<footer>
-  <div class="wrap">
-    <span>© 2026 iTube. Read forever, free forever.</span>
-    <span>No video was harmed in the making of this platform.</span>
-  </div>
-</footer>
-<script src="../../theme.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-<script defer src="../../app.js"></script>
+        <p>Our goal is to find a function \(f\) such that \(f(x)\) is a good prediction of \(y\) for new, unseen inputs. The function \(f\) is learned from the training data — that is the "learning" in machine learning.</p>
+
+        <p>But what does "good prediction" mean? And what kind of function should \(f\) be? These two questions define the entire landscape of supervised learning, and they lead directly to the split between <strong>regression</strong> and <strong>classification</strong>.</p>
+
+        <h2>Regression vs. Classification</h2>
+
+        <p>Look at the target \(y\). What kind of quantity is it?</p>
+
+        <p>If \(y\) is a <strong>continuous number</strong> — a house price, a temperature, a patient's blood sugar level — then we are doing <strong>regression</strong>. The function \(f(x)\) must output a real number, and we measure how wrong it is by asking "how far off was the number?"</p>
+
+        <p>If \(y\) is a <strong>discrete label</strong> — "spam" or "not spam," "cat" or "dog," "disease" or "no disease" — then we are doing <strong>classification</strong>. The function \(f(x)\) must output a label (or a probability over labels), and we measure how wrong it is by asking "did it pick the right category?"</p>
+
+        <p>This distinction is not cosmetic. It changes which loss functions make sense, which algorithms are natural, and which mathematical tools we reach for. Regression leans on calculus and linear algebra over real-valued outputs. Classification leans on probability, thresholds, and decision boundaries.</p>
+
+        <p>In this chapter we begin with regression — specifically, the simplest possible regression problem: predicting \(y\) from a single input \(x\) using a straight line. This is <strong>simple linear regression</strong>, and it is the foundation on which nearly every supervised method in this book is built.</p>
+
+        <h2>Simple Linear Regression: the question</h2>
+
+        <p>Suppose you have \(n\) data points, each with one input \(x_i\) and one output \(y_i\). You suspect the relationship is roughly linear: bigger \(x\) tends to mean bigger \(y\), or smaller \(y\), in a straight-line fashion. You want to find the "best" straight line through the scatter of points.</p>
+
+        <p>A straight line is described by two numbers — an intercept \(\beta_0\) and a slope \(\beta_1\):</p>
+
+        \[\hat{y} = \beta_0 + \beta_1 x\]
+
+        <p>The hat on \(\hat{y}\) reminds us this is a <em>prediction</em>, not the true observed \(y\). For each data point \(x_i\), our line predicts \(\hat{y}_i = \beta_0 + \beta_1 x_i\). The true value is \(y_i\). The difference is the <strong>residual</strong>:</p>
+
+        \[e_i = y_i - \hat{y}_i = y_i - (\beta_0 + \beta_1 x_i)\]
+
+        <p>Now the question becomes precise: <strong>which values of \(\beta_0\) and \(\beta_1\) make the residuals "as small as possible" overall?</strong></p>
+
+        <p>But "as small as possible" still needs a definition. We have \(n\) residuals. How do we combine them into a single number to minimize?</p>
+
+        <h2>Why squared error? A Socratic detour</h2>
+
+        <p>A first instinct might be: just add up all the residuals and make that sum small. Let's see why that fails. Consider three points where the residuals are \(+3\), \(-3\), and \(+1\). Their sum is \(+1\). But another line gives residuals \(+1\), \(+1\), \(-1\), whose sum is also \(+1\). Are these lines equally good? Clearly not — the first line has two errors of magnitude 3, while the second has errors of magnitude 1. The sum of raw residuals hides the size of individual errors because positives and negatives cancel.</p>
+
+        <p>What if we take absolute values? Minimize \(\sum |e_i|\)? This is actually a legitimate approach (it leads to <em>least absolute deviations</em> regression), but it has a practical drawback: the absolute value function has a sharp corner at zero, which makes calculus harder. Derivatives don't exist at the corner, so we can't just set a derivative to zero and solve cleanly.</p>
+
+        <p>What if we square each residual before summing? The squared loss \((y_i - \hat{y}_i)^2\) has three beautiful properties:</p>
+        <ul>
+          <li>It is always non-negative, so positives and negatives don't cancel.</li>
+          <li>It penalizes large errors more than small ones (an error of 3 costs 9, not 3), which encourages the line not to leave any point badly behind.</li>
+          <li>It is a smooth, differentiable function of \(\beta_0\) and \(\beta_1\), so we can use calculus to find the minimum exactly.</li>
+        </ul>
+
+        <p>So we define the <strong>Residual Sum of Squares (RSS)</strong> as our objective:</p>
+
+        \[\text{RSS}(\beta_0, \beta_1) = \sum_{i=1}^{n} (y_i - \beta_0 - \beta_1 x_i)^2\]
+
+        <p>Our goal: find \(\beta_0\) and \(\beta_1\) that <strong>minimize</strong> RSS. This is the <strong>Ordinary Least Squares (OLS)</strong> criterion.</p>
+
+        <h2>Deriving the OLS estimators</h2>
+
+        <p>We minimize RSS by taking partial derivatives with respect to \(\beta_0\) and \(\beta_1\), setting both to zero, and solving the resulting system. RSS is a quadratic function of \((\beta_0, \beta_1)\) — a bowl-shaped surface — so the critical point we find will be the global minimum.</p>
+
+        <h3>Step 1: Partial derivative with respect to \(\beta_0\)</h3>
+
+        <p>We differentiate RSS treating \(\beta_1\) as a constant. Each term in the sum is \((y_i - \beta_0 - \beta_1 x_i)^2\). By the chain rule, the derivative of \((u)^2\) with respect to \(\beta_0\), where \(u = y_i - \beta_0 - \beta_1 x_i\), is \(2u \cdot \frac{\partial u}{\partial \beta_0} = 2(y_i - \beta_0 - \beta_1 x_i)(-1)\). So:</p>
+
+        \[\frac{\partial \text{RSS}}{\partial \beta_0} = \sum_{i=1}^{n} 2(y_i - \beta_0 - \beta_1 x_i)(-1) = -2\sum_{i=1}^{n}(y_i - \beta_0 - \beta_1 x_i)\]
+
+        <p>Setting this equal to zero and dividing both sides by \(-2\):</p>
+
+        \[\sum_{i=1}^{n}(y_i - \beta_0 - \beta_1 x_i) = 0\]
+
+        <p>Distributing the sum:</p>
+
+        \[\sum_{i=1}^{n} y_i - n\beta_0 - \beta_1 \sum_{i=1}^{n} x_i = 0\]
+
+        <p>Solving for \(\beta_0\):</p>
+
+        \[n\beta_0 = \sum_{i=1}^{n} y_i - \beta_1 \sum_{i=1}^{n} x_i\]
+
+        \[\beta_0 = \frac{1}{n}\sum_{i=1}^{n} y_i - \beta_1 \cdot \frac{1}{n}\sum_{i=1}^{n} x_i = \bar{y} - \beta_1 \bar{x}\]
+
+        <p>where \(\bar{y} = \frac{1}{n}\sum y_i\) and \(\bar{x} = \frac{1}{n}\sum x_i\) are the sample means. This is our first key result:</p>
+
+        \[\boxed{\hat{\beta}_0 = \bar{y} - \hat{\beta}_1 \bar{x}}\]
+
+        <p>This tells us something geometric: the fitted line <em>always</em> passes through the point \((\bar{x}, \bar{y})\), the centroid of the data. No matter what the slope is, the line pivots through the center.</p>
+
+        <h3>Step 2: Partial derivative with respect to \(\beta_1\)</h3>
+
+        <p>Now differentiate RSS with respect to \(\beta_1\), treating \(\beta_0\) as constant. The chain rule gives:</p>
+
+        \[\frac{\partial \text{RSS}}{\partial \beta_1} = \sum_{i=1}^{n} 2(y_i - \beta_0 - \beta_1 x_i)(-x_i) = -2\sum_{i=1}^{n} x_i(y_i - \beta_0 - \beta_1 x_i)\]
+
+        <p>Setting equal to zero and dividing by \(-2\):</p>
+
+        \[\sum_{i=1}^{n} x_i(y_i - \beta_0 - \beta_1 x_i) = 0\]
+
+        <p>Now substitute \(\beta_0 = \bar{y} - \beta_1 \bar{x}\) from Step 1:</p>
+
+        \[\sum_{i=1}^{n} x_i\big(y_i - (\bar{y} - \beta_1 \bar{x}) - \beta_1 x_i\big) = 0\]
+
+        \[\sum_{i=1}^{n} x_i\big((y_i - \bar{y}) - \beta_1(x_i - \bar{x})\big) = 0\]
+
+        <p>Distributing:</p>
+
+        \[\sum_{i=1}^{n} x_i(y_i - \bar{y}) - \beta_1 \sum_{i=1}^{n} x_i(x_i - \bar{x}) = 0\]
+
+        <p>Now here is a useful algebraic fact: \(\sum x_i(y_i - \bar{y}) = \sum (x_i - \bar{x})(y_i - \bar{y})\), because \(\sum \bar{x}(y_i - \bar{y}) = \bar{x}\sum(y_i - \bar{y}) = \bar{x} \cdot 0 = 0\). Similarly, \(\sum x_i(x_i - \bar{x}) = \sum (x_i - \bar{x})^2\). Applying both:</p>
+
+        \[\sum_{i=1}^{n}(x_i - \bar{x})(y_i - \bar{y}) - \beta_1 \sum_{i=1}^{n}(x_i - \bar{x})^2 = 0\]
+
+        <p>Solving for \(\beta_1\):</p>
+
+        \[\boxed{\hat{\beta}_1 = \frac{\sum_{i=1}^{n}(x_i - \bar{x})(y_i - \bar{y})}{\sum_{i=1}^{n}(x_i - \bar{x})^2}}\]
+
+        <p>This is the <strong>OLS slope estimator</strong>. Notice what it says: the slope is the ratio of the <em>sample covariance</em> of \(x\) and \(y\) (the numerator) to the <em>sample variance</em> of \(x\) (the denominator). If \(x\) and \(y\) tend to move together (positive covariance), the slope is positive. If they move in opposite directions, the slope is negative. If \(x\) has no variation at all, the denominator is zero and the slope is undefined — we'll return to this edge case.</p>
+
+        <h2>Interpreting the slope: the correlation connection</h2>
+
+        <p>Recall that the sample correlation coefficient is defined as:</p>
+
+        \[r = \frac{\sum(x_i - \bar{x})(y_i - \bar{y})}{\sqrt{\sum(x_i - \bar{x})^2}\sqrt{\sum(y_i - \bar{y})^2}}\]
+
+        <p>If we let \(s_x = \sqrt{\frac{1}{n-1}\sum(x_i-\bar{x})^2}\) and \(s_y = \sqrt{\frac{1}{n-1}\sum(y_i-\bar{y})^2}\) be the sample standard deviations, then we can rewrite the slope as:</p>
+
+        \[\hat{\beta}_1 = r \cdot \frac{s_y}{s_x}\]
+
+        <p>This is a beautiful decomposition: the slope equals the correlation (a unitless number between \(-1\) and \(+1\)) scaled by the ratio of output spread to input spread. If \(x\) and \(y\) are measured in the same units, the slope equals the correlation directly.</p>
+
+        <h2>Worked example</h2>
+
+        <h3>Fitting a line to five points</h3>
+
+        <p>Let's compute everything by hand on a tiny dataset. Suppose we have \(n = 5\) observations:</p>
+
+        <ul>
+          <li>\(x\): 1, 2, 3, 4, 5</li>
+          <li>\(y\): 2, 4, 5, 4, 5</li>
+        </ul>
+
+        <p><strong>Step 1: Compute the means.</strong></p>
+
+        \[\bar{x} = \frac{1+2+3+4+5}{5} = \frac{15}{5} = 3\]
+
+        \[\bar{y} = \frac{2+4+5+4+5}{5} = \frac{20}{5} = 4\]
+
+        <p><strong>Step 2: Compute the numerator of \(\hat{\beta}_1\): \(\sum(x_i - \bar{x})(y_i - \bar{y})\).</strong></p>
+
+        <p>We compute each term individually:</p>
+        <ul>
+          <li>\(i=1\): \((1-3)(2-4) = (-2)(-2) = 4\)</li>
+          <li>\(i=2\): \((2-3)(4-4) = (-1)(0) = 0\)</li>
+          <li>\(i=3\): \((3-3)(5-4) = (0)(1) = 0\)</li>
+          <li>\(i=4\): \((4-3)(4-4) = (1)(0) = 0\)</li>
+          <li>\(i=5\): \((5-3)(5-4) = (2)(1) = 2\)</li>
+        </ul>
+
+        <p>Sum: \(4 + 0 + 0 + 0 + 2 = 6\).</p>
+
+        <p><strong>Step 3: Compute the denominator: \(\sum(x_i - \bar{x})^2\).</strong></p>
+        <ul>
+          <li>\(i=1\): \((1-3)^2 = 4\)</li>
+          <li>\(i=2\): \((2-3)^2 = 1\)</li>
+          <li>\(i=3\): \((3-3)^2 = 0\)</li>
+          <li>\(i=4\): \((4-3)^2 = 1\)</li>
+          <li>\(i=5\): \((5-3)^2 = 4\)</li>
+        </ul>
+
+        <p>Sum: \(4 + 1 + 0 + 1 + 4 = 10\).</p>
+
+        <p><strong>Step 4: Compute the slope.</strong></p>
+
+        \[\hat{\beta}_1 = \frac{6}{10} = 0.6\]
+
+        <p><strong>Step 5: Compute the intercept.</strong></p>
+
+        \[\hat{\beta}_0 = \bar{y} - \hat{\beta}_1 \bar{x} = 4 - (0.6)(3) = 4 - 1.8 = 2.2\]
+
+        <p><strong>Step 6: Write the fitted line.</strong></p>
+
+        \[\hat{y} = 2.2 + 0.6x\]
+
+        <p><strong>Step 7: Compute predictions and residuals.</strong></p>
+        <ul>
+          <li>\(x=1\): \(\hat{y} = 2.2 + 0.6(1) = 2.8\), residual \(= 2 - 2.8 = -0.8\)</li>
+          <li>\(x=2\): \(\hat{y} = 2.2 + 0.6(2) = 3.4\), residual \(= 4 - 3.4 = 0.6\)</li>
+          <li>\(x=3\): \(\hat{y} = 2.2 + 0.6(3) = 4.0\), residual \(= 5 - 4.0 = 1.0\)</li>
+          <li>\(x=4\): \(\hat{y} = 2.2 + 0.6(4) = 4.6\), residual \(= 4 - 4.6 = -0.6\)</li>
+          <li>\(x=5\): \(\hat{y} = 2.2 + 0.6(5) = 5.2\), residual \(= 5 - 5.2 = -0.2\)</li>
+        </ul>
+
+        <p><strong>Step 8: Verify the residuals sum to zero.</strong></p>
+
+        \[-0.8 + 0.6 + 1.0 + (-0.6) + (-0.2) = 0\]
+
+        <p>This is not a coincidence — it is guaranteed by the first normal equation. The sum of OLS residuals is always exactly zero.</p>
+
+        <p><strong>Step 9: Compute RSS.</strong></p>
+
+        \[\text{RSS} = (-0.8)^2 + (0.6)^2 + (1.0)^2 + (-0.6)^2 + (-0.2)^2\]
+        \[= 0.64 + 0.36 + 1.00 + 0.36 + 0.04 = 2.40\]
+
+        <p>So the fitted line \(\hat{y} = 2.2 + 0.6x\) achieves RSS = 2.40 on this dataset, and no other line can do better under the squared-error criterion.</p>
+
+        <h2>Measuring fit: \(R^2\)</h2>
+
+        <p>RSS tells us the absolute error, but it doesn't tell us whether 2.40 is "good" or "bad" without context. A natural question: <em>how much better is our line than just guessing \(\bar{y}\) for every point?</em></p>
+
+        <p>If we had no \(x\) at all, the best constant prediction would be \(\bar{y}\) (this is the same derivation from the worked reference example in the guide — the mean minimizes squared error). The error of that naive baseline is the <strong>Total Sum of Squares</strong>:</p>
+
+        \[\text{TSS} = \sum_{i=1}^{n}(y_i - \bar{y})^2\]
+
+        <p>Our regression reduces the error from TSS down to RSS. The fraction of variance explained is:</p>
+
+        \[R^2 = 1 - \frac{\text{RSS}}{\text{TSS}}\]
+
+        <p>In our example: \(\text{TSS} = (2-4)^2 + (4-4)^2 + (5-4)^2 + (4-4)^2 + (5-4)^2 = 4 + 0 + 1 + 0 + 1 = 6\). So:</p>
+
+        \[R^2 = 1 - \frac{2.40}{6} = 1 - 0.4 = 0.6\]
+
+        <p>Our line explains 60% of the variance in \(y\). The remaining 40% is unexplained residual variation. \(R^2\) ranges from 0 (the line is no better than guessing the mean) to 1 (the line fits perfectly, all residuals are zero).</p>
+
+        <h2>Common mistakes</h2>
+
+        <p><strong>Common mistake:</strong> Students often confuse <em>correlation</em> with <em>causation</em>. A high \(\hat{\beta}_1\) tells us that \(x\) and \(y\) move together linearly in the observed data. It does not tell us that changing \(x\) <em>causes</em> \(y\) to change. Ice cream sales and drowning deaths are correlated (both rise in summer), but banning ice cream won't prevent drownings. Regression finds associations; causal claims require experimental design or additional assumptions.</p>
+
+        <p><strong>Common mistake:</strong> Extrapolation. Our fitted line \(\hat{y} = 2.2 + 0.6x\) was learned from \(x\) values between 1 and 5. If someone asks for a prediction at \(x = 100\), the line will dutifully output \(62.2\), but there is no reason to believe the linear relationship holds that far outside the observed range. Linear regression is a local model — trust it within the range of your data, be deeply skeptical beyond it.</p>
+
+        <h2>Edge cases</h2>
+
+        <p><strong>What if all \(x_i\) are the same value?</strong> Then \(\sum(x_i - \bar{x})^2 = 0\), and the denominator of \(\hat{\beta}_1\) is zero. The slope is undefined. Geometrically, all data points are stacked vertically — there is no "spread" in \(x\) to determine a tilt. In this degenerate case, the best we can do is predict \(\bar{y}\) for every input, which is equivalent to setting \(\beta_1 = 0\) and \(\beta_0 = \bar{y}\). This is exactly the situation where regression collapses to the constant-mean predictor.</p>
+
+        <p><strong>What if the points are perfectly collinear?</strong> If every point lies exactly on some line \(y = a + bx\), then RSS = 0 and \(R^2 = 1\). The OLS formulas recover that line exactly. This is the ideal case — real data almost never achieves it, because real data has noise.</p>
+
+        <p><strong>What about outliers?</strong> Because squared error penalizes large residuals quadratically, a single outlier far from the line can drag the OLS fit dramatically toward it. If you suspect outliers, robust regression methods (using absolute error or Huber loss) are more appropriate. This is a recurring theme: the choice of loss function shapes everything about the resulting model.</p>
+
+        <h2>Where we go next</h2>
+
+        <p>We derived everything for a single input \(x\). But real problems have many features — age, blood pressure, cholesterol, all at once. In Chapter 2, we generalize to <strong>multiple linear regression</strong>, where the same least-squares logic plays out in matrix notation, and the closed-form solution becomes \(\hat{\boldsymbol{\beta}} = (X^\top X)^{-1} X^\top \mathbf{y}\). The geometric intuition — projecting \(\mathbf{y}\) onto the column space of \(X\) — is one of the most important pictures in all of machine learning.</p>
+
+      </article>
+
+      <div class="chapter-nav">
+        <div class="chapter-nav-empty"></div>
+        <a class="chapter-nav-link next" href="../ch2/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">2. Multiple Linear Regression</span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
 </body>
 </html>
