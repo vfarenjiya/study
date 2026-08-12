@@ -1,172 +1,304 @@
-<!-- File: /<slug>/ch10/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>10. Decision Trees — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
-<meta name="description" content="Recursive partitioning, Gini impurity and entropy splitting criteria, pruning strategies, overfitting diagnosis, and a hand-built tree on mixed data with sensitivity analysis.">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap" rel="stylesheet">
-<link rel="manifest" href="../../manifest.json">
-<link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="../../icons/icon-192.svg">
-<meta name="theme-color" content="#1B1B1F">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="iTube">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script>
-(function(){
-  var saved = localStorage.getItem("itube-theme");
-  var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-  document.documentElement.setAttribute("data-theme", theme);
-})();
-</script>
-<link rel="stylesheet" href="../../style.css">
+  <title>10. Bias-Variance Trade-off &amp; Cross-Validation — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
+  <meta name="description" content="Why do complex models overfit and simple models underfit? We derive the bias-variance decomposition of expected prediction error from first principles, explain LOO and k-fold cross-validation with full numeric examples, and connect these ideas to every model in the syllabus.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
 </head>
 <body data-depth="2">
-<header class="top">
-  <div class="wrap">
-    <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
-    <div class="top-actions">
-      <div class="font-controls" role="group" aria-label="Adjust text size">
-        <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
-        <span id="font-size-label">100%</span>
-        <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
-        <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
       </div>
-      <button id="theme-btn" title="Toggle light/dark">◐</button>
     </div>
-  </div>
-</header>
-<main>
-<div class="wrap narrow">
-  <div class="breadcrumb">
-    <a href="../../index.html">iTube</a><span class="sep">/</span>
-    <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
-    <span>Ch. 10</span>
-  </div>
-  <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
-  <h1>10. Decision Trees</h1>
-  <div class="chapter-meta">
-    <span>Chapter 10 of 17</span>
-    <span class="read-badge">24 min read</span>
-  </div>
-  <article>
+  </header>
 
-<h2>Recursive partitioning and axis-aligned boundaries</h2>
-<p><strong>Decision trees</strong> learn a hierarchy of simple decision rules that recursively partition the feature space into rectangular regions, each assigned a single prediction. For classification, each leaf stores a class label (typically the majority class of training points reaching it); for regression, each leaf stores a value (typically the mean response). The resulting decision boundary is <strong>axis-aligned</strong>: each split tests a single feature against a threshold (\(x_j \leq t\)), producing boundaries parallel to coordinate axes. This contrasts sharply with the oblique boundaries of logistic regression (Chapter 5), LDA (Chapter 8), and SVMs (Chapter 9).</p>
-<p>The tree is built greedily via <strong>recursive binary splitting</strong>. At each node, the algorithm evaluates all possible splits across all features, selects the one that maximizes a chosen <strong>splitting criterion</strong> (measuring improvement in purity or reduction in error), partitions the data accordingly, and recurses on each child. Growth stops when a stopping condition is met: minimum node size, maximum depth, no improvement from any split, or pure node. This top-down induction is fast (\(O(np \log n)\) per level typically) and requires no feature scaling or distributional assumptions.</p>
-<p><strong>Common mistake:</strong> assuming decision trees are inherently interpretable because they produce human-readable rules. While shallow trees are interpretable, deep trees grown to minimize training error can have hundreds of nodes with complex interactions that defy comprehension. Interpretability is a property of <em>regularized</em> trees (via pruning or depth limits), not of the algorithm itself. Always report tree depth and number of leaves alongside accuracy; a 50-node tree achieving 85% accuracy may be less useful than a 5-node tree achieving 83%, depending on the application’s need for transparency versus performance.</p>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
+        <span>Ch. 10</span>
+      </div>
+      <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
+      <h1>10. Bias-Variance Trade-off &amp; Cross-Validation</h1>
+      <div class="chapter-meta">
+        <span>Chapter 10 of 14</span>
+        <span class="read-badge">30 min read</span>
+      </div>
 
-<h2>Splitting criteria: Gini impurity and entropy</h2>
-<p>The splitting criterion quantifies how much a candidate split improves the homogeneity of class labels within child nodes relative to the parent. Two criteria dominate practice for classification:</p>
-<h3>Gini impurity</h3>
-<p>For a node containing samples with class proportions \(p_1, \dots, p_K\), Gini impurity is:</p>
-\[
-G = \sum_{k=1}^{K} p_k (1 - p_k) = 1 - \sum_{k=1}^{K} p_k^2
-\]
-<p>This equals the probability that two randomly drawn samples from the node have different classes. \(G = 0\) when the node is pure (all one class); \(G\) is maximized at \(1 - 1/K\) under uniform class distribution. The Gini gain of a split is the weighted decrease in impurity:</p>
-\[
-\Delta G = G_{\text{parent}} - \left( \frac{n_L}{n} G_L + \frac{n_R}{n} G_R \right)
-\]
-<p>where \(n_L, n_R\) are child sample sizes and \(G_L, G_R\) their impurities. CART (the most common tree algorithm) uses Gini by default due to computational efficiency (no logarithms).</p>
-<h3>Entropy and information gain</h3>
-<p>Entropy measures uncertainty in bits (or nats):</p>
-\[
-H = -\sum_{k=1}^{K} p_k \log_2 p_k
-\]
-<p>\(H = 0\) for pure nodes; \(H = \log_2 K\) for uniform distributions. Information gain is the entropy reduction:</p>
-\[
-\Delta H = H_{\text{parent}} - \left( \frac{n_L}{n} H_L + \frac{n_R}{n} H_R \right)
-\]
-<p>ID3 and C4.5 use entropy/information gain. In practice, Gini and entropy yield nearly identical trees; differences arise mainly when class distributions are highly skewed or when splits produce very unbalanced children. Entropy penalizes unbalanced splits slightly more, which can be preferable when balanced subtrees aid interpretability.</p>
-<p><strong>Edge case:</strong> both criteria are biased toward features with many distinct values (especially continuous features with many candidate thresholds). A feature with unique values per sample can always achieve perfect purity by isolating each point, regardless of predictive relevance. C4.5 addresses this via <strong>gain ratio</strong>, normalizing information gain by the intrinsic information of the split itself. Modern implementations (e.g., scikit-learn) mitigate bias via minimum samples per leaf constraints rather than gain ratio. Always validate feature importance rankings against domain knowledge or permutation tests rather than trusting raw split frequencies.</p>
+      <article>
 
-<h3>Worked example: computing Gini and entropy gains</h3>
-<p>Parent node: 10 samples, 6 class A, 4 class B. \(p_A = 0.6, p_B = 0.4\).</p>
-\[
-G_{\text{parent}} = 1 - (0.6^2 + 0.4^2) = 1 - (0.36 + 0.16) = 0.48
-\]
-\[
-H_{\text{parent}} = -(0.6 \log_2 0.6 + 0.4 \log_2 0.4) = -(0.6 \cdot (-0.737) + 0.4 \cdot (-1.322)) = 0.442 + 0.529 = 0.971 \text{ bits}
-\]
-<p>Candidate split produces left child (4A, 1B) and right child (2A, 3B). Left: \(p_A = 0.8, p_B = 0.2\); \(G_L = 1 - (0.64 + 0.04) = 0.32\); \(H_L = -(0.8 \log_2 0.8 + 0.2 \log_2 0.2) = 0.722\). Right: \(p_A = 0.4, p_B = 0.6\); \(G_R = 0.48\); \(H_R = 0.971\). Weighted averages:</p>
-\[
-G_{\text{children}} = \frac{5}{10}(0.32) + \frac{5}{10}(0.48) = 0.16 + 0.24 = 0.40 \quad \Rightarrow \quad \Delta G = 0.48 - 0.40 = 0.08
-\]
-\[
-H_{\text{children}} = \frac{5}{10}(0.722) + \frac{5}{10}(0.971) = 0.361 + 0.486 = 0.847 \quad \Rightarrow \quad \Delta H = 0.971 - 0.847 = 0.124 \text{ bits}
-\]
-<p>Both criteria favor this split over alternatives with lower gains. <strong>Sensitivity check:</strong> if the split instead produced (5A,0B) and (1A,4B), left would be pure (\(G_L=0, H_L=0\)), right \(G_R=0.32, H_R=0.722\). Then \(\Delta G = 0.48 - [0.5(0)+0.5(0.32)] = 0.32\); \(\Delta H = 0.971 - [0+0.361] = 0.610\). Much larger gains reflect the near-perfect separation. Note that Gini and entropy rank splits identically here, but with three+ classes or extreme imbalance, rankings can diverge slightly.</p>
+        <h2>The central question of model selection</h2>
 
-<h2>Regression trees and variance reduction</h2>
-<p>For regression, splitting criteria measure reduction in response variability rather than class impurity. The standard criterion is <strong>mean squared error reduction</strong>:</p>
-\[
-\Delta \text{MSE} = \text{MSE}_{\text{parent}} - \left( \frac{n_L}{n} \text{MSE}_L + \frac{n_R}{n} \text{MSE}_R \right)
-\]
-<p>where \(\text{MSE} = \frac{1}{n}\sum (y_i - \bar y)^2\) within each node. Equivalently, this maximizes the between-group sum of squares. Leaf predictions are the local mean \(\bar y\), making regression trees piecewise constant approximators. Unlike linear models (Chapters 2–4), trees capture nonlinearities and interactions automatically without explicit specification, but produce discontinuous predictions at split boundaries.</p>
-<p><strong>Edge case:</strong> MSE-based splits are sensitive to outliers, just like OLS. A single extreme \(y\)-value can dominate the variance reduction calculation and induce splits that isolate it, harming generalization. Robust alternatives include mean absolute error reduction or Huber loss, though these are less commonly implemented. Also note that regression trees cannot extrapolate beyond the range of training responses; predictions at test points outside the training feature bounds default to the nearest leaf’s mean, which may be wildly inaccurate. Always check feature ranges at prediction time.</p>
+        <p>Throughout this book, we have encountered a recurring tension. In Chapter 3, ridge regression shrinks coefficients to reduce variance at the cost of introducing bias. In Chapter 5, increasing \(k\) in kNN smooths predictions (lower variance) but loses local detail (higher bias). In Chapter 9, deeper decision trees fit training data perfectly but generalize poorly, while shallow trees underfit. Every hyperparameter choice across every algorithm reflects the same underlying tradeoff.</p>
 
-<h2>Overfitting and pruning strategies</h2>
-<p>Unpruned trees grown until purity or minimum node size tend to <strong>overfit</strong> severely: they memorize noise and idiosyncrasies of the training set, producing deep, bushy structures with poor generalization. Training error decreases monotonically with tree size, but test error follows a U-shape — the classic bias-variance trade-off (Chapter 11). Three main strategies control complexity:</p>
-<h3>Pre-pruning (early stopping)</h3>
-<p>Halt growth based on heuristics: maximum depth, minimum samples per node/leaf, minimum impurity decrease per split. Simple and computationally cheap, but myopic: a split with negligible immediate gain might enable highly informative subsequent splits. Optimal thresholds require cross-validation (Chapter 12).</p>
-<h3>Post-pruning (cost-complexity pruning)</h3>
-<p>Grow a full tree, then prune back using cost-complexity:</p>
-\[
-R_\alpha(T) = R(T) + \alpha |T|
-\]
-<p>where \(R(T)\) is training error (misclassification rate or MSE), \(|T|\) is number of leaves, and \(\alpha \geq 0\) penalizes complexity. For each \(\alpha\), find the subtree minimizing \(R_\alpha\) via weakest-link pruning (iteratively collapsing the internal node whose removal increases \(R\) least per leaf removed). Select \(\alpha\) by cross-validation. This is CART’s standard approach and generally outperforms pre-pruning because it considers global structure before simplifying.</p>
-<h3>Minimum description length and Bayesian approaches</h3>
-<p>MDL/Bayesian methods penalize tree complexity via encoding length or prior probabilities, offering principled alternatives to CV-tuned \(\alpha\). Less common in practice but theoretically elegant.</p>
-<p><strong>Common mistake:</strong> relying solely on training error or in-sample metrics to select tree size. Always use held-out validation or cross-validation. Also beware that pruned trees can still overfit if the validation set is small or non-representative; nested cross-validation provides more reliable estimates when data are limited.</p>
+        <p>The question this chapter answers is: <strong>can we decompose prediction error into interpretable components that explain why models fail, and can we estimate generalization error without access to future data?</strong></p>
 
-<h3>Worked example: cost-complexity pruning path</h3>
-<p>Suppose a fully grown tree has 7 leaves with training misclassification rates summing to \(R(T) = 0.05\) (5 errors out of 100). Weakest-link pruning identifies collapse candidates with associated \(\alpha\) values where collapsing becomes optimal:</p>
-\[
-\begin{array}{c|c|c}
-\text{Subtree} & |T| & R(T) \\ \hline
-T_0 \text{ (full)} & 7 & 0.05 \\
-T_1 & 5 & 0.07 \\
-T_2 & 3 & 0.10 \\
-T_3 \text{ (root only)} & 1 & 0.20
-\end{array}
-\]
-<p>Effective \(\alpha\) for each transition: \(\alpha_1 = (0.07 - 0.05)/(7 - 5) = 0.01\); \(\alpha_2 = (0.10 - 0.07)/(5 - 3) = 0.015\); \(\alpha_3 = (0.20 - 0.10)/(3 - 1) = 0.05\). For \(\alpha < 0.01\), keep full tree. For \(0.01 \leq \alpha < 0.015\), use \(T_1\). For \(0.015 \leq \alpha < 0.05\), use \(T_2\). For \(\alpha \geq 0.05\), use root-only. Cross-validation selects the \(\alpha\) (and corresponding subtree) with lowest validation error. <strong>Sensitivity check:</strong> if validation errors were [0.12, 0.09, 0.08, 0.18] for \(T_0,T_1,T_2,T_3\), then \(T_2\) wins despite higher training error than \(T_0\) — illustrating how pruning trades fit for generalization. If validation set were tiny and gave [0.06, 0.09, 0.11, 0.15], \(T_0\) would win spuriously; larger validation sets stabilize selection.</p>
+        <p>The answers are the bias-variance decomposition and cross-validation, respectively. Together, they form the theoretical and practical foundation for model evaluation and selection.</p>
 
-<h2>Feature importance and interaction detection</h2>
-<p>Decision trees naturally capture <strong>feature interactions</strong>: a split on \(x_j\) followed by a split on \(x_k\) in one branch but not another encodes a conditional dependency. This is impossible in additive models without explicit interaction terms. Feature importance is typically measured by total impurity decrease attributable to each feature across all splits where it was used, weighted by node sample sizes. Alternatively, permutation importance (shuffle feature values, measure accuracy drop) avoids biases toward high-cardinality features.</p>
-<p><strong>Edge case:</strong> correlated features share importance arbitrarily; if \(x_1\) and \(x_2\) are perfectly correlated, the tree picks one at random for each split, splitting importance roughly equally even if only one is causally relevant. Permutation importance also suffers: shuffling \(x_1\) leaves \(x_2\) intact, so accuracy drops little, understating true importance. Grouped permutation or conditional permutation addresses this. Also note that importance reflects predictive utility within the fitted tree, not causal effect; confounded features can appear important without being causally relevant.</p>
+        <h2>Setting up the decomposition</h2>
 
-<h2>Connection to the broader framework</h2>
-<p>Decision trees complement the linear and kernel-based methods of earlier chapters. Where logistic regression (Chapter 5) and SVMs (Chapter 9) produce smooth or margin-maximizing boundaries, trees produce piecewise-constant partitions adaptive to local structure. Where LDA (Chapter 8) assumes Gaussian class densities, trees are fully nonparametric. Where kNN (Chapter 6) stores all data, trees compress data into hierarchical rules. Chapter 11’s bias-variance decomposition explains why unpruned trees have low bias but high variance, and why pruning shifts this balance. Chapter 12’s cross-validation is essential for selecting pruning parameters and comparing trees to other models. And ensemble methods (not covered here but foreshadowed) — bagging, random forests, boosting — combine many weak trees to overcome individual instability while retaining flexibility, dominating tabular data competitions and practical applications.</p>
-<p>Master decision trees not as standalone predictors (they rarely win alone) but as the building blocks of modern ensembles and as the clearest illustration of greedy hierarchical learning. If you can compute Gini/entropy gains by hand, trace a pruning path, diagnose overfitting from tree structure, and explain when axis-aligned boundaries help or hurt relative to linear separators, you have internalized the nonparametric, partition-based paradigm that complements the geometric and probabilistic views of earlier chapters.</p>
+        <p>Consider a regression problem where the true data-generating process is:</p>
 
-  </article>
-  <div class="chapter-nav">
-    <a class="chapter-nav-link prev" href="../ch9/index.html">
-      <span class="chapter-nav-label">← Previous</span>
-      <span class="chapter-nav-title">9. Support Vector Machine</span>
-    </a>
-    <a class="chapter-nav-link next" href="../ch11/index.html">
-      <span class="chapter-nav-label">Next →</span>
-      <span class="chapter-nav-title">11. Bias-Variance Trade-off</span>
-    </a>
-  </div>
-</div>
-</main>
-<footer>
-  <div class="wrap">
-    <span>© 2026 iTube. Read forever, free forever.</span>
-    <span>No video was harmed in the making of this platform.</span>
-  </div>
-</footer>
-<script src="../../theme.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-<script defer src="../../app.js"></script>
+        \[y = f(x) + \varepsilon\]
+
+        <p>where \(f(x)\) is the unknown true function and \(\varepsilon\) is irreducible noise with \(\mathbb{E}[\varepsilon] = 0\) and \(\text{Var}(\varepsilon) = \sigma^2\). We observe a training set \(\mathcal{D}\) drawn from this process and fit a model \(\hat{f}_{\mathcal{D}}(x)\), producing predictions that depend on which particular dataset we happened to observe.</p>
+
+        <p>We want to understand the <strong>expected prediction error</strong> at a fixed test point \(x_0\), averaged over both the noise in \(y\) and the randomness in the training set \(\mathcal{D}\):</p>
+
+        \[\text{EPE}(x_0) = \mathbb{E}_{\mathcal{D}, \varepsilon}\left[(y_0 - \hat{f}_{\mathcal{D}}(x_0))^2\right]\]
+
+        <p>where \(y_0 = f(x_0) + \varepsilon_0\) is a new observation at \(x_0\). This expectation captures what we actually care about: how well our procedure performs on average when applied to fresh data drawn from the same process.</p>
+
+        <h2>Deriving the bias-variance decomposition</h2>
+
+        <p>Define the <strong>average prediction</strong> at \(x_0\) across all possible training sets:</p>
+
+        \[\bar{f}(x_0) = \mathbb{E}_{\mathcal{D}}[\hat{f}_{\mathcal{D}}(x_0)]\]
+
+        <p>This is the prediction we would get if we could average over infinitely many training sets. Now add and subtract \(\bar{f}(x_0)\) inside the squared error:</p>
+
+        \[(y_0 - \hat{f}_{\mathcal{D}}(x_0))^2 = \big((y_0 - f(x_0)) + (f(x_0) - \bar{f}(x_0)) + (\bar{f}(x_0) - \hat{f}_{\mathcal{D}}(x_0))\big)^2\]
+
+        <p>Let \(A = y_0 - f(x_0) = \varepsilon_0\), \(B = f(x_0) - \bar{f}(x_0)\), and \(C = \bar{f}(x_0) - \hat{f}_{\mathcal{D}}(x_0)\). Then:</p>
+
+        \[(A + B + C)^2 = A^2 + B^2 + C^2 + 2AB + 2AC + 2BC\]
+
+        <p>Taking expectations over both \(\mathcal{D}\) and \(\varepsilon\):</p>
+
+        <ul>
+          <li>\(\mathbb{E}[A^2] = \mathbb{E}[\varepsilon_0^2] = \sigma^2\) (irreducible noise)</li>
+          <li>\(\mathbb{E}[B^2] = (f(x_0) - \bar{f}(x_0))^2\) (constant w.r.t. both expectations)</li>
+          <li>\(\mathbb{E}[C^2] = \mathbb{E}_{\mathcal{D}}[(\hat{f}_{\mathcal{D}}(x_0) - \bar{f}(x_0))^2] = \text{Var}_{\mathcal{D}}(\hat{f}_{\mathcal{D}}(x_0))\)</li>
+          <li>\(\mathbb{E}[2AB] = 2\mathbb{E}[\varepsilon_0](f(x_0) - \bar{f}(x_0)) = 0\) (since \(\mathbb{E}[\varepsilon_0] = 0\))</li>
+          <li>\(\mathbb{E}[2AC] = 2\mathbb{E}[\varepsilon_0]\mathbb{E}_{\mathcal{D}}[\bar{f}(x_0) - \hat{f}_{\mathcal{D}}(x_0)] = 0\) (noise independent of training set; inner expectation is zero by definition of \(\bar{f}\))</li>
+          <li>\(\mathbb{E}[2BC] = 2(f(x_0) - \bar{f}(x_0))\mathbb{E}_{\mathcal{D}}[\bar{f}(x_0) - \hat{f}_{\mathcal{D}}(x_0)] = 0\) (inner expectation is zero)</li>
+        </ul>
+
+        <p>All cross terms vanish. The result is the <strong>bias-variance decomposition</strong>:</p>
+
+        \[\boxed{\text{EPE}(x_0) = \underbrace{(f(x_0) - \bar{f}(x_0))^2}_{\text{Bias}^2} + \underbrace{\text{Var}_{\mathcal{D}}(\hat{f}_{\mathcal{D}}(x_0))}_{\text{Variance}} + \underbrace{\sigma^2}_{\text{Irreducible Error}}}</\]
+
+        <p>Three components, each with a clear interpretation:</p>
+
+        <p><strong>Bias²</strong> measures how far the average prediction \(\bar{f}(x_0)\) is from the truth \(f(x_0)\). High bias means the model class is systematically wrong — it cannot represent the true function even with infinite data. Simple models (linear regression on nonlinear data, shallow trees) have high bias.</p>
+
+        <p><strong>Variance</strong> measures how much \(\hat{f}_{\mathcal{D}}(x_0)\) fluctuates across different training sets. High variance means the model is overly sensitive to the particular sample observed. Complex models (high-degree polynomials, deep trees, 1-NN) have high variance.</p>
+
+        <p><strong>Irreducible error</strong> \(\sigma^2\) is the noise floor. No model, regardless of complexity, can reduce error below this level. It represents genuine stochasticity in the data-generating process.</p>
+
+        <h2>The tradeoff in action</h2>
+
+        <p>As model complexity increases, bias typically decreases (the model can better approximate \(f\)) while variance increases (the model fits noise in the training set). The optimal complexity minimizes their sum. This is why:</p>
+
+        <ul>
+          <li>Ridge regression's \(\lambda\) (Chapter 3): larger \(\lambda\) increases bias, decreases variance.</li>
+          <li>kNN's \(k\) (Chapter 5): larger \(k\) increases bias, decreases variance.</li>
+          <li>SVM's \(C\) (Chapter 8): larger \(C\) decreases bias, increases variance.</li>
+          <li>Decision tree depth (Chapter 9): deeper trees decrease bias, increase variance.</li>
+          <li>Laplace smoothing's \(\alpha\) (Chapter 6): larger \(\alpha\) increases bias, decreases variance.</li>
+        </ul>
+
+        <p>Every hyperparameter in this book navigates this same tradeoff. Understanding the decomposition tells you <em>why</em> tuning matters, not just <em>that</em> it matters.</p>
+
+        <h3>Worked example</h3>
+
+        <h4>Bias-variance decomposition for three estimators</h4>
+
+        <p>Suppose the true function is \(f(x) = x^2\) and we observe noisy data \(y = x^2 + \varepsilon\) with \(\varepsilon \sim \mathcal{N}(0, 1)\), so \(\sigma^2 = 1\). We evaluate three estimators at \(x_0 = 2\) (true value: \(f(2) = 4\)) using repeated sampling from the training distribution \(x \sim \text{Uniform}[-3, 3]\), \(n = 20\).</p>
+
+        <p>We simulate conceptually (exact values illustrative):</p>
+
+        <p><strong>Estimator A: Constant predictor \(\hat{f}(x) = 0\).</strong></p>
+        <ul>
+          <li>\(\bar{f}(2) = 0\) (always predicts 0)</li>
+          <li>Bias² = \((4 - 0)^2 = 16\)</li>
+          <li>Variance = 0 (prediction never changes)</li>
+          <li>EPE = \(16 + 0 + 1 = 17\)</li>
+        </ul>
+
+        <p><strong>Estimator B: Linear regression \(\hat{f}(x) = \hat{\beta}_0 + \hat{\beta}_1 x\).</strong></p>
+        <ul>
+          <li>Average fitted line approximates the best linear fit to \(x^2\) on \([-3,3]\), which is roughly \(\bar{f}(2) \approx 3.0\)</li>
+          <li>Bias² = \((4 - 3)^2 = 1.0\)</li>
+          <li>Variance ≈ 0.5 (moderate sensitivity to training samples)</li>
+          <li>EPE = \(1.0 + 0.5 + 1 = 2.5\)</li>
+        </ul>
+
+        <p><strong>Estimator C: Degree-10 polynomial regression.</strong></p>
+        <ul>
+          <li>Can fit \(x^2\) nearly perfectly on average: \(\bar{f}(2) \approx 4.0\)</li>
+          <li>Bias² ≈ 0</li>
+          <li>Variance ≈ 8.0 (extreme sensitivity: degree-10 polynomial oscillates wildly between training points)</li>
+          <li>EPE = \(0 + 8.0 + 1 = 9.0\)</li>
+        </ul>
+
+        <p><strong>Comparison:</strong></p>
+
+        <table style="border-collapse:collapse; margin:1em 0;">
+          <tr style="border-bottom:2px solid var(--stone);">
+            <th style="padding:4px 8px; text-align:left;">Estimator</th>
+            <th style="padding:4px 8px; text-align:center;">Bias²</th>
+            <th style="padding:4px 8px; text-align:center;">Variance</th>
+            <th style="padding:4px 8px; text-align:center;">σ²</th>
+            <th style="padding:4px 8px; text-align:center;">EPE</th>
+          </tr>
+          <tr><td style="padding:4px 8px;">Constant</td><td style="text-align:center;">16.0</td><td style="text-align:center;">0.0</td><td style="text-align:center;">1</td><td style="text-align:center;">17.0</td></tr>
+          <tr><td style="padding:4px 8px;">Linear</td><td style="text-align:center;">1.0</td><td style="text-align:center;">0.5</td><td style="text-align:center;">1</td><td style="text-align:center;">2.5</td></tr>
+          <tr><td style="padding:4px 8px;">Degree-10 poly</td><td style="text-align:center;">0.0</td><td style="text-align:center;">8.0</td><td style="text-align:center;">1</td><td style="text-align:center;">9.0</td></tr>
+        </table>
+
+        <p>Linear regression wins despite having nonzero bias because its total EPE is lowest. The constant predictor has zero variance but catastrophic bias. The degree-10 polynomial has zero bias but catastrophic variance. The U-shaped EPE curve as a function of complexity is the visual manifestation of the bias-variance tradeoff.</p>
+
+        <h2>Estimating generalization error: why holdout isn't enough</h2>
+
+        <p>The bias-variance decomposition is theoretical — it requires knowing \(f(x)\) and averaging over infinitely many training sets. In practice, we have one dataset and need to estimate how well our model will perform on unseen data. The naive approach (training error) is optimistically biased because the model was optimized on that same data.</p>
+
+        <p>A single train/test split gives an unbiased estimate but with high variance: the estimate depends heavily on which points happened to land in the test set. With small datasets, this variability makes the estimate unreliable. We need methods that use data more efficiently.</p>
+
+        <h2>Leave-One-Out Cross-Validation (LOO-CV)</h2>
+
+        <p>LOO-CV uses \(n\) folds, each containing exactly one test point. For each \(i = 1, \ldots, n\):</p>
+        <ol>
+          <li>Train the model on all data except \((x_i, y_i)\).</li>
+          <li>Predict \(\hat{y}_{-i}\) for the held-out point.</li>
+          <li>Record the error \(e_i = (y_i - \hat{y}_{-i})^2\).</li>
+        </ol>
+
+        <p>The LOO-CV estimate of test error is:</p>
+
+        \[\text{LOO-CV} = \frac{1}{n}\sum_{i=1}^{n} e_i\]
+
+        <p>LOO-CV is nearly unbiased for the true expected test error (each fold uses \(n-1\) training points, almost the full dataset). But it has two drawbacks: computational cost (\(n\) model fits) and potentially high variance when \(n\) is small (the \(n\) error estimates are highly correlated since each pair of folds shares \(n-2\) training points).</p>
+
+        <h3>Worked example: LOO-CV for linear regression</h3>
+
+        <p>Consider \(n = 4\) points: \((1, 2), (2, 4), (3, 5), (4, 4)\). We fit simple linear regression and compute LOO-CV MSE.</p>
+
+        <p><strong>Fold 1: Hold out \((1, 2)\).</strong> Train on \(\{(2,4), (3,5), (4,4)\}\).</p>
+        <ul>
+          <li>\(\bar{x} = 3, \bar{y} = 13/3\)</li>
+          <li>\(\hat{\beta}_1 = \frac{(2-3)(4-13/3) + (3-3)(5-13/3) + (4-3)(4-13/3)}{(2-3)^2 + 0 + (4-3)^2} = \frac{(-1)(-1/3) + 0 + (1)(-1/3)}{2} = \frac{1/3 - 1/3}{2} = 0\)</li>
+          <li>\(\hat{\beta}_0 = 13/3 - 0 \cdot 3 = 13/3 \approx 4.333\)</li>
+          <li>Prediction at \(x=1\): \(\hat{y}_{-1} = 4.333\)</li>
+          <li>Error: \((2 - 4.333)^2 = 5.444\)</li>
+        </ul>
+
+        <p><strong>Fold 2: Hold out \((2, 4)\).</strong> Train on \(\{(1,2), (3,5), (4,4)\}\).</p>
+        <ul>
+          <li>\(\bar{x} = 8/3, \bar{y} = 11/3\)</li>
+          <li>Numerator: \((1-8/3)(2-11/3) + (3-8/3)(5-11/3) + (4-8/3)(4-11/3) = (-5/3)(-5/3) + (1/3)(4/3) + (4/3)(1/3) = 25/9 + 4/9 + 4/9 = 33/9\)</li>
+          <li>Denominator: \((1-8/3)^2 + (3-8/3)^2 + (4-8/3)^2 = 25/9 + 1/9 + 16/9 = 42/9\)</li>
+          <li>\(\hat{\beta}_1 = 33/42 = 11/14 \approx 0.786\)</li>
+          <li>\(\hat{\beta}_0 = 11/3 - (11/14)(8/3) = 11/3 - 88/42 = (154 - 88)/42 = 66/42 = 11/7 \approx 1.571\)</li>
+          <li>Prediction at \(x=2\): \(\hat{y}_{-2} = 11/7 + (11/14)(2) = 11/7 + 22/14 = 44/14 = 22/7 \approx 3.143\)</li>
+          <li>Error: \((4 - 22/7)^2 = (6/7)^2 = 36/49 \approx 0.735\)</li>
+        </ul>
+
+        <p><strong>Fold 3: Hold out \((3, 5)\).</strong> Train on \(\{(1,2), (2,4), (4,4)\}\).</p>
+        <ul>
+          <li>\(\bar{x} = 7/3, \bar{y} = 10/3\)</li>
+          <li>Numerator: \((1-7/3)(2-10/3) + (2-7/3)(4-10/3) + (4-7/3)(4-10/3) = (-4/3)(-4/3) + (-1/3)(2/3) + (5/3)(2/3) = 16/9 - 2/9 + 10/9 = 24/9\)</li>
+          <li>Denominator: \(16/9 + 1/9 + 25/9 = 42/9\)</li>
+          <li>\(\hat{\beta}_1 = 24/42 = 4/7 \approx 0.571\)</li>
+          <li>\(\hat{\beta}_0 = 10/3 - (4/7)(7/3) = 10/3 - 4/3 = 6/3 = 2\)</li>
+          <li>Prediction at \(x=3\): \(\hat{y}_{-3} = 2 + (4/7)(3) = 2 + 12/7 = 26/7 \approx 3.714\)</li>
+          <li>Error: \((5 - 26/7)^2 = (9/7)^2 = 81/49 \approx 1.653\)</li>
+        </ul>
+
+        <p><strong>Fold 4: Hold out \((4, 4)\).</strong> Train on \(\{(1,2), (2,4), (3,5)\}\).</p>
+        <ul>
+          <li>From Chapter 1 worked example: \(\hat{\beta}_1 = 1.5, \hat{\beta}_0 = 0.5\)</li>
+          <li>Prediction at \(x=4\): \(\hat{y}_{-4} = 0.5 + 1.5(4) = 6.5\)</li>
+          <li>Error: \((4 - 6.5)^2 = 6.25\)</li>
+        </ul>
+
+        <p><strong>LOO-CV MSE:</strong></p>
+
+        \[\text{LOO-CV} = \frac{1}{4}(5.444 + 0.735 + 1.653 + 6.25) = \frac{14.082}{4} = 3.521\]
+
+        <p>This is our estimate of the expected test MSE for simple linear regression on this data-generating process.</p>
+
+        <h2>k-Fold Cross-Validation</h2>
+
+        <p>k-fold CV partitions the data into \(k\) roughly equal folds. For each fold \(j = 1, \ldots, k\):</p>
+        <ol>
+          <li>Train on all data except fold \(j\).</li>
+          <li>Evaluate error on fold \(j\).</li>
+        </ol>
+
+        <p>The k-fold CV estimate is the average error across all folds. Common choices are \(k = 5\) or \(k = 10\), balancing bias (each fold uses \((k-1)/k\) of the data) against variance (more folds means more correlated estimates) and computational cost (\(k\) fits instead of \(n\)).</p>
+
+        <p>k-fold CV is generally preferred over LOO-CV in practice because it is computationally cheaper and often has lower variance due to less correlation between fold errors. LOO-CV is preferred only when \(n\) is very small (say, \(n < 30\)) where wasting even \(1/k\) of the data per fold matters significantly.</p>
+
+        <h2>Common mistake</h2>
+
+        <p><strong>Common mistake:</strong> Students sometimes perform feature selection, hyperparameter tuning, or preprocessing (e.g., standardization) on the full dataset before applying cross-validation. This leaks information from the test folds into the training process, producing optimistically biased error estimates. All data-dependent decisions must be made <em>within</em> each CV fold: standardize using only the training fold's statistics, select features using only the training fold, tune hyperparameters using nested CV. The test fold must remain completely untouched until the final evaluation step. Violating this principle is the single most common source of inflated performance claims in machine learning.</p>
+
+        <h2>Edge case</h2>
+
+        <p><strong>What happens when \(k = n\) in k-fold CV?</strong> This is exactly LOO-CV. What happens when \(k = 1\)?</p> The entire dataset is both the training and test set, giving training error — maximally optimistic and useless for generalization estimation. Valid k-fold CV requires \(k \geq 2\). At \(k = 2\), each fold uses 50% of the data for training, introducing substantial pessimistic bias (the model is trained on half the available data). This is why \(k = 5\) or \(10\) is standard: sufficient training data per fold while maintaining reasonable computational cost and variance properties.</p>
+
+        <p><strong>What about classification?</strong> The bias-variance decomposition as derived applies to squared-error loss in regression. For 0/1 classification loss, no exact additive decomposition exists, but the qualitative tradeoff persists: complex classifiers have low bias and high variance, simple classifiers have high bias and low variance. Cross-validation works identically for classification — simply replace squared error with misclassification rate (or log-loss) in each fold.</p>
+
+        <h2>Where we go next</h2>
+
+        <p>We now have the tools to evaluate and compare any supervised model rigorously. Chapter 11 shifts from classical methods to <strong>neural networks</strong>: multi-layer perceptrons and feed-forward architectures that learn hierarchical representations through backpropagation. Neural networks push the bias-variance tradeoff to its extreme — enormous capacity (near-zero bias) controlled by regularization and early stopping (variance management) — and the evaluation framework from this chapter applies directly to their training and tuning.</p>
+
+      </article>
+
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch9/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">9. Decision Trees</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch11/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">11. Multi-Layer Perceptron &amp; Feed-Forward Neural Networks</span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
 </body>
 </html>
