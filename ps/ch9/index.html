@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>9. Special Distributions: Poisson, t, and Chi-Squared — Probability &amp; Statistics — iTube</title>
+  <meta name="description" content="Where do the Poisson, t, and chi-squared distributions come from? We derive each as a limit, ratio, or sum of simpler distributions, showing why they appear universally in counting, estimation, and testing rather than treating them as arbitrary formulas.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Probability &amp; Statistics</a><span class="sep">/</span>
+        <span>Ch. 9</span>
+      </div>
+      <div class="eyebrow">Probability &amp; Statistics</div>
+      <h1>9. Special Distributions: Poisson, t, and Chi-Squared</h1>
+      <div class="chapter-meta">
+        <span>Chapter 9 of 12</span>
+        <span class="read-badge">30 min read</span>
+      </div>
+      <article>
+
+        <h2>Why these three distributions matter</h2>
+        <p>The Bernoulli, Binomial, Uniform, Exponential, and Normal distributions from Chapters 7 and 8 arise directly from simple structural assumptions. But three other distributions appear with extraordinary frequency in statistical practice — not because they model physical phenomena directly, but because they emerge as <em>derived quantities</em>: limits of sequences, ratios of estimators, or sums of squares. The Poisson arises as the rare-event limit of the Binomial. The t-distribution arises when estimating a Normal mean with unknown variance. The chi-squared distribution arises as the sum of squared Standard Normals. Understanding their origins explains why they're unavoidable in hypothesis testing (Chapter 12) and confidence intervals (Chapter 11), rather than treating them as arbitrary lookup tables.</p>
+
+        <h2>The Poisson distribution: rare events in large populations</h2>
+        <p>Suppose you have \(n\) independent trials, each with success probability \(p\), and you're interested in the total number of successes. This is exactly the Binomial setup from Chapter 7. But what happens when \(n\) is very large, \(p\) is very small, and their product \(\lambda = np\) stays moderate and fixed? Intuitively, this models rare events occurring in a vast population: radioactive decays per second, website hits per minute, defects per million units.</p>
+        <p>Let's derive the limiting PMF rigorously. Start with the Binomial PMF and substitute \(p = \lambda/n\):</p>
+        \[
+        P(Y = k) = \binom{n}{k} \left( \frac{\lambda}{n} \right)^k \left( 1 - \frac{\lambda}{n} \right)^{n-k}
+        \]
+        <p>Expand the binomial coefficient:</p>
+        \[
+        = \frac{n!}{k!(n-k)!} \cdot \frac{\lambda^k}{n^k} \cdot \left( 1 - \frac{\lambda}{n} \right)^n \cdot \left( 1 - \frac{\lambda}{n} \right)^{-k}
+        \]
+        <p>Rearrange to isolate terms whose limits we can evaluate separately:</p>
+        \[
+        = \frac{\lambda^k}{k!} \cdot \underbrace{\frac{n(n-1)(n-2)\cdots(n-k+1)}{n^k}}_{\text{Term A}} \cdot \underbrace{\left( 1 - \frac{\lambda}{n} \right)^n}_{\text{Term B}} \cdot \underbrace{\left( 1 - \frac{\lambda}{n} \right)^{-k}}_{\text{Term C}}
+        \]
+        <p>Now take the limit as \(n \to \infty\) with \(\lambda\) and \(k\) fixed:</p>
+        <ul>
+          <li><strong>Term A:</strong> The numerator has \(k\) factors, each asymptotically equal to \(n\). So the ratio approaches \(n^k / n^k = 1\).</li>
+          <li><strong>Term B:</strong> This is the defining limit of the exponential function: \(\lim_{n\to\infty} (1 - \lambda/n)^n = e^{-\lambda}\).</li>
+          <li><strong>Term C:</strong> As \(n \to \infty\), \(\lambda/n \to 0\), so \((1 - \lambda/n)^{-k} \to 1^{-k} = 1\).</li>
+        </ul>
+        <p>Multiplying the limits together:</p>
+        \[
+        \lim_{n \to \infty} P(Y = k) = \frac{\lambda^k}{k!} \cdot 1 \cdot e^{-\lambda} \cdot 1 = \frac{e^{-\lambda} \lambda^k}{k!}
+        \]
+        <p>This is the <strong>Poisson PMF</strong> with parameter \(\lambda\), written \(X \sim \operatorname{Poisson}(\lambda)\). Every factor has a clear origin: \(\lambda^k/k!\) from the Binomial coefficient and power term, \(e^{-\lambda}\) from the failure probability raised to the \(n\)-th power. The Poisson isn't an arbitrary invention — it's what the Binomial becomes under rare-event scaling.</p>
+
+        <h3>Verifying normalization via Taylor series</h3>
+        <p>Does this PMF sum to 1? Compute:</p>
+        \[
+        \sum_{k=0}^{\infty} \frac{e^{-\lambda} \lambda^k}{k!} = e^{-\lambda} \sum_{k=0}^{\infty} \frac{\lambda^k}{k!}
+        \]
+        <p>Recognize the sum as the Taylor series expansion of \(e^\lambda\):</p>
+        \[
+        = e^{-\lambda} \cdot e^\lambda = 1
+        \]
+        <p>Normalization holds automatically through analytic identity, just as the Binomial normalized via the binomial theorem in Chapter 7.</p>
+
+        <h3>Deriving the Poisson mean and variance</h3>
+        <p>Compute \(\mathbb{E}[X]\) directly from the PMF:</p>
+        \[
+        \mathbb{E}[X] = \sum_{k=0}^{\infty} k \cdot \frac{e^{-\lambda} \lambda^k}{k!}
+        \]
+        <p>The \(k=0\) term vanishes. For \(k \geq 1\), cancel \(k\) with \(k!\) to get \((k-1)!\) in the denominator:</p>
+        \[
+        = e^{-\lambda} \sum_{k=1}^{\infty} \frac{\lambda^k}{(k-1)!}
+        \]
+        <p>Factor out one \(\lambda\) and reindex with \(j = k-1\):</p>
+        \[
+        = e^{-\lambda} \lambda \sum_{j=0}^{\infty} \frac{\lambda^j}{j!} = e^{-\lambda} \lambda \cdot e^\lambda = \lambda
+        \]
+        <p>The mean equals \(\lambda\), consistent with the Binomial mean \(np = \lambda\) being preserved in the limit.</p>
+        <p>For variance, compute \(\mathbb{E}[X(X-1)]\) first (this trick avoids messy algebra):</p>
+        \[
+        \mathbb{E}[X(X-1)] = \sum_{k=0}^{\infty} k(k-1) \frac{e^{-\lambda} \lambda^k}{k!}
+        \]
+        <p>Terms for \(k=0\) and \(k=1\) vanish. For \(k \geq 2\), cancel \(k(k-1)\) with \(k!\) to leave \((k-2)!\):</p>
+        \[
+        = e^{-\lambda} \lambda^2 \sum_{j=0}^{\infty} \frac{\lambda^j}{j!} = \lambda^2
+        \]
+        <p>Now use \(\operatorname{Var}(X) = \mathbb{E}[X(X-1)] + \mathbb{E}[X] - (\mathbb{E}[X])^2 = \lambda^2 + \lambda - \lambda^2 = \lambda\).</p>
+        <p><strong>The Poisson has equal mean and variance.</strong> This equidispersion property is both its signature and its limitation: real count data often exhibits overdispersion (variance &gt; mean), signaling that the Poisson assumption is violated and a Negative Binomial or mixture model may be needed.</p>
+
+        <h3>Worked example: call center arrivals</h3>
+        <p>A call center receives an average of 4 calls per minute. Assuming Poisson arrivals, what is the probability of receiving exactly 7 calls in a given minute?</p>
+        <p>Let \(X \sim \operatorname{Poisson}(4)\). We want \(P(X = 7)\):</p>
+        \[
+        P(X = 7) = \frac{e^{-4} \cdot 4^7}{7!}
+        \]
+        <p>Compute each component: \(4^7 = 16384\). \(7! = 5040\). \(e^{-4} \approx 0.018316\). Multiply numerator: \(0.018316 \times 16384 \approx 300.09\). Divide:</p>
+        \[
+        P(X = 7) = \frac{300.09}{5040} \approx 0.0595
+        \]
+        <p>Approximately 5.95% chance of exactly 7 calls. As a sanity check, the mean is 4, so 7 is above average but within reasonable fluctuation for a distribution with standard deviation \(\sqrt{4} = 2\). The result is plausible.</p>
+
+        <p><strong>Edge case:</strong> the Poisson approximation to the Binomial works well when \(n \geq 20\) and \(p \leq 0.05\) (or more conservatively, \(n \geq 100\) and \(np \leq 10\)). Outside this regime, use the exact Binomial. The approximation error decreases as \(n\) increases with \(\lambda\) fixed.</p>
+
+        <h2>The Chi-Squared distribution: sums of squared normals</h2>
+        <p>Suppose \(Z_1, Z_2, \ldots, Z_k\) are independent Standard Normal random variables. Define:</p>
+        \[
+        Q = Z_1^2 + Z_2^2 + \cdots + Z_k^2
+        \]
+        <p>What is the distribution of \(Q\)? Since each \(Z_i^2 \geq 0\), \(Q\) is non-negative. Its distribution depends only on \(k\), called the <strong>degrees of freedom</strong>. This is the <strong>Chi-Squared distribution</strong> with \(k\) degrees of freedom, written \(Q \sim \chi^2_k\).</p>
+
+        <h3>Deriving the \(\chi^2_1\) PDF via change of variables</h3>
+        <p>Start with the simplest case: \(Q = Z^2\) where \(Z \sim \mathcal{N}(0,1)\). Find the CDF of \(Q\):</p>
+        \[
+        F_Q(q) = P(Z^2 \leq q) = P(-\sqrt{q} \leq Z \leq \sqrt{q}) = \Phi(\sqrt{q}) - \Phi(-\sqrt{q})
+        \]
+        <p>By symmetry of the Standard Normal, \(\Phi(-\sqrt{q}) = 1 - \Phi(\sqrt{q})\), so:</p>
+        \[
+        F_Q(q) = 2\Phi(\sqrt{q}) - 1
+        \]
+        <p>Differentiate with respect to \(q\) using the chain rule (\(d\Phi/dz = \phi(z)\)):</p>
+        \[
+        f_Q(q) = 2 \phi(\sqrt{q}) \cdot \frac{1}{2\sqrt{q}} = \frac{\phi(\sqrt{q})}{\sqrt{q}}
+        \]
+        <p>Substitute \(\phi(z) = \frac{1}{\sqrt{2\pi}} e^{-z^2/2}\):</p>
+        \[
+        f_Q(q) = \frac{1}{\sqrt{2\pi q}} e^{-q/2}, \quad q > 0
+        \]
+        <p>This is the \(\chi^2_1\) PDF. Notice it diverges as \(q \to 0^+\) (the density blows up near zero because squashing the symmetric Normal through \(z \mapsto z^2\) piles mass near the origin). For general \(k\), the PDF involves the gamma function:</p>
+        \[
+        f_Q(q) = \frac{1}{2^{k/2} \Gamma(k/2)} q^{k/2 - 1} e^{-q/2}, \quad q > 0
+        \]
+        <p>We won't derive the general form here (it requires convolution or moment-generating functions), but the key structural facts suffice for applications.</p>
+
+        <h3>Key properties derived from structure</h3>
+        <p>Since \(Q = \sum_{i=1}^k Z_i^2\) and the \(Z_i\) are independent:</p>
+        \[
+        \mathbb{E}[Q] = \sum_{i=1}^k \mathbb{E}[Z_i^2] = \sum_{i=1}^k 1 = k
+        \]
+        <p>(because \(\mathbb{E}[Z^2] = \operatorname{Var}(Z) + (\mathbb{E}[Z])^2 = 1 + 0 = 1\)). Similarly, since \(\operatorname{Var}(Z^2) = \mathbb{E}[Z^4] - (\mathbb{E}[Z^2])^2 = 3 - 1 = 2\) (using the fourth moment of the Standard Normal):</p>
+        \[
+        \operatorname{Var}(Q) = \sum_{i=1}^k \operatorname{Var}(Z_i^2) = 2k
+        \]
+        <p>The mean equals the degrees of freedom; the variance equals twice the degrees of freedom. These relationships are essential for calibrating goodness-of-fit tests and understanding why chi-squared statistics scale with sample size.</p>
+
+        <h3>Additivity: summing independent chi-squared variables</h3>
+        <p>If \(Q_1 \sim \chi^2_{k_1}\) and \(Q_2 \sim \chi^2_{k_2}\) are independent, then \(Q_1 + Q_2 \sim \chi^2_{k_1 + k_2}\). This follows immediately from the definition: if \(Q_1\) is a sum of \(k_1\) squared Standard Normals and \(Q_2\) is a sum of \(k_2\) independent squared Standard Normals, their sum is a sum of \(k_1 + k_2\) independent squared Standard Normals. This additivity makes the chi-squared distribution closed under convolution — a property shared by few distributions and critical for ANOVA decomposition in Chapter 12.</p>
+
+        <h3>Worked example: variance test statistic</h3>
+        <p>A sample of size \(n = 20\) from a Normal population yields sample variance \(s^2 = 25\). Under the null hypothesis that the true variance is \(\sigma_0^2 = 16\), the test statistic is:</p>
+        \[
+        Q = \frac{(n-1)s^2}{\sigma_0^2} = \frac{19 \times 25}{16}
+        \]
+        <p>Compute: \(19 \times 25 = 475\). Then \(475 / 16 = 29.6875\).</p>
+        <p>Under the null, \(Q \sim \chi^2_{19}\). The expected value under the null is \(k = 19\). Our observed value of 29.69 is substantially above the mean, suggesting the true variance may exceed 16. Formal p-value computation requires chi-squared tables or software (Chapter 12), but the magnitude relative to the mean already signals potential rejection.</p>
+
+        <p><strong>Common mistake:</strong> confusing degrees of freedom with sample size. In many applications, df = \(n - 1\) (not \(n\)) because one degree of freedom was consumed estimating the mean. Always verify the df formula for your specific test statistic rather than assuming df = \(n\).</p>
+
+        <h2>The t-distribution: Normal means with estimated variance</h2>
+        <p>In Chapter 8, we saw that if \(X \sim \mathcal{N}(\mu, \sigma^2)\) with <em>known</em> \(\sigma\), then \(Z = (X - \mu)/\sigma \sim \mathcal{N}(0,1)\). But in practice, \(\sigma\) is almost never known. We estimate it with the sample standard deviation \(S\). What is the distribution of:</p>
+        \[
+        T = \frac{\bar{X} - \mu}{S / \sqrt{n}}?
+        \]
+        <p>This is not Standard Normal because \(S\) is random. Gosset (publishing as "Student") showed that if the data are Normal, then \(T\) follows the <strong>t-distribution</strong> with \(n-1\) degrees of freedom, written \(T \sim t_{n-1}\).</p>
+
+        <h3>Deriving the t-distribution as a ratio</h3>
+        <p>Write \(T\) as a ratio of two independent quantities. From sampling theory (proven in Chapter 11 but stated here):</p>
+        <ol>
+          <li>\(Z = \frac{\bar{X} - \mu}{\sigma/\sqrt{n}} \sim \mathcal{N}(0,1)\)</li>
+          <li>\(V = \frac{(n-1)S^2}{\sigma^2} \sim \chi^2_{n-1}\)</li>
+          <li>\(Z\) and \(V\) are independent (a special property of Normal samples)</li>
+        </ol>
+        <p>Now rewrite \(T\):</p>
+        \[
+        T = \frac{\bar{X} - \mu}{S/\sqrt{n}} = \frac{(\bar{X} - \mu)/(\sigma/\sqrt{n})}{S/\sigma} = \frac{Z}{\sqrt{V/(n-1)}}
+        \]
+        <p>So the t-statistic is a Standard Normal divided by the square root of an independent chi-squared variable scaled by its degrees of freedom. This ratio structure explains everything about the t-distribution's behavior.</p>
+
+        <h3>Why heavier tails than Normal?</h3>
+        <p>When \(V\) happens to be small (sample variance underestimates true variance), the denominator \(\sqrt{V/(n-1)}\) shrinks, making \(|T|\) large even if \(Z\) is moderate. This inflates tail probabilities relative to the Standard Normal. As \(n \to \infty\), \(V/(n-1) \to 1\) almost surely (by the Law of Large Numbers), so \(T \to Z\) in distribution. The t-distribution converges to the Standard Normal as degrees of freedom increase — which is why z-tests and t-tests give nearly identical results for large samples.</p>
+
+        <h3>Mean and variance of the t-distribution</h3>
+        <p>For \(T \sim t_\nu\) with \(\nu > 1\): \(\mathbb{E}[T] = 0\) (by symmetry). For \(\nu > 2\):</p>
+        \[
+        \operatorname{Var}(T) = \frac{\nu}{\nu - 2}
+        \]
+        <p>Notice this exceeds 1 for all finite \(\nu\) and approaches 1 as \(\nu \to \infty\). For \(\nu \leq 2\), the variance is undefined (infinite) — the tails are so heavy that the second moment diverges. This is why small-sample t-inference requires caution: with very few degrees of freedom, even the variance of the test statistic doesn't exist.</p>
+
+        <h3>Worked example: small-sample mean test</h3>
+        <p>A sample of \(n = 10\) observations from a Normal population yields \(\bar{x} = 52\) and \(s = 8\). Test whether the population mean differs from \(\mu_0 = 45\).</p>
+        <p>Compute the t-statistic:</p>
+        \[
+        t = \frac{\bar{x} - \mu_0}{s/\sqrt{n}} = \frac{52 - 45}{8/\sqrt{10}}
+        \]
+        <p>Numerator: \(52 - 45 = 7\). Denominator: \(8 / \sqrt{10} \approx 8 / 3.1623 \approx 2.5298\). Divide:</p>
+        \[
+        t = \frac{7}{2.5298} \approx 2.767
+        \]
+        <p>Under the null, \(T \sim t_9\). The critical value for a two-sided test at \(\alpha = 0.05\) with 9 df is approximately 2.262. Since \(|2.767| > 2.262\), we reject the null. Had we incorrectly used the Standard Normal critical value of 1.96, we would still reject — but the margin is narrower, illustrating how the t-distribution's heavier tails demand stronger evidence for small samples.</p>
+
+        <p><strong>Edge case:</strong> the t-distribution assumes Normality of the underlying data. For non-Normal data with small \(n\), the actual distribution of \(T\) may differ substantially from \(t_{n-1}\). The Central Limit Theorem (Chapter 11) rescues approximate validity for large \(n\), but for small non-Normal samples, consider nonparametric alternatives (Wilcoxon signed-rank test) covered implicitly in Chapter 12's discussion of test assumptions.</p>
+
+        <h2>Connecting the three distributions</h2>
+        <p>These three distributions form an interconnected system:</p>
+        <ul>
+          <li><strong>Poisson ← Binomial:</strong> Rare-event limit (this chapter).</li>
+          <li><strong>Chi-Squared ← Normal:</strong> Sum of squared Standard Normals (this chapter).</li>
+          <li><strong>t ← Normal + Chi-Squared:</strong> Ratio of Normal to scaled chi-squared root (this chapter).</li>
+          <li><strong>Normal ← Sums:</strong> Central Limit Theorem applied to any i.i.d. sequence (Chapter 11).</li>
+        </ul>
+        <p>Every major test in Chapter 12 uses at least one of these: z-tests use the Normal, t-tests use the t-distribution, chi-squared goodness-of-fit and independence tests use \(\chi^2\), and proportion tests use the Normal approximation to the Binomial (which itself connects to Poisson in sparse regimes). Understanding their derivations transforms hypothesis testing from memorized procedures into logical consequences of probability theory.</p>
+
+        <p><strong>Common mistake across all three:</strong> applying these distributions outside their domain of validity. Poisson requires rare events in large populations (check \(np \leq 10\)). Chi-squared tests require expected cell counts ≥ 5 (otherwise use Fisher's exact test). t-tests require Normality or large \(n\). Always verify assumptions before invoking the distribution — the mathematics is exact only under its stated conditions.</p>
+
+      </article>
+  <div class="chapter-nav">        <a class="chapter-nav-link prev" href="../ch8/index.html">          <span class="chapter-nav-label">← Previous</span>          <span class="chapter-nav-title">8. Continuous Random Variables and Probability Density Functions</span>        </a>        <a class="chapter-nav-link next" href="../ch10/index.html">          <span class="chapter-nav-label">Next →</span>          <span class="chapter-nav-title">10. Cumulative Distribution Function and Conditional PDF</span>        </a>      </div>    </div>  </main>  <footer>    <div class="wrap">      <span>© 2026 iTube. Read forever, free forever.</span>      <span>No video was harmed in the making of this platform.</span>    </div>  </footer>  <script src="../../theme.js"></script>  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>  <script defer src="../../app.js"></script></body></html>
