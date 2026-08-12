@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>3. Matrices, Operations, and Special Types — Linear Algebra — iTube</title>
+    <meta name="description" content="Rigorous treatment of matrix algebra, operations, inverses, transposes, and special matrices with full derivations and exam-focused worked examples.">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+    <link rel="manifest" href="../../manifest.json">
+    <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+    <meta name="theme-color" content="#1B1B1F">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="iTube">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script>
+        (function(){
+            var saved = localStorage.getItem("itube-theme");
+            var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+            document.documentElement.setAttribute("data-theme", theme);
+        })();
+    </script>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+    <header class="top">
+        <div class="wrap">
+            <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+            <div class="top-actions">
+                <div class="font-controls" role="group" aria-label="Adjust text size">
+                    <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+                    <span id="font-size-label">100%</span>
+                    <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+                    <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+                </div>
+                <button id="theme-btn" title="Toggle light/dark">◐</button>
+            </div>
+        </div>
+    </header>
+    <main>
+        <div class="wrap narrow">
+            <div class="breadcrumb"><a href="../../index.html">iTube</a><span class="sep">/</span><a href="../index.html">Linear Algebra</a><span class="sep">/</span><span>Ch. 3</span></div>
+            <div class="eyebrow">Linear Algebra</div>
+            <h1>3. Matrices, Operations, and Special Types</h1>
+            <div class="chapter-meta">
+                <span>Chapter 3 of 14</span>
+                <span class="read-badge">17 min read</span>
+            </div>
+            <article>
+                <h2>Matrices as linear maps and data structures</h2>
+                <p>In Chapters 1 and 2 we built the abstract theory of vector spaces, subspaces, and bases without ever writing down a rectangular array of numbers. Yet nearly every computation in linear algebra—and every algorithm in Chapters 4 through 13—ultimately reduces to manipulating matrices. This chapter bridges the gap: it defines matrices not merely as tables of scalars but as concrete representations of linear transformations between finite-dimensional spaces once bases are chosen. Understanding this dual nature—as both a computational object and a representation of an abstract map—is essential for everything that follows.</p>
+                <p>The operations defined below (addition, multiplication, transpose, inverse) are not arbitrary conventions; they are precisely the operations that make matrix algebra isomorphic to the algebra of linear maps. When you multiply two matrices, you are composing two linear transformations. When you take a transpose, you are computing the adjoint map relative to standard inner products. When you invert a matrix, you are finding the inverse transformation. Every identity proved here has a coordinate-free counterpart in functional analysis; every algorithm built on these operations inherits that structural meaning. Exams test both the mechanical fluency and the conceptual understanding—this chapter develops both.</p>
+
+                <h2>Matrix addition, scalar multiplication, and multiplication</h2>
+                <p>An \(m \times n\) matrix over a field \(F\) is a rectangular array \(A = [a_{ij}]\) with \(m\) rows and \(n\) columns, where each \(a_{ij} \in F\). The set of all such matrices is denoted \(M_{m \times n}(F)\). Addition and scalar multiplication are defined componentwise:</p>
+                \[
+                (A + B)_{ij} = a_{ij} + b_{ij}, \quad (cA)_{ij} = c \cdot a_{ij}.
+                \]
+                <p>These operations make \(M_{m \times n}(F)\) a vector space of dimension \(mn\) over \(F\), with the standard basis consisting of matrices \(E_{ij}\) having 1 in position \((i,j)\) and 0 elsewhere. This connects directly to Chapter 1: matrices themselves form a vector space, so all subspace, span, and basis concepts apply to them.</p>
+                <p><strong>Matrix multiplication</strong> is fundamentally different. If \(A \in M_{m \times n}(F)\) and \(B \in M_{n \times p}(F)\), then \(AB \in M_{m \times p}(F)\) is defined by:</p>
+                \[
+                (AB)_{ij} = \sum_{k=1}^{n} a_{ik} b_{kj}.
+                \]
+                <p>This formula encodes composition of linear maps: if \(T_A: F^n \to F^m\) and \(T_B: F^p \to F^n\) are the maps represented by \(A\) and \(B\) (relative to standard bases), then \(T_A \circ T_B\) is represented by \(AB\). The inner dimension \(n\) must match because the output space of \(T_B\) must equal the input space of \(T_A\). Matrix multiplication is associative \((AB)C = A(BC)\) and distributive over addition, but <em>not commutative</em>: even when \(AB\) and \(BA\) are both defined, they are generally unequal. This non-commutativity reflects the fact that function composition is order-dependent.</p>
+                <p><strong>Common mistake:</strong> Students frequently assume \(AB = BA\) or cancel matrices from equations as if they were scalars. Never write \(A^{-1}AB = B\) unless you have verified \(A\) is square and invertible; never conclude \(AB = AC \implies B = C\) unless \(A\) has full column rank. These errors account for a significant fraction of lost points on exams involving matrix equations.</p>
+
+                <h3>Worked example: verifying non-commutativity</h3>
+                <p>Let \(A = \begin{pmatrix} 1 & 2 \\ 0 & 1 \end{pmatrix}\) and \(B = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}\). Compute \(AB\) and \(BA\) explicitly.</p>
+                <p><strong>Step 1 (Compute \(AB\)):</strong></p>
+                \[
+                AB = \begin{pmatrix} 1 & 2 \\ 0 & 1 \end{pmatrix} \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}
+                = \begin{pmatrix}
+                1\cdot0 + 2\cdot1 & 1\cdot1 + 2\cdot0 \\
+                0\cdot0 + 1\cdot1 & 0\cdot1 + 1\cdot0
+                \end{pmatrix}
+                = \begin{pmatrix} 2 & 1 \\ 1 & 0 \end{pmatrix}.
+                \]
+                <p><strong>Step 2 (Compute \(BA\)):</strong></p>
+                \[
+                BA = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix} \begin{pmatrix} 1 & 2 \\ 0 & 1 \end{pmatrix}
+                = \begin{pmatrix}
+                0\cdot1 + 1\cdot0 & 0\cdot2 + 1\cdot1 \\
+                1\cdot1 + 0\cdot0 & 1\cdot2 + 0\cdot1
+                \end{pmatrix}
+                = \begin{pmatrix} 0 & 1 \\ 1 & 2 \end{pmatrix}.
+                \]
+                <p><strong>Step 3 (Compare):</strong> \(AB \neq BA\); specifically, \((AB)_{11} = 2\) while \((BA)_{11} = 0\).</p>
+                <p><strong>Sensitivity check:</strong> If \(B\) were instead the identity matrix \(I\), then \(AI = IA = A\). Commutativity holds only for special pairs (e.g., when one matrix is scalar, diagonal with equal entries, or a polynomial in the other). In general, always compute both products when order matters—never assume symmetry.</p>
+
+                <h2>Transpose and its fundamental properties</h2>
+                <p>The <strong>transpose</strong> of an \(m \times n\) matrix \(A\), denoted \(A^\top\), is the \(n \times m\) matrix obtained by swapping rows and columns: \((A^\top)_{ij} = a_{ji}\). Transposition interacts with other operations via four key identities, each reflecting a property of adjoint maps:</p>
+                \[
+                (A + B)^\top = A^\top + B^\top, \quad
+                (cA)^\top = c A^\top, \quad
+                (AB)^\top = B^\top A^\top, \quad
+                (A^\top)^\top = A.
+                \]
+                <p>The reversal in \((AB)^\top = B^\top A^\top\) is critical and mirrors the contravariant nature of dual maps. To see why the order reverses, consider the \((i,j)\)-entry of \((AB)^\top\): it equals \((AB)_{ji} = \sum_k a_{jk} b_{ki}\). The \((i,j)\)-entry of \(B^\top A^\top\) is \(\sum_k (B^\top)_{ik} (A^\top)_{kj} = \sum_k b_{ki} a_{jk}\), which is identical since scalar multiplication commutes. Thus the identity holds entrywise. This derivation shows the reversal is not a convention but a consequence of how indices contract.</p>
+                <p>A square matrix \(A\) is <strong>symmetric</strong> if \(A^\top = A\) and <strong>skew-symmetric</strong> if \(A^\top = -A\). Symmetric matrices arise naturally as Gram matrices (\(X^\top X\)), covariance matrices, and Hessian matrices; their spectral properties (real eigenvalues, orthogonal eigenvectors) underpin quadratic forms (Chapter 8), PCA, and SVD (Chapter 13). Skew-symmetric matrices appear in cross-product operators and Lie algebras; their diagonal entries are always zero because \(a_{ii} = -a_{ii} \implies a_{ii} = 0\).</p>
+                <p><strong>Edge case:</strong> For complex matrices, the conjugate transpose \(A^* = \overline{A^\top}\) replaces the ordinary transpose in most theoretical contexts (Hermitian vs. symmetric, unitary vs. orthogonal). This book focuses on real matrices unless stated otherwise, but be aware that many results generalize with \(^\top\) replaced by \(^*\) and “symmetric” by “Hermitian.” Exam questions specifying \(\mathbb{C}^n\) will use \(^*\); those specifying \(\mathbb{R}^n\) use \(^\top\).</p>
+
+                <h2>Invertibility and elementary matrices</h2>
+                <p>A square matrix \(A \in M_n(F)\) is <strong>invertible</strong> (or nonsingular) if there exists \(A^{-1} \in M_n(F)\) such that \(AA^{-1} = A^{-1}A = I_n\). Invertibility is equivalent to any of the following conditions (each proved or motivated below):</p>
+                \[
+                \det(A) \neq 0 \iff \operatorname{rank}(A) = n \iff \text{columns of } A \text{ are linearly independent} \iff Ax = 0 \text{ has only the trivial solution}.
+                \]
+                <p>This equivalence chain connects determinants (Chapter 6), rank (Chapter 5), linear independence (Chapter 2), and homogeneous systems (Chapter 4)—making invertibility a central hub concept. On exams, you may be asked to determine invertibility using whichever condition is most convenient given the problem context.</p>
+                <p><strong>Derivation: uniqueness of inverse.</strong> Suppose \(B\) and \(C\) are both inverses of \(A\). Then \(B = BI = B(AC) = (BA)C = IC = C\). Thus the inverse, if it exists, is unique. This justifies the notation \(A^{-1}\) without ambiguity.</p>
+                <p><strong>Elementary matrices</strong> encode row operations: multiplying \(A\) on the left by an elementary matrix \(E\) performs the corresponding row operation on \(A\). There are three types: row swap, row scaling, and row addition. Each elementary matrix is invertible, and its inverse corresponds to the reverse operation. Crucially, \(A\) is invertible if and only if it can be written as a product of elementary matrices—equivalently, if Gaussian elimination reduces \(A\) to \(I\) without encountering a zero pivot. This links invertibility directly to the algorithmic machinery of Chapter 4 and LU decomposition (Chapter 12).</p>
+
+                <h3>Worked example: computing inverse via augmented matrix</h3>
+                <p>Find \(A^{-1}\) for \(A = \begin{pmatrix} 2 & 1 \\ 5 & 3 \end{pmatrix}\) using the augmented matrix method.</p>
+                <p><strong>Step 1:</strong> Form \([A \mid I]\):</p>
+                \[
+                \left[\begin{array}{cc|cc}
+                2 & 1 & 1 & 0 \\
+                5 & 3 & 0 & 1
+                \end{array}\right].
+                \]
+                <p><strong>Step 2:</strong> Scale \(R_1\) by \(1/2\):</p>
+                \[
+                \left[\begin{array}{cc|cc}
+                1 & 1/2 & 1/2 & 0 \\
+                5 & 3 & 0 & 1
+                \end{array}\right].
+                \]
+                <p><strong>Step 3:</strong> Eliminate below pivot: \(R_2 \gets R_2 - 5R_1\):</p>
+                \[
+                \left[\begin{array}{cc|cc}
+                1 & 1/2 & 1/2 & 0 \\
+                0 & 1/2 & -5/2 & 1
+                \end{array}\right].
+                \]
+                <p><strong>Step 4:</strong> Scale \(R_2\) by 2:</p>
+                \[
+                \left[\begin{array}{cc|cc}
+                1 & 1/2 & 1/2 & 0 \\
+                0 & 1 & -5 & 2
+                \end{array}\right].
+                \]
+                <p><strong>Step 5:</strong> Eliminate above pivot: \(R_1 \gets R_1 - (1/2)R_2\):</p>
+                \[
+                \left[\begin{array}{cc|cc}
+                1 & 0 & 3 & -1 \\
+                0 & 1 & -5 & 2
+                \end{array}\right].
+                \]
+                <p><strong>Step 6:</strong> Read off \(A^{-1} = \begin{pmatrix} 3 & -1 \\ -5 & 2 \end{pmatrix}\).</p>
+                <p><strong>Verification:</strong> Compute \(AA^{-1} = \begin{pmatrix} 2 & 1 \\ 5 & 3 \end{pmatrix} \begin{pmatrix} 3 & -1 \\ -5 & 2 \end{pmatrix} = \begin{pmatrix} 6-5 & -2+2 \\ 15-15 & -5+6 \end{pmatrix} = I\). Confirmed.</p>
+                <p><strong>Sensitivity check:</strong> If the (2,2) entry of \(A\) were changed from 3 to 2.5, then \(\det(A) = 2(2.5) - 5(1) = 0\), making \(A\) singular. Row reduction would produce a zero row on the left side of the augmented matrix, signaling non-invertibility. This illustrates how small perturbations can destroy invertibility—a phenomenon quantified by the condition number in numerical linear algebra and revisited in SVD (Chapter 13).</p>
+
+                <h2>Trace, determinant preview, and special matrix types</h2>
+                <p>The <strong>trace</strong> of a square matrix \(A\), denoted \(\operatorname{tr}(A)\), is the sum of its diagonal entries: \(\operatorname{tr}(A) = \sum_{i=1}^{n} a_{ii}\). Trace is linear (\(\operatorname{tr}(A+B) = \operatorname{tr}(A) + \operatorname{tr}(B)\), \(\operatorname{tr}(cA) = c\operatorname{tr}(A)\)) and satisfies the cyclic property \(\operatorname{tr}(AB) = \operatorname{tr}(BA)\) whenever both products are defined (even if \(A\) and \(B\) are not square, as long as dimensions conform). This cyclic property implies \(\operatorname{tr}(ABC) = \operatorname{tr}(BCA) = \operatorname{tr}(CAB)\), though not generally \(\operatorname{tr}(ACB)\). Trace appears in Frobenius norm (\(\|A\|_F^2 = \operatorname{tr}(A^\top A)\)), expected values of quadratic forms, and character formulas in representation theory.</p>
+                <p>Beyond symmetric and skew-symmetric matrices, several special types recur throughout this book:</p>
+                <ul>
+                    <li><strong>Diagonal:</strong> \(D = \operatorname{diag}(d_1, \dots, d_n)\) with \(d_{ij} = 0\) for \(i \neq j\). Multiplication by \(D\) scales coordinates; inversion requires only \(d_i \neq 0\).</li>
+                    <li><strong>Triangular:</strong> Upper triangular (\(a_{ij} = 0\) for \(i > j\)) or lower triangular (\(a_{ij} = 0\) for \(i < j\)). Determinant equals product of diagonals; eigenvalues are diagonal entries. Central to LU decomposition (Chapter 12).</li>
+                    <li><strong>Orthogonal:</strong> \(Q^\top Q = QQ^\top = I\). Preserves norms and angles; \(Q^{-1} = Q^\top\). Columns form an orthonormal basis. Essential for QR factorization, SVD (Chapter 13), and change-of-basis preserving geometry.</li>
+                    <li><strong>Idempotent:</strong> \(P^2 = P\). Eigenvalues are 0 or 1; represents projection onto range along kernel. Orthogonal projections satisfy additionally \(P^\top = P\). Covered in detail in Chapter 9.</li>
+                    <li><strong>Nilpotent:</strong> \(N^k = 0\) for some \(k \geq 1\). All eigenvalues are 0; appears in Jordan canonical form.</li>
+                </ul>
+                <p><strong>Common mistake:</strong> Confusing orthogonal matrices with orthonormal sets of vectors. An orthogonal matrix must be square with orthonormal columns <em>and</em> rows; a rectangular matrix with orthonormal columns satisfies \(Q^\top Q = I\) but \(QQ^\top \neq I\) (unless square). Only square orthogonal matrices are truly invertible with \(Q^{-1} = Q^\top\). Rectangular “orthonormal-column” matrices are partial isometries, not orthogonal matrices in the strict sense. Exam graders deduct points for this conflation.</p>
+
+                <h3>Worked example: verifying orthogonality and computing trace</h3>
+                <p>Let \(Q = \frac{1}{\sqrt{2}} \begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix}\). Verify \(Q\) is orthogonal and compute \(\operatorname{tr}(Q^\top Q)\).</p>
+                <p><strong>Step 1 (Check \(Q^\top Q\)):</strong></p>
+                \[
+                Q^\top Q = \frac{1}{2} \begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix} \begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix}
+                = \frac{1}{2} \begin{pmatrix} 1+1 & 1-1 \\ 1-1 & 1+1 \end{pmatrix}
+                = \frac{1}{2} \begin{pmatrix} 2 & 0 \\ 0 & 2 \end{pmatrix} = I.
+                \]
+                <p>Since \(Q\) is square and \(Q^\top Q = I\), it follows that \(QQ^\top = I\) automatically, confirming orthogonality.</p>
+                <p><strong>Step 2 (Compute trace):</strong> \(\operatorname{tr}(Q^\top Q) = \operatorname{tr}(I) = 2\). Alternatively, \(\operatorname{tr}(Q^\top Q) = \|Q\|_F^2 = \sum_{i,j} q_{ij}^2 = 4 \cdot (1/\sqrt{2})^2 = 4 \cdot (1/2) = 2\). Both methods agree.</p>
+                <p><strong>Interpretation:</strong> The trace of \(Q^\top Q\) equals the squared Frobenius norm, which for orthogonal matrices always equals \(n\) (the dimension). This provides a quick sanity check: if your computed \(Q^\top Q\) has trace different from \(n\), either \(Q\) is not orthogonal or arithmetic error occurred.</p>
+
+                <h2>Connections forward and exam strategy</h2>
+                <p>Matrix algebra is the computational backbone of everything that follows. Gaussian elimination (Chapter 4) manipulates matrices via elementary row operations to solve systems and compute rank. Determinants (Chapter 6) provide a scalar test for invertibility and volume scaling. Eigenvalue problems (Chapter 7) seek special bases in which matrices become diagonal or triangular. Quadratic forms (Chapter 8) represent energy functions via symmetric matrices
