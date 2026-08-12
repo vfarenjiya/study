@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>12. Hypothesis Testing: z-test, t-test, and Chi-Squared Test — Probability &amp; Statistics — iTube</title>
+  <meta name="description" content="How do we decide whether data contradicts a claim? We derive hypothesis tests by inverting confidence intervals and probability statements, showing exactly how test statistics, p-values, and critical regions emerge from the distributions built in Chapters 7–11.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Probability &amp; Statistics</a><span class="sep">/</span>
+        <span>Ch. 12</span>
+      </div>
+      <div class="eyebrow">Probability &amp; Statistics</div>
+      <h1>12. Hypothesis Testing: z-test, t-test, and Chi-Squared Test</h1>
+      <div class="chapter-meta">
+        <span>Chapter 12 of 12</span>
+        <span class="read-badge">25 min read</span>
+      </div>
+      <article>
+
+        <h2>The question that starts everything</h2>
+        <p>Throughout this book, we've built tools for describing uncertainty: counting principles, probability axioms, conditional reasoning, random variables, key distributions, and the Central Limit Theorem. But description alone doesn't answer the question practitioners actually face: <em>does my data contradict a specific claim?</em> A pharmaceutical company wants to know if a new drug outperforms placebo. An engineer wants to know if a manufacturing process has drifted from specification. A researcher wants to know if two categorical variables are associated.</p>
+        <p>Hypothesis testing is the formal machinery for answering such questions. But rather than presenting tests as memorized procedures with lookup tables, we will derive each one from first principles by asking: what probability statement would be true if the claim were correct, and how unlikely must our observed data be under that statement before we reject it? Every test statistic, critical value, and p-value in this chapter emerges directly from the distributions and limit theorems developed in Chapters 7–11.</p>
+
+        <h2>The general framework: null hypotheses and rejection regions</h2>
+        <p>Every hypothesis test begins with two competing claims about a population parameter \(\theta\):</p>
+        <ul>
+          <li><strong>Null hypothesis</strong> \(H_0\): the default assumption, typically representing "no effect," "no difference," or "status quo." Written as \(\theta = \theta_0\) (or \(\theta \leq \theta_0\) / \(\theta \geq \theta_0\) for one-sided tests).</li>
+          <li><strong>Alternative hypothesis</strong> \(H_1\) (or \(H_a\)): what we suspect might be true instead. Written as \(\theta \neq \theta_0\), \(\theta &gt; \theta_0\), or \(\theta &lt; \theta_0\).</li>
+        </ul>
+        <p>We never "prove" \(H_0\) or \(H_1\). Instead, we assume \(H_0\) is true and ask: how surprising is our observed data under this assumption? If the data would be extremely rare under \(H_0\), we reject \(H_0\) in favor of \(H_1\). If not, we fail to reject \(H_0\) (which is not the same as accepting it).</p>
+        <p>The threshold for "extremely rare" is set by the <strong>significance level</strong> \(\alpha\), typically 0.05 or 0.01. Formally, \(\alpha = P(\text{reject } H_0 \mid H_0 \text{ true})\) — the maximum tolerable probability of a Type I error (false positive). The <strong>rejection region</strong> is the set of test statistic values whose combined probability under \(H_0\) equals \(\alpha\). If our observed test statistic falls in this region, we reject.</p>
+
+        <h3>Why not just accept \(H_0\) when we fail to reject?</h3>
+        <p>A natural follow-up question: if the data isn't surprising under \(H_0\), why can't we conclude \(H_0\) is true? Because absence of evidence against \(H_0\) is not evidence for it. A small sample might simply lack power to detect a real effect. Failing to reject means "the data are consistent with \(H_0\)," not "\(H_0\) is confirmed." This asymmetry is fundamental to frequentist inference and motivates the complementary concept of statistical power (\(1 - \beta\), where \(\beta = P(\text{fail to reject } H_0 \mid H_1 \text{ true})\)), which quantifies a test's ability to detect effects when they exist.</p>
+
+        <h2>The z-test: known variance, Normal approximation</h2>
+        <p>Suppose we have i.i.d. observations \(X_1, \ldots, X_n\) from a distribution with mean \(\mu\) and <em>known</em> variance \(\sigma^2\). We want to test \(H_0: \mu = \mu_0\) vs. \(H_1: \mu \neq \mu_0\).</p>
+        <p>From Chapter 11, we know that under \(H_0\), the standardized sample mean follows (exactly if Normal, approximately via CLT otherwise):</p>
+        \[
+        Z = \frac{\bar{X} - \mu_0}{\sigma / \sqrt{n}} \sim \mathcal{N}(0, 1)
+        \]
+        <p>This is our <strong>test statistic</strong>. Under \(H_0\), it should be near zero. Values far from zero indicate inconsistency with \(H_0\). For a two-sided test at level \(\alpha\), the rejection region is \(|Z| &gt; z_{\alpha/2}\), where \(z_{\alpha/2}\) satisfies \(P(|Z| &gt; z_{\alpha/2}) = \alpha\) under the Standard Normal.</p>
+
+        <h3>Deriving the p-value from the test statistic</h3>
+        <p>Rather than comparing \(Z\) to a fixed critical value, we can compute the <strong>p-value</strong>: the probability, assuming \(H_0\) is true, of observing a test statistic at least as extreme as the one actually observed. For a two-sided z-test:</p>
+        \[
+        p = 2 \cdot P(Z \geq |z_{\text{obs}}|) = 2 \big(1 - \Phi(|z_{\text{obs}}|)\big)
+        \]
+        <p>where \(\Phi\) is the Standard Normal CDF (Chapter 8/10). The factor of 2 accounts for both tails. If \(p \leq \alpha\), we reject \(H_0\); equivalently, \(p \leq \alpha\) if and only if \(|z_{\text{obs}}| &gt; z_{\alpha/2}\). The p-value contains more information than a binary reject/fail-to-reject decision: it tells us the smallest \(\alpha\) at which we would reject.</p>
+
+        <h3>Worked example: testing a population mean with known variance</h3>
+        <p>A machine fills bottles with liquid. The fill volume is Normally distributed with known standard deviation \(\sigma = 3\) mL. The target mean is \(\mu_0 = 500\) mL. A sample of \(n = 36\) bottles yields \(\bar{x} = 498.2\) mL. Test \(H_0: \mu = 500\) vs. \(H_1: \mu \neq 500\) at \(\alpha = 0.05\).</p>
+        <p>Step 1: Compute the test statistic.</p>
+        \[
+        z_{\text{obs}} = \frac{\bar{x} - \mu_0}{\sigma / \sqrt{n}} = \frac{498.2 - 500}{3 / \sqrt{36}}
+        \]
+        <p>Numerator: \(498.2 - 500 = -1.8\). Denominator: \(3 / \sqrt{36} = 3/6 = 0.5\). Divide:</p>
+        \[
+        z_{\text{obs}} = \frac{-1.8}{0.5} = -3.6
+        \]
+        <p>Step 2: Compute the p-value.</p>
+        \[
+        p = 2 \cdot P(Z \geq |-3.6|) = 2 \cdot P(Z \geq 3.6)
+        \]
+        <p>From Standard Normal tables or software, \(\Phi(3.6) \approx 0.99984\), so \(P(Z \geq 3.6) = 1 - 0.99984 = 0.00016\). Multiply by 2:</p>
+        \[
+        p = 2 \times 0.00016 = 0.00032
+        \]
+        <p>Step 3: Compare to \(\alpha\). Since \(0.00032 &lt; 0.05\), we reject \(H_0\).</p>
+        <p>The data provide very strong evidence that the true mean fill volume differs from 500 mL. The observed sample mean of 498.2 mL is 3.6 standard errors below the hypothesized mean — an event with probability less than 0.04% under \(H_0\).</p>
+
+        <p><strong>Common mistake:</strong> using the z-test when \(\sigma\) is unknown and estimated from the sample. Replacing \(\sigma\) with \(s\) changes the sampling distribution from Normal to t (Chapter 9). Using z-critical values with estimated variance produces anti-conservative tests (actual Type I error exceeds nominal \(\alpha\)), especially for small \(n\). Always check whether \(\sigma\) is genuinely known before choosing the z-test.</p>
+
+        <h2>The t-test: unknown variance, exact under Normality</h2>
+        <p>In practice, \(\sigma\) is almost never known. When we estimate it with the sample standard deviation \(S\), the test statistic becomes:</p>
+        \[
+        T = \frac{\bar{X} - \mu_0}{S / \sqrt{n}}
+        \]
+        <p>As derived in Chapter 9, if the data are exactly Normal, then \(T \sim t_{n-1}\) under \(H_0\). The t-distribution has heavier tails than the Standard Normal, reflecting additional uncertainty from estimating \(\sigma\). For large \(n\), \(t_{n-1} \approx \mathcal{N}(0,1)\) and the t-test converges to the z-test. For small \(n\), the heavier tails demand stronger evidence for rejection.</p>
+
+        <h3>One-sample t-test derivation from first principles</h3>
+        <p>Why does \(T\) follow a t-distribution? Recall from Chapter 9 that \(T\) can be written as:</p>
+        \[
+        T = \frac{Z}{\sqrt{V/(n-1)}}
+        \]
+        <p>where \(Z = (\bar{X} - \mu)/(\sigma/\sqrt{n}) \sim \mathcal{N}(0,1)\) and \(V = (n-1)S^2/\sigma^2 \sim \chi^2_{n-1}\), with \(Z\) and \(V\) independent (a special property of Normal samples proven via Cochran's theorem). This ratio structure is precisely the definition of the t-distribution with \(n-1\) degrees of freedom. No approximation is involved — the t-test is <em>exact</em> under Normality, unlike the z-test which relies on CLT when data aren't Normal.</p>
+
+        <h3>Worked example: one-sample t-test</h3>
+        <p>A researcher measures reaction times (in ms) for \(n = 12\) subjects: \(\bar{x} = 342\), \(s = 28\). Test whether the population mean differs from \(\mu_0 = 350\) ms at \(\alpha = 0.05\).</p>
+        <p>Step 1: Compute the test statistic.</p>
+        \[
+        t_{\text{obs}} = \frac{342 - 350}{28 / \sqrt{12}}
+        \]
+        <p>Numerator: \(342 - 350 = -8\). Denominator: \(28 / \sqrt{12} \approx 28 / 3.4641 \approx 8.0829\). Divide:</p>
+        \[
+        t_{\text{obs}} = \frac{-8}{8.0829} \approx -0.990
+        \]
+        <p>Step 2: Determine the critical value. Degrees of freedom: \(n - 1 = 11\). For a two-sided test at \(\alpha = 0.05\), \(t_{11, 0.025} \approx 2.201\) (from t-tables or software).</p>
+        <p>Step 3: Compare. Since \(|-0.990| = 0.990 &lt; 2.201\), we fail to reject \(H_0\).</p>
+        <p>The observed mean of 342 ms is less than one standard error below 350 ms. Under \(H_0\), deviations of this magnitude occur frequently (p-value ≈ 0.34). The data are consistent with a true mean of 350 ms. Note: had we incorrectly used \(z_{0.025} = 1.96\), we would still fail to reject here, but the margin between test statistic and critical value would appear larger than it truly is, potentially misleading in borderline cases.</p>
+
+        <p><strong>Edge case:</strong> what if the data aren't Normal? For small \(n\), the t-test's actual Type I error rate may deviate substantially from \(\alpha\). The CLT rescues approximate validity for large \(n\) (typically \(n &gt; 30\) for moderate skewness, \(n &gt; 100\) for heavy tails), but for small non-Normal samples, consider the Wilcoxon signed-rank test or bootstrap methods. Always assess Normality via Q-Q plots or Shapiro-Wilk tests before applying the t-test to small samples.</p>
+
+        <h2>The chi-squared test: categorical data and goodness-of-fit</h2>
+        <p>The z-test and t-test address means of continuous (or approximately continuous) data. What about categorical data — counts in categories, contingency tables, or testing whether observed frequencies match expected ones? The chi-squared test handles these via a fundamentally different mechanism: comparing observed and expected counts through squared discrepancies.</p>
+
+        <h3>Goodness-of-fit test: deriving the statistic</h3>
+        <p>Suppose we observe counts \(O_1, O_2, \ldots, O_k\) across \(k\) categories, and under \(H_0\) the expected counts are \(E_1, E_2, \ldots, E_k\) (computed from the hypothesized distribution and total sample size \(n = \sum O_i\)). How do we measure discrepancy between observed and expected?</p>
+        <p>A naive approach: sum the raw differences \(\sum(O_i - E_i)\). But this always equals zero (both sum to \(n\)), so it carries no information. Square the differences to prevent cancellation: \(\sum(O_i - E_i)^2\). But a discrepancy of 5 matters more when \(E_i = 10\) than when \(E_i = 1000\) — we need to scale by expected count. This motivates Pearson's chi-squared statistic:</p>
+        \[
+        \chi^2 = \sum_{i=1}^{k} \frac{(O_i - E_i)^2}{E_i}
+        \]
+        <p>Under \(H_0\) (and assuming all \(E_i \geq 5\) for the asymptotic approximation to hold), this statistic follows approximately \(\chi^2_{k-1-m}\), where \(m\) is the number of parameters estimated from the data to compute the \(E_i\). The degrees of freedom equal the number of free categories minus constraints: \(k\) categories have \(k-1\) free counts (since they sum to \(n\)), and estimating \(m\) parameters imposes \(m\) additional constraints.</p>
+
+        <h3>Why chi-squared? Connecting to sums of squared normals</h3>
+        <p>The connection to the chi-squared distribution (Chapter 9) arises because, under \(H_0\), each standardized residual \((O_i - E_i)/\sqrt{E_i}\) is approximately Standard Normal (by the CLT applied to multinomial counts), and the sum of their squares is approximately chi-squared. The dependence among categories (counts sum to \(n\)) reduces the effective dimensionality from \(k\) to \(k-1-m\), which is why the degrees of freedom adjust accordingly.</p>
+
+        <h3>Worked example: testing fairness of a six-sided die</h3>
+        <p>A die is rolled \(n = 120\) times. Observed counts: \(\{18, 22, 20, 19, 24, 17\}\). Test \(H_0\): the die is fair (each face has probability \(1/6\)).</p>
+        <p>Step 1: Compute expected counts. Under \(H_0\), \(E_i = 120 \times (1/6) = 20\) for all \(i = 1, \ldots, 6\).</p>
+        <p>Step 2: Compute each term \((O_i - E_i)^2 / E_i\):</p>
+        \[
+        \frac{(18-20)^2}{20} = \frac{4}{20} = 0.20
+        \]
+        \[
+        \frac{(22-20)^2}{20} = \frac{4}{20} = 0.20
+        \]
+        \[
+        \frac{(20-20)^2}{20} = \frac{0}{20} = 0.00
+        \]
+        \[
+        \frac{(19-20)^2}{20} = \frac{1}{20} = 0.05
+        \]
+        \[
+        \frac{(24-20)^2}{20} = \frac{16}{20} = 0.80
+        \]
+        \[
+        \frac{(17-20)^2}{20} = \frac{9}{20} = 0.45
+        \]
+        <p>Step 3: Sum all terms:</p>
+        \[
+        \chi^2_{\text{obs}} = 0.20 + 0.20 + 0.00 + 0.05 + 0.80 + 0.45 = 1.70
+        \]
+        <p>Step 4: Determine degrees of freedom. \(k = 6\) categories, no parameters estimated (\(m = 0\)), so df = \(6 - 1 - 0 = 5\).</p>
+        <p>Step 5: Find the critical value or p-value. At \(\alpha = 0.05\), \(\chi^2_{5, 0.05} \approx 11.07\). Since \(1.70 &lt; 11.07\), we fail to reject \(H_0\). Alternatively, the p-value is \(P(\chi^2_5 \geq 1.70) \approx 0.89\) — extremely high, indicating excellent agreement with fairness.</p>
+        <p>The observed counts deviate from expected by at most 4 units, and the chi-squared statistic of 1.70 reflects negligible overall discrepancy relative to sampling variability.</p>
+
+        <p><strong>Common mistake:</strong> applying the chi-squared test when expected counts are too small. The asymptotic \(\chi^2\) approximation requires \(E_i \geq 5\) for all categories (some authors allow \(E_i \geq 1\) if most exceed 5). When this condition fails, combine adjacent categories or use Fisher's exact test. Violating this assumption inflates Type I error rates unpredictably.</p>
+
+        <h3>Test of independence in contingency tables</h3>
+        <p>The chi-squared framework extends naturally to testing whether two categorical variables are independent. Given an \(r \times c\) contingency table with observed counts \(O_{ij}\), the expected count under independence is:</p>
+        \[
+        E_{ij} = \frac{(\text{row } i \text{ total}) \times (\text{column } j \text{ total})}{n}
+        \]
+        <p>This follows from \(P(A \cap B) = P(A)P(B)\) under independence (Chapter 3), estimated via marginal proportions. The test statistic is again \(\sum_{i,j} (O_{ij} - E_{ij})^2 / E_{ij}\), with degrees of freedom \((r-1)(c-1)\). The derivation mirrors the goodness-of-fit case: under independence, standardized residuals are asymptotically Normal, and their squared sum is chi-squared with dimensionality reduced by row and column sum constraints.</p>
+
+        <h2>Type I and Type II errors: the tradeoff</h2>
+        <p>No test is perfect. Two types of error are possible:</p>
+        <ul>
+          <li><strong>Type I error</strong> (\(\alpha\)): rejecting \(H_0\) when it is true. Controlled by design via the significance level.</li>
+          <li><strong>Type II error</strong> (\(\beta\)): failing to reject \(H_0\) when \(H_1\) is true. Depends on effect size, sample size, and \(\alpha\).</li>
+        </ul>
+        <p>Power = \(1 - \beta\) is the probability of correctly rejecting \(H_0\) when \(H_1\) is true. There is an inherent tradeoff: decreasing \(\alpha\) (stricter evidence requirement) increases \(\beta\) (harder to detect true effects), holding \(n\) fixed. Increasing \(n\) improves power without sacrificing \(\alpha\), which is why sample size planning precedes data collection in rigorous studies.</p>
+
+        <p><strong>Edge case:</strong> what happens as \(n \to \infty\)? Power approaches 1 for any fixed effect size, meaning even trivially small deviations from \(H_0\) become statistically significant. This is why statistical significance ≠ practical significance: with enough data, you can reject \(H_0\) for effects too small to matter. Always report effect sizes alongside p-values to distinguish statistical from substantive importance.</p>
+
+        <h2>Connecting backward: the unified picture</h2>
+        <p>Every test in this chapter rests on foundations built throughout this book:</p>
+        <ul>
+          <li><strong>z-test:</strong> Uses the Normal distribution (Chapter 8) and CLT (Chapter 11). 
+
+Requires known variance or large \(n\).</li>          <li><strong>t-test:</strong> Uses the t-distribution (Chapter 9), derived as Normal/\(\sqrt{\chi^2/\nu}\). Exact under Normality; robust for moderate \(n\).</li>          <li><strong>Chi-squared test:</strong> Uses the \(\chi^2\) distribution (Chapter 9), derived as sum of squared Standard Normals. Asymptotic; requires adequate expected counts.</li>        </ul>        <p>The logic connecting them is uniform: assume \(H_0\), derive the sampling distribution of a relevant statistic under that assumption, measure how extreme the observed value is relative to that distribution, and reject if extremity exceeds the pre-specified threshold. This is not a collection of unrelated recipes — it is a single inferential principle applied through different distributional lenses depending on the data type and what is known versus estimated.</p>        <p><strong>Final common mistake across all tests:</strong> treating the p-value as the probability that \(H_0\) is true. It is not. The p-value is \(P(\text{data as extreme or more} \mid H_0)\), not \(P(H_0 \mid \text{data})\). Confusing these is the prosecutor's fallacy, and it leads to systematic overstatement of evidence against \(H_0\). Bayesian methods (Chapter 4) compute \(P(H_0 \mid \text{data})\) directly via priors and posteriors; frequentist p-values do not and cannot. Always interpret p-values as measures of compatibility between data and \(H_0\), not as probabilities of hypotheses.</p>      </article>      <div class="chapter-nav">        <a class="chapter-nav-link prev" href="../ch11/index.html">          <span class="chapter-nav-label">← Previous</span>          <span class="chapter-nav-title">11. Central Limit Theorem and Confidence Intervals</span>        </a>        <div class="chapter-nav-empty"></div>      </div>    </div>  </main>  <footer>    <div class="wrap">      <span>© 2026 iTube. Read forever, free forever.</span>      <span>No video was harmed in the making of this platform.</span>    </div>  </footer>  <script src="../../theme.js"></script>  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>  <script defer src="../../app.js"></script></body></html>
