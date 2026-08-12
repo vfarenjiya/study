@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>10. Cumulative Distribution Function and Conditional PDF — Probability &amp; Statistics — iTube</title>
+  <meta name="description" content="How do we unify discrete and continuous probability under one framework? We derive the CDF as the universal descriptor, show how conditioning works when P(B)=0 via limiting arguments, and connect conditional densities to Bayes' theorem for continuous variables.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Probability &amp; Statistics</a><span class="sep">/</span>
+        <span>Ch. 10</span>
+      </div>
+      <div class="eyebrow">Probability &amp; Statistics</div>
+      <h1>10. Cumulative Distribution Function and Conditional PDF</h1>
+      <div class="chapter-meta">
+        <span>Chapter 10 of 12</span>
+        <span class="read-badge">20 min read</span>
+      </div>
+      <article>
+
+        <h2>The unification problem</h2>
+        <p>In Chapters 7 and 8, we treated discrete and continuous random variables separately: PMFs for discrete, PDFs for continuous. But many real-world quantities are neither purely discrete nor purely continuous — a sensor reading might be continuous except for a point mass at zero (sensor failure), or a mixture of distinct populations creates a distribution with both smooth and atomic components. More fundamentally, we'd like a single mathematical object that describes <em>any</em> random variable without committing to a type upfront.</p>
+        <p>That object is the <strong>cumulative distribution function</strong> (CDF). It works uniformly for discrete, continuous, mixed, and even pathological distributions. Moreover, once we have the CDF as our foundation, we can finally answer the question left open in Chapter 4: what does \(P(A \mid B)\) mean when \(P(B) = 0\)? For continuous variables, conditioning on exact values requires a new definition — the conditional PDF — which emerges naturally from the CDF framework.</p>
+
+        <h2>The CDF: definition and universal properties</h2>
+        <p>For any random variable \(X\) (discrete, continuous, or otherwise), define:</p>
+        \[
+        F_X(x) = P(X \leq x), \quad x \in \mathbb{R}
+        \]
+        <p>This is the <strong>cumulative distribution function</strong>. Unlike PMFs or PDFs, it is defined for every random variable without exception. What properties must every valid CDF satisfy?</p>
+        <ol>
+          <li><strong>Non-decreasing:</strong> If \(a &lt; b\), then \(F_X(a) \leq F_X(b)\). (Because \(\{X \leq a\} \subseteq \{X \leq b\}\), and monotonicity of probability was proven in Chapter 2.)</li>
+          <li><strong>Right-continuous:</strong> \(\lim_{x \to a^+} F_X(x) = F_X(a)\) for every \(a\). (This follows from continuity of probability measures from above; the limit from the right always equals the function value.)</li>
+          <li><strong>Boundary limits:</strong> \(\lim_{x \to -\infty} F_X(x) = 0\) and \(\lim_{x \to +\infty} F_X(x) = 1\). (Because \(\{X \leq x\} \to \emptyset\) as \(x \to -\infty\) and \(\{X \leq x\} \to S\) as \(x \to +\infty\).)</li>
+        </ol>
+        <p>These three properties are not just necessary — they are <em>sufficient</em>. Any function satisfying them is the CDF of some random variable. This characterization theorem means we can specify distributions entirely through CDFs without ever mentioning PMFs or PDFs.</p>
+
+        <h3>Recovering probabilities from the CDF</h3>
+        <p>How do we extract interval probabilities from \(F_X\)? For any \(a &lt; b\):</p>
+        \[
+        P(a &lt; X \leq b) = F_X(b) - F_X(a)
+        \]
+        <p>This follows directly from additivity: \(\{X \leq b\} = \{X \leq a\} \cup \{a &lt; X \leq b\}\), a disjoint union, so \(F_X(b) = F_X(a) + P(a &lt; X \leq b)\).</p>
+        <p>Notice the strict inequality on the left: \(P(a &lt; X \leq b)\), not \(P(a \leq X \leq b)\). The difference matters for discrete variables where \(P(X = a)\) may be positive. Specifically:</p>
+        \[
+        P(X = a) = F_X(a) - \lim_{x \to a^-} F_X(x) = F_X(a) - F_X(a^-)
+        \]
+        <p>This is the size of the jump in the CDF at \(a\). For continuous variables, \(F_X\) is continuous everywhere, so \(F_X(a) = F_X(a^-)\) and \(P(X = a) = 0\) — recovering the result from Chapter 8 as a special case. For discrete variables, jumps occur exactly at the support points, and their magnitudes equal the PMF values.</p>
+
+        <h3>Worked example: CDF of a mixed distribution</h3>
+        <p>Consider a random variable \(X\) that equals 0 with probability 0.3 and is Uniform(0, 1) with probability 0.7. This is neither purely discrete nor purely continuous. What is its CDF?</p>
+        <p>For \(x &lt; 0\): \(F_X(x) = 0\) (no mass below zero).</p>
+        <p>At \(x = 0\): \(F_X(0) = P(X \leq 0) = P(X = 0) = 0.3\). There is a jump of size 0.3 at the origin.</p>
+        <p>For \(0 &lt; x &lt; 1\): The contribution from the point mass is still 0.3. The continuous part contributes \(0.7 \times x\) (since Uniform(0,1) has CDF \(x\) on \([0,1]\)). So:</p>
+        \[
+        F_X(x) = 0.3 + 0.7x, \quad 0 &lt; x &lt; 1
+        \]
+        <p>For \(x \geq 1\): All mass has accumulated, so \(F_X(x) = 1\).</p>
+        <p>Verify right-continuity at \(x = 0\): \(\lim_{x \to 0^+} (0.3 + 0.7x) = 0.3 = F_X(0)\). ✓ Verify boundary limits: \(F_X(-\infty) = 0\), \(F_X(+\infty) = 1\). ✓ Verify non-decreasing: constant on \((-\infty, 0)\), jumps up at 0, linearly increasing on \((0,1)\), constant on \([1, \infty)\). ✓ This CDF fully describes a mixed distribution that no PMF or PDF alone could capture.</p>
+
+        <p><strong>Common mistake:</strong> assuming \(P(a \leq X \leq b) = F_X(b) - F_X(a)\). This is only true for continuous variables. For general variables, \(P(a \leq X \leq b) = F_X(b) - F_X(a^-)\), because the left endpoint inclusion adds the jump at \(a\). Always check whether the variable has atoms before applying interval formulas.</p>
+
+        <h2>Connecting CDF to PDF and PMF</h2>
+        <p>When \(X\) is continuous with PDF \(f_X\), the CDF is the integral of the density:</p>
+        \[
+        F_X(x) = \int_{-\infty}^{x} f_X(t)\, dt
+        \]
+        <p>By the Fundamental Theorem of Calculus, if \(f_X\) is continuous at \(x\), then \(F_X'(x) = f_X(x)\). This recovers the PDF-from-CDF relationship derived in Chapter 8.</p>
+        <p>When \(X\) is discrete with PMF \(p_X\), the CDF is a step function:</p>
+        \[
+        F_X(x) = \sum_{t \leq x} p_X(t)
+        \]
+        <p>The PMF can be recovered from the jumps: \(p_X(a) = F_X(a) - F_X(a^-)\).</p>
+        <p>For mixed distributions like the worked example above, the CDF decomposes into a continuous part and a discrete part. By Lebesgue decomposition, any CDF can be written as:</p>
+        \[
+        F_X(x) = \alpha F_d(x) + (1-\alpha) F_c(x)
+        \]
+        <p>where \(F_d\) is a discrete CDF, \(F_c\) is a continuous CDF, and \(\alpha \in [0,1]\) is the total mass of the discrete component. This decomposition shows that the CDF truly unifies all distribution types under one framework.</p>
+
+        <h2>The conditioning-on-zero-probability problem</h2>
+        <p>In Chapter 4, we defined \(P(A \mid B) = P(A \cap B)/P(B)\), requiring \(P(B) &gt; 0\). But for continuous \(X\), \(P(X = x) = 0\) for every \(x\). So what does "the distribution of \(Y\) given \(X = x\)" mean? We can't divide by zero.</p>
+        <p>The resolution is to condition on a <em>small interval</em> instead of a point, then take a limit. Define:</p>
+        \[
+        P(Y \leq y \mid x \leq X \leq x + \Delta x) = \frac{P(Y \leq y,\, x \leq X \leq x + \Delta x)}{P(x \leq X \leq x + \Delta x)}
+        \]
+        <p>Assuming \(X\) has a continuous marginal PDF \(f_X\) and joint PDF \(f_{X,Y}\), approximate numerator and denominator for small \(\Delta x\):</p>
+        \[
+        P(x \leq X \leq x + \Delta x) \approx f_X(x) \cdot \Delta x
+        \]
+        \[
+        P(Y \leq y,\, x \leq X \leq x + \Delta x) \approx \left( \int_{-\infty}^{y} f_{X,Y}(x, t)\, dt \right) \cdot \Delta x
+        \]
+        <p>Dividing and canceling \(\Delta x\):</p>
+        \[
+        \lim_{\Delta x \to 0} P(Y \leq y \mid x \leq X \leq x + \Delta x) = \frac{\int_{-\infty}^{y} f_{X,Y}(x, t)\, dt}{f_X(x)}
+        \]
+        <p>This limit defines the <strong>conditional CDF</strong> of \(Y\) given \(X = x\). Differentiating with respect to \(y\) gives the <strong>conditional PDF</strong>:</p>
+        \[
+        f_{Y \mid X}(y \mid x) = \frac{f_{X,Y}(x, y)}{f_X(x)}, \quad \text{provided } f_X(x) &gt; 0
+        \]
+        <p>This formula is the continuous analog of \(P(Y=y \mid X=x) = P(X=x, Y=y)/P(X=x)\) from Chapter 4. The division-by-zero problem is resolved by recognizing that we're really taking a limit of well-defined conditional probabilities over shrinking intervals. The resulting conditional density inherits all the properties of a valid PDF: non-negative and integrates to 1 over \(y\) for each fixed \(x\).</p>
+
+        <h3>Verifying normalization of the conditional PDF</h3>
+        <p>Does \(\int_{-\infty}^{\infty} f_{Y \mid X}(y \mid x)\, dy = 1\)? Substitute the definition:</p>
+        \[
+        \int_{-\infty}^{\infty} \frac{f_{X,Y}(x, y)}{f_X(x)}\, dy = \frac{1}{f_X(x)} \int_{-\infty}^{\infty} f_{X,Y}(x, y)\, dy
+        \]
+        <p>The integral in the numerator is exactly the marginal density \(f_X(x)\) by definition of marginalization (integrating out \(Y\) from the joint). So:</p>
+        \[
+        = \frac{f_X(x)}{f_X(x)} = 1
+        \]
+        <p>Normalization holds whenever \(f_X(x) &gt; 0\). When \(f_X(x) = 0\), the conditional density is undefined — there is no meaningful way to condition on an event that has zero probability density.</p>
+
+        <h3>Worked example: conditional distribution of bivariate Normal</h3>
+        <p>Suppose \((X, Y)\) is bivariate Normal with means \(\mu_X, \mu_Y\), variances \(\sigma_X^2, \sigma_Y^2\), and correlation \(\rho\). The joint PDF is:</p>
+        \[
+        f_{X,Y}(x,y) = \frac{1}{2\pi\sigma_X\sigma_Y\sqrt{1-\rho^2}} \exp\!\left( -\frac{1}{2(1-\rho^2)} \left[ \frac{(x-\mu_X)^2}{\sigma_X^2} - 2\rho\frac{(x-\mu_X)(y-\mu_Y)}{\sigma_X\sigma_Y} + \frac{(y-\mu_Y)^2}{\sigma_Y^2} \right] \right)
+        \]
+        <p>Rather than dividing this by the marginal \(f_X(x)\) directly (algebraically messy), complete the square in \(y\) inside the exponent. After algebraic manipulation (treating \(x\) as fixed), the exponent becomes a quadratic in \(y\) centered at:</p>
+        \[
+        \mu_{Y \mid X=x} = \mu_Y + \rho \frac{\sigma_Y}{\sigma_X}(x - \mu_X)
+        \]
+        <p>with variance:</p>
+        \[
+        \sigma_{Y \mid X}^2 = \sigma_Y^2 (1 - \rho^2)
+        \]
+        <p>So \(Y \mid X=x \sim \mathcal{N}\!\left( \mu_Y + \rho \frac{\sigma_Y}{\sigma_X}(x - \mu_X),\; \sigma_Y^2(1-\rho^2) \right)\).</p>
+        <p>Two key observations emerge. First, the conditional mean is <em>linear</em> in \(x\) — this is why linear regression works perfectly for jointly Normal data (connecting to Chapter 6's correlation and Chapter 5's conditional expectation). Second, the conditional variance \(\sigma_Y^2(1-\rho^2)\) is <em>constant</em> (doesn't depend on \(x\)) and is strictly less than the marginal variance \(\sigma_Y^2\) whenever \(|\rho| &gt; 0\). Knowing \(X\) reduces uncertainty about \(Y\) by a factor of \(1-\rho^2\) — exactly the fraction of variance explained by linear association, connecting directly to the variance decomposition from Chapter 5.</p>
+
+        <p><strong>Edge case:</strong> what happens as \(|\rho| \to 1\)? The conditional variance \(\sigma_Y^2(1-\rho^2) \to 0\), meaning \(Y\) becomes deterministic given \(X\): perfect linear relationship. As \(\rho \to 0\), the conditional mean approaches \(\mu_Y\) and conditional variance approaches \(\sigma_Y^2\): \(X\) provides no information about \(Y\), recovering independence. These boundary behaviors confirm the formulas encode dependence correctly.</p>
+
+        <h2>Bayes' theorem for continuous variables</h2>
+        <p>In Chapter 4, Bayes' theorem was stated for discrete hypotheses. For continuous parameters, replace PMFs with PDFs. If \(\theta\) is a continuous parameter with prior density \(\pi(\theta)\) and data \(x\) has likelihood \(f(x \mid \theta)\), then the posterior density is:</p>
+        \[
+        \pi(\theta \mid x) = \frac{f(x \mid \theta) \pi(\theta)}{\int_{-\infty}^{\infty} f(x \mid t) \pi(t)\, dt}
+        \]
+        <p>This is structurally identical to the discrete version, with summation replaced by integration in the denominator. The conditional PDF machinery developed above justifies this formula rigorously: the posterior is simply the conditional density of \(\theta\) given observed data \(x\), derived via the same limiting argument.</p>
+
+        <h3>Worked example: Normal-Normal conjugacy</h3>
+        <p>Suppose \(X \mid \theta \sim \mathcal{N}(\theta, \sigma^2)\) with known \(\sigma^2\), and the prior is \(\theta \sim \mathcal{N}(\mu_0, \tau_0^2)\). What is the posterior \(\pi(\theta \mid x)\)?</p>
+        <p>Write the kernel of the posterior (ignoring constants that don't depend on \(\theta\)):</p>
+        \[
+        \pi(\theta \mid x) \propto f(x \mid \theta) \pi(\theta) \propto \exp\!\left( -\frac{(x-\theta)^2}{2\sigma^2} \right) \cdot \exp\!\left( -\frac{(\theta-\mu_0)^2}{2\tau_0^2} \right)
+        \]
+        <p>Combine exponents:</p>
+        \[
+        = \exp\!\left( -\frac{1}{2} \left[ \frac{(x-\theta)^2}{\sigma^2} + \frac{(\theta-\mu_0)^2}{\tau_0^2} \right] \right)
+        \]
+        <p>Expand both quadratics in \(\theta\) and collect terms. The coefficient of \(\theta^2\) is \(\frac{1}{\sigma^2} + \frac{1}{\tau_0^2}\). Completing the square reveals the posterior is Normal with:</p>
+        \[
+        \mu_{\text{post}} = \frac{\tau_0^{-2} \mu_0 + \sigma^{-2} x}{\tau_0^{-2} + \sigma^{-2}}, \quad \tau_{\text{post}}^2 = \frac{1}{\tau_0^{-2} + \sigma^{-2}}
+        \]
+        <p>The posterior mean is a precision-weighted average of prior mean and data: higher precision (lower variance) gets more weight. The posterior precision equals prior precision plus data precision — information adds linearly. This conjugacy makes Bayesian updating analytically tractable for Normal models and foreshadows the frequentist confidence interval structure in Chapter 11.</p>
+
+        <p><strong>Common mistake:</strong> forgetting the normalizing constant in Bayesian computation. While proportionality (\(\propto\)) suffices for identifying the posterior family, actual probability statements require the normalized density. In practice, either recognize the conjugate form (as above) or use numerical integration / MCMC to compute the denominator.</p>
+
+        <h2>Connecting forward</h2>
+        <p>The CDF and conditional PDF complete the probabilistic toolkit needed for inference. The CDF appears explicitly in the Kolmogorov-Smirnov test (Chapter 12) and implicitly in quantile-based methods. Conditional densities underpin Bayesian estimation throughout statistics and machine learning. Most immediately, the Central Limit Theorem (Chapter 11) is most naturally stated and proved using CDFs (convergence in distribution is defined via pointwise CDF convergence), and confidence intervals (Chapter 11) invert CDF relationships to construct coverage guarantees. Everything built in Chapters 1–10 converges toward the inferential methods of Chapters 11–12.</p>
+
+      </article>
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch9/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">9. Special Distributions: Poisson, t, and Chi-Squared</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch11/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">11. Central Limit Theorem and Confidence Intervals</span>
+        </a>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
+</body>
+</html>
