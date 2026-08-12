@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>3. Independence and Mutually Exclusive Events — Probability &amp; Statistics — iTube</title>
+  <meta name="description" content="Are independent events the same as mutually exclusive events? We derive both definitions from first principles, show why they are almost opposites rather than synonyms, and test them against concrete examples where intuition fails.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Probability &amp; Statistics</a><span class="sep">/</span>
+        <span>Ch. 3</span>
+      </div>
+      <div class="eyebrow">Probability &amp; Statistics</div>
+      <h1>3. Independence and Mutually Exclusive Events</h1>
+      <div class="chapter-meta">
+        <span>Chapter 3 of 12</span>
+        <span class="read-badge">15 min read</span>
+      </div>
+      <article>
+
+        <h2>Two words that sound similar but mean opposite things</h2>
+        <p>In everyday language, "independent" and "mutually exclusive" feel like they could be synonyms. If two events are unrelated, aren't they also separate? If they can't happen together, doesn't that make them independent? This intuition is wrong — and it is one of the most persistent sources of error in introductory probability. In this chapter, we will derive the precise mathematical definitions of both concepts from the axioms of Chapter 2, show that they are nearly opposites rather than synonyms, and work through concrete examples where the distinction determines whether an answer is correct or catastrophically wrong.</p>
+
+        <h2>Mutually exclusive events: when overlap is impossible</h2>
+        <p>Let's start with the simpler concept. Two events \(A\) and \(B\) are <strong>mutually exclusive</strong> (also called <em>disjoint</em>) if they cannot both occur in the same trial. Formally:</p>
+        \[
+        A \cap B = \emptyset
+        \]
+        <p>This is a statement about the <em>structure</em> of the sample space — it says nothing about probabilities yet. But we can immediately translate it into a probabilistic consequence using Axiom 3 from Chapter 2. Since \(A\) and \(B\) are disjoint, finite additivity gives:</p>
+        \[
+        P(A \cup B) = P(A) + P(B)
+        \]
+        <p>And since \(A \cap B = \emptyset\), we also know \(P(A \cap B) = P(\emptyset) = 0\). So mutual exclusivity forces the intersection probability to be exactly zero.</p>
+
+        <h3>Worked example: rolling a die</h3>
+        <p>Consider a fair six-sided die. Let \(A = \{1, 2\}\) ("roll is at most 2") and \(B = \{5, 6\}\) ("roll is at least 5"). Are these mutually exclusive?</p>
+        <p>Check the intersection: \(A \cap B = \{1,2\} \cap \{5,6\} = \emptyset\). Yes — no single roll can be both at most 2 and at least 5. Therefore:</p>
+        \[
+        P(A \cup B) = P(A) + P(B) = \frac{2}{6} + \frac{2}{6} = \frac{4}{6} = \frac{2}{3}
+        \]
+        <p>We can verify by direct enumeration: \(A \cup B = \{1, 2, 5, 6\}\), which has 4 outcomes out of 6, confirming \(P(A \cup B) = 4/6 = 2/3\). The additivity formula works perfectly because the events don't overlap.</p>
+
+        <h2>Independent events: when knowledge changes nothing</h2>
+        <p>Now consider a fundamentally different question. Suppose you learn that event \(B\) has occurred. Does this change your belief about whether \(A\) will occur? If the answer is "no" — if knowing \(B\) tells you absolutely nothing about \(A\) — then \(A\) and \(B\) are <strong>independent</strong>.</p>
+        <p>We haven't formally defined conditional probability yet (that's Chapter 4), but we can capture this idea using only the tools from Chapter 2. If \(B\) gives no information about \(A\), then the fraction of \(B\)'s probability mass that overlaps with \(A\) should be the same as the fraction of the entire sample space that belongs to \(A\). In other words, \(A\) should occupy the same proportion of \(B\) as it does of \(S\). Translating this proportionality into an equation:</p>
+        \[
+        \frac{P(A \cap B)}{P(B)} = P(A)
+        \]
+        <p>Multiplying both sides by \(P(B)\) (assuming \(P(B) &gt; 0\)) gives the standard definition:</p>
+        \[
+        P(A \cap B) = P(A) \cdot P(B)
+        \]
+        <p>Two events are independent if and only if the probability of their intersection equals the product of their individual probabilities. This is not an intuitive guess — it is the precise mathematical encoding of "knowing one tells you nothing about the other."</p>
+
+        <h3>Why multiplication? Testing naive alternatives</h3>
+        <p>A natural question: why is independence defined via <em>multiplication</em> rather than, say, addition or equality? Let's test what would go wrong with alternatives.</p>
+        <p>Suppose we tried defining independence as \(P(A \cap B) = P(A) + P(B)\). For any non-trivial events where \(P(A) + P(B) &gt; 1\), this would violate Axiom 1 (probabilities can't exceed 1). Even when \(P(A) + P(B) \leq 1\), this definition would imply that learning \(B\) occurred makes \(A\) <em>more</em> likely (since \(P(A \cap B) &gt; P(A)\) whenever \(P(B) &gt; 0\)), which contradicts the very idea of "no information."</p>
+        <p>What about \(P(A \cap B) = P(A)\)? This would mean \(A \subseteq B\) always (since \(P(A \cap B) = P(A)\) implies \(A \setminus B\) has probability zero). That's not "no information" — it's "A guarantees B," which is maximal dependence.</p>
+        <p>Multiplication is the unique operation that encodes proportional scaling: \(A\) takes up the same fraction of \(B\) as it does of the whole space. No other arithmetic relationship captures this.</p>
+
+        <h3>Worked example: two coin flips</h3>
+        <p>Flip a fair coin twice. Let \(A\) = "first flip is heads" and \(B\) = "second flip is heads." Are these independent?</p>
+        <p>The sample space is \(S = \{HH, HT, TH, TT\}\), each with probability \(1/4\). Compute each quantity:</p>
+        \[
+        P(A) = P(\{HH, HT\}) = \frac{2}{4} = \frac{1}{2}
+        \]
+        \[
+        P(B) = P(\{HH, TH\}) = \frac{2}{4} = \frac{1}{2}
+        \]
+        \[
+        P(A \cap B) = P(\{HH\}) = \frac{1}{4}
+        \]
+        <p>Now check the independence condition: does \(P(A \cap B) = P(A) \cdot P(B)\)?</p>
+        \[
+        P(A) \cdot P(B) = \frac{1}{2} \cdot \frac{1}{2} = \frac{1}{4}
+        \]
+        <p>Since \(1/4 = 1/4\), the equality holds. The events are independent. This matches our physical intuition: the coin has no memory, so the second flip genuinely tells us nothing about the first.</p>
+
+        <h2>The critical distinction: mutually exclusive ≠ independent</h2>
+        <p>Now we can state precisely why these two concepts are nearly opposites. If \(A\) and \(B\) are mutually exclusive and both have positive probability, then:</p>
+        \[
+        P(A \cap B) = 0 \quad \text{but} \quad P(A) \cdot P(B) &gt; 0
+        \]
+        <p>So \(P(A \cap B) \neq P(A) \cdot P(B)\), meaning they are <em>not</em> independent. In fact, mutually exclusive events with positive probability are <strong>maximally dependent</strong>: if you know \(A\) occurred, you know with certainty that \(B\) did not. Learning one tells you everything about the other — the exact opposite of independence.</p>
+        <p>The only case where mutually exclusive events can also be independent is the degenerate case where at least one of them has probability zero. If \(P(A) = 0\), then \(P(A \cap B) = 0 = P(A) \cdot P(B)\) regardless of \(B\), so the independence condition is trivially satisfied. But this is a boundary case with no practical significance — for all events you'll actually encounter in problems, mutual exclusivity and independence are incompatible.</p>
+
+        <p><strong>Common mistake:</strong> students frequently write "A and B are mutually exclusive, therefore they are independent" on exams. This is backwards. Mutual exclusivity means maximum dependence (for positive-probability events). Independence requires overlap — specifically, overlap of exactly the right amount (\(P(A)P(B)\)). If you catch yourself writing this, stop and ask: "if I know A happened, do I know something about B?" If yes (and for disjoint events, you know B didn't happen), they cannot be independent.</p>
+
+        <h3>Worked example: testing both properties on the same events</h3>
+        <p>Roll a fair six-sided die. Let \(A = \{1, 2, 3\}\) ("at most 3") and \(B = \{3, 4, 5\}\) ("between 3 and 5 inclusive"). Are these mutually exclusive? Are they independent?</p>
+        <p>First, check mutual exclusivity: \(A \cap B = \{3\} \neq \emptyset\). They share outcome 3, so they are <strong>not</strong> mutually exclusive.</p>
+        <p>Next, check independence. Compute each probability:</p>
+        \[
+        P(A) = \frac{3}{6} = \frac{1}{2}, \quad P(B) = \frac{3}{6} = \frac{1}{2}, \quad P(A \cap B) = P(\{3\}) = \frac{1}{6}
+        \]
+        <p>Now compute the product:</p>
+        \[
+        P(A) \cdot P(B) = \frac{1}{2} \cdot \frac{1}{2} = \frac{1}{4}
+        \]
+        <p>Is \(1/6 = 1/4\)? No. So \(A\) and \(B\) are <strong>not</strong> independent either. These events are neither mutually exclusive nor independent — they simply overlap in a way that doesn't match the independence proportionality. This third possibility (overlapping but dependent) is actually the most common situation in real problems, even though textbooks emphasize the two special cases.</p>
+
+        <h2>Extending independence to multiple events</h2>
+        <p>What does it mean for three events \(A\), \(B\), and \(C\) to be mutually independent? A natural first guess is that pairwise independence suffices: \(P(A \cap B) = P(A)P(B)\), \(P(A \cap C) = P(A)P(C)\), and \(P(B \cap C) = P(B)P(C)\). But this is insufficient.</p>
+        <p>Full mutual independence requires <em>all</em> factorization conditions simultaneously:</p>
+        \[
+        P(A \cap B) = P(A)P(B), \quad P(A \cap C) = P(A)P(C), \quad P(B \cap C) = P(B)P(C)
+        \]
+        <p><em>and</em></p>
+        \[
+        P(A \cap B \cap C) = P(A)P(B)P(C)
+        \]
+        <p>The triple-intersection condition does not follow from the pairwise conditions. It is possible to construct examples where every pair is independent but the triple is not — meaning that while no two events tell you anything about each other individually, knowing <em>two</em> of them together can tell you something about the third. This is why "pairwise independent" and "mutually independent" are distinct concepts, and why exam problems sometimes test the difference explicitly.</p>
+
+        <p><strong>Edge case:</strong> what happens when \(P(A) = 0\) or \(P(A) = 1\)? An event with probability 0 or 1 is independent of <em>every</em> other event. If \(P(A) = 0\), then \(P(A \cap B) \leq P(A) = 0\), so \(P(A \cap B) = 0 = P(A)P(B)\). If \(P(A) = 1\), then \(P(A^c) = 0\), and \(A^c\) is independent of \(B\) by the previous argument; since \(A = (A^c)^c\), independence is preserved under complementation (a fact worth verifying as an exercise using the complement rule from Chapter 2). Certainty and impossibility carry no information, so they are trivially independent of everything.</p>
+
+        <h2>Connecting forward</h2>
+        <p>Independence is the foundation for everything that follows in this book. The binomial distribution (Chapter 7) assumes independent Bernoulli trials. The central limit theorem (Chapter 11) requires independent observations. Hypothesis tests (Chapter 12) assume independence between samples. But to use independence properly in conditional settings — where we ask "are A and B independent given that C occurred?" — we need the machinery of conditional probability, which is the subject of Chapter 4. There, we will see that independence can appear and disappear depending on what information is conditioned on, a phenomenon that makes Bayes' theorem both powerful and subtle.</p>
+
+      </article>
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch2/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">2. Probability Axioms, Sample Spaces, and Events</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch4/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">4. Marginal, Conditional, and Joint Probability; Bayes' Theorem</span>
+        </a>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
+</body>
+</html>
