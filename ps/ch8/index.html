@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>8. Continuous Random Variables and Probability Density Functions — Probability &amp; Statistics — iTube</title>
+  <meta name="description" content="How do we assign probabilities when individual outcomes have zero probability? We derive PDFs from CDFs by asking what 'density' must mean geometrically, build the Uniform, Exponential, and Normal distributions from first principles, and show why integration replaces summation at every step.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Probability &amp; Statistics</a><span class="sep">/</span>
+        <span>Ch. 8</span>
+      </div>
+      <div class="eyebrow">Probability &amp; Statistics</div>
+      <h1>8. Continuous Random Variables and Probability Density Functions</h1>
+      <div class="chapter-meta">
+        <span>Chapter 8 of 12</span>
+        <span class="read-badge">25 min read</span>
+      </div>
+      <article>
+
+        <h2>The problem that discrete methods can't solve</h2>
+        <p>In Chapter 7, we described random variables using probability mass functions: \(P(X = x)\) gave a meaningful number for each possible value. But what happens when \(X\) represents something inherently continuous — the exact time until a radioactive atom decays, the precise height of a person, or the real-valued output of a sensor? In these cases, there are uncountably many possible outcomes, and assigning positive probability to any single point would make the total probability infinite (or require infinitesimal probabilities, which standard analysis doesn't support).</p>
+        <p>So \(P(X = x) = 0\) for every individual \(x\). Does this mean continuous random variables carry no probabilistic information? Clearly not — some regions are more likely than others. We need a new mathematical object that captures "likelihood concentration" without assigning point masses. This object is the <strong>probability density function</strong>, and it emerges naturally once we ask the right question.</p>
+
+        <h2>From CDF to PDF: density as a derivative</h2>
+        <p>Even though \(P(X = x) = 0\), the probability that \(X\) falls within an interval \((a, b]\) is perfectly well-defined. Define the <strong>cumulative distribution function</strong> (CDF) as:</p>
+        \[
+        F_X(x) = P(X \leq x)
+        \]
+        <p>The CDF works for both discrete and continuous variables. For continuous variables, it has two key properties inherited from the axioms of Chapter 2: it is non-decreasing (bigger intervals contain more probability), and it is continuous (no jumps, since no single point carries mass). Moreover, \(F_X(-\infty) = 0\) and \(F_X(\infty) = 1\).</p>
+        <p>Now ask: how quickly does probability accumulate near a particular value \(x\)? If we look at a tiny interval \([x, x + \Delta x]\), the probability contained in it is approximately:</p>
+        \[
+        P(x \leq X \leq x + \Delta x) = F_X(x + \Delta x) - F_X(x)
+        \]
+        <p>For small \(\Delta x\), if \(F_X\) is differentiable at \(x\), this difference is approximately \(F_X'(x) \cdot \Delta x\) by the definition of the derivative. The quantity \(F_X'(x)\) tells us the <em>rate</em> at which probability accumulates per unit length near \(x\) — it's a density, not a probability. This motivates the definition:</p>
+        \[
+        f_X(x) = \frac{d}{dx} F_X(x)
+        \]
+        <p>This is the <strong>probability density function</strong> (PDF). Crucially, \(f_X(x)\) is not a probability — it can exceed 1, and its value at a single point has no direct probabilistic meaning. Only integrals of the PDF correspond to probabilities:</p>
+        \[
+        P(a \leq X \leq b) = \int_a^b f_X(x)\, dx = F_X(b) - F_X(a)
+        \]
+        <p>This relationship between differentiation and integration is exactly the Fundamental Theorem of Calculus applied to probability. Every operation we performed with sums in Chapter 7 now becomes an integral; every PMF becomes a PDF; but the logical structure remains identical.</p>
+
+        <p><strong>Common mistake:</strong> treating \(f_X(x)\) as \(P(X = x)\). Since \(P(X = x) = 0\) for continuous variables, this interpretation is always wrong. Think of \(f_X(x)\) as probability <em>per unit length</em> near \(x\), analogous to physical mass density: the density at a point isn't a mass, but integrating density over a region gives mass.</p>
+
+        <h2>Properties of valid PDFs</h2>
+        <p>What constraints must a function \(f(x)\) satisfy to be a valid PDF? Two conditions, mirroring the PMF requirements from Chapter 7:</p>
+        <ol>
+          <li><strong>Non-negativity:</strong> \(f(x) \geq 0\) for all \(x\). (Since \(F_X\) is non-decreasing, its derivative cannot be negative.)</li>
+          <li><strong>Normalization:</strong> \(\int_{-\infty}^{\infty} f(x)\, dx = 1\). (Since \(F_X(\infty) - F_X(-\infty) = 1 - 0 = 1\).)</li>
+        </ol>
+        <p>Any non-negative function integrating to 1 is a valid PDF for some continuous random variable. Unlike PMFs, there is no upper bound on \(f(x)\): a density can be arbitrarily tall as long as it's narrow enough to keep the total area equal to 1.</p>
+
+        <h3>Worked example: verifying a candidate PDF</h3>
+        <p>Is \(f(x) = 3x^2\) for \(0 \leq x \leq 1\) (and 0 otherwise) a valid PDF?</p>
+        <p>Check non-negativity: \(3x^2 \geq 0\) for all \(x \in [0,1]\). ✓</p>
+        <p>Check normalization: compute the integral:</p>
+        \[
+        \int_0^1 3x^2\, dx = 3 \int_0^1 x^2\, dx
+        \]
+        <p>Apply the power rule for integration (\(\int x^n\, dx = x^{n+1}/(n+1)\)):</p>
+        \[
+        = 3 \left[ \frac{x^3}{3} \right]_0^1 = 3 \left( \frac{1^3}{3} - \frac{0^3}{3} \right) = 3 \cdot \frac{1}{3} = 1
+        \]
+        <p>The integral equals 1. ✓ Both conditions satisfied, so \(f(x) = 3x^2\) on \([0,1]\) is a valid PDF. Notice that \(f(1) = 3 > 1\) — this is perfectly fine because density values aren't probabilities.</p>
+
+        <h2>Expectation and variance for continuous variables</h2>
+        <p>The transition from discrete to continuous expectation is mechanical: replace sums with integrals and PMFs with PDFs. For a continuous random variable \(X\) with PDF \(f_X\):</p>
+        \[
+        \mathbb{E}[X] = \int_{-\infty}^{\infty} x \cdot f_X(x)\, dx
+        \]
+        <p>More generally, for any function \(g\):</p>
+        \[
+        \mathbb{E}[g(X)] = \int_{-\infty}^{\infty} g(x) \cdot f_X(x)\, dx
+        \]
+        <p>This is the continuous analog of the Law of the Unconscious Statistician from Chapter 7. Variance follows the same computational formula:</p>
+        \[
+        \operatorname{Var}(X) = \mathbb{E}[X^2] - (\mathbb{E}[X])^2 = \int_{-\infty}^{\infty} x^2 f_X(x)\, dx - \left( \int_{-\infty}^{\infty} x f_X(x)\, dx \right)^2
+        \]
+
+        <h3>Worked example: mean and variance of \(f(x) = 3x^2\) on \([0,1]\)</h3>
+        <p>Using the validated PDF from above, compute \(\mathbb{E}[X]\):</p>
+        \[
+        \mathbb{E}[X] = \int_0^1 x \cdot 3x^2\, dx = \int_0^1 3x^3\, dx
+        \]
+        <p>Integrate using the power rule:</p>
+        \[
+        = 3 \left[ \frac{x^4}{4} \right]_0^1 = 3 \cdot \frac{1}{4} = \frac{3}{4} = 0.75
+        \]
+        <p>Now compute \(\mathbb{E}[X^2]\):</p>
+        \[
+        \mathbb{E}[X^2] = \int_0^1 x^2 \cdot 3x^2\, dx = \int_0^1 3x^4\, dx
+        \]
+        \[
+        = 3 \left[ \frac{x^5}{5} \right]_0^1 = 3 \cdot \frac{1}{5} = \frac{3}{5} = 0.6
+        \]
+        <p>Apply the computational variance formula:</p>
+        \[
+        \operatorname{Var}(X) = \mathbb{E}[X^2] - (\mathbb{E}[X])^2 = 0.6 - (0.75)^2
+        \]
+        <p>Compute \((0.75)^2 = 0.5625\). Subtract:</p>
+        \[
+        = 0.6 - 0.5625 = 0.0375 = \frac{3}{80}
+        \]
+        <p>The mean is 0.75 and the variance is 3/80 ≈ 0.0375. Notice the mean (0.75) is greater than the midpoint (0.5) because the density \(3x^2\) increases toward 1, concentrating more mass on the right side of the interval. The low variance reflects that most probability is clustered near 1.</p>
+
+        <h2>The Continuous Uniform distribution: constant density</h2>
+        <p>What is the simplest continuous distribution? One where probability is spread evenly across an interval \([a, b]\). By normalization, the constant density must be:</p>
+        \[
+        f(x) = \begin{cases} \frac{1}{b-a} & \text{if } a \leq x \leq b \\ 0 & \text{otherwise} \end{cases}
+        \]
+        <p>This is the <strong>Continuous Uniform distribution</strong>, written \(X \sim \operatorname{Uniform}(a,b)\). Let's derive its mean and variance from scratch rather than memorizing formulas.</p>
+
+        <h3>Deriving the uniform mean</h3>
+        \[
+        \mathbb{E}[X] = \int_a^b x \cdot \frac{1}{b-a}\, dx = \frac{1}{b-a} \int_a^b x\, dx
+        \]
+        <p>Evaluate the integral:</p>
+        \[
+        = \frac{1}{b-a} \left[ \frac{x^2}{2} \right]_a^b = \frac{1}{b-a} \cdot \frac{b^2 - a^2}{2}
+        \]
+        <p>Factor the difference of squares: \(b^2 - a^2 = (b-a)(b+a)\). Cancel \(b-a\):</p>
+        \[
+        = \frac{(b-a)(b+a)}{2(b-a)} = \frac{a+b}{2}
+        \]
+        <p>The mean is the midpoint of the interval — exactly what symmetry demands.</p>
+
+        <h3>Deriving the uniform variance</h3>
+        <p>First compute \(\mathbb{E}[X^2]\):</p>
+        \[
+        \mathbb{E}[X^2] = \int_a^b x^2 \cdot \frac{1}{b-a}\, dx = \frac{1}{b-a} \left[ \frac{x^3}{3} \right]_a^b = \frac{b^3 - a^3}{3(b-a)}
+        \]
+        <p>Factor the difference of cubes: \(b^3 - a^3 = (b-a)(b^2 + ab + a^2)\). Cancel \(b-a\):</p>
+        \[
+        \mathbb{E}[X^2] = \frac{b^2 + ab + a^2}{3}
+        \]
+        <p>Now apply the variance formula:</p>
+        \[
+        \operatorname{Var}(X) = \frac{b^2 + ab + a^2}{3} - \left( \frac{a+b}{2} \right)^2
+        \]
+        <p>Expand the squared term: \((a+b)^2/4 = (a^2 + 2ab + b^2)/4\). Find common denominator 12:</p>
+        \[
+        = \frac{4(b^2 + ab + a^2) - 3(a^2 + 2ab + b^2)}{12}
+        \]
+        <p>Expand numerator: \(4b^2 + 4ab + 4a^2 - 3a^2 - 6ab - 3b^2 = a^2 - 2ab + b^2 = (b-a)^2\). So:</p>
+        \[
+        \operatorname{Var}(X) = \frac{(b-a)^2}{12}
+        \]
+        <p>This matches the discrete uniform variance formula from Chapter 7 in spirit: variance scales quadratically with the width of the support. The factor 12 arises from the continuous integration, replacing the discrete factor \((n^2-1)/12\).</p>
+
+        <h2>The Exponential distribution: modeling waiting times</h2>
+        <p>Suppose events occur randomly over time at a constant average rate \(\lambda > 0\). What is the distribution of the waiting time \(T\) until the next event? Rather than postulating a PDF, let's derive it from a natural assumption: <strong>memorylessness</strong>. The probability of waiting an additional \(t\) units shouldn't depend on how long you've already waited. Formally:</p>
+        \[
+        P(T > s + t \mid T > s) = P(T > t) \quad \text{for all } s, t \geq 0
+        \]
+        <p>Define the survival function \(S(t) = P(T > t) = 1 - F_T(t)\). The memoryless condition becomes:</p>
+        \[
+        \frac{S(s+t)}{S(s)} = S(t) \quad \Longrightarrow \quad S(s+t) = S(s) S(t)
+        \]
+        <p>This functional equation has a unique continuous solution (Cauchy's exponential functional equation): \(S(t) = e^{-\lambda t}\) for some \(\lambda > 0\). Therefore:</p>
+        \[
+        F_T(t) = 1 - e^{-\lambda t}, \quad t \geq 0
+        \]
+        <p>Differentiate to get the PDF:</p>
+        \[
+        f_T(t) = \frac{d}{dt}(1 - e^{-\lambda t}) = \lambda e^{-\lambda t}, \quad t \geq 0
+        \]
+        <p>This is the <strong>Exponential distribution</strong> with rate parameter \(\lambda\), written \(T \sim \operatorname{Exponential}(\lambda)\). Memorylessness uniquely characterizes it among continuous distributions — just as the geometric distribution is the unique memoryless discrete distribution (Chapter 7).</p>
+
+        <h3>Deriving the exponential mean via integration by parts</h3>
+        \[
+        \mathbb{E}[T] = \int_0^\infty t \cdot \lambda e^{-\lambda t}\, dt
+        \]
+        <p>Use integration by parts: let \(u = t\), \(dv = \lambda e^{-\lambda t}\, dt\). Then \(du = dt\), \(v = -e^{-\lambda t}\). Apply \(\int u\, dv = uv - \int v\, du\):</p>
+        \[
+        = \left[ -t e^{-\lambda t} \right]_0^\infty + \int_0^\infty e^{-\lambda t}\, dt
+        \]
+        <p>Evaluate the boundary term: at \(t = 0\), \(-0 \cdot e^0 = 0\); as \(t \to \infty\), \(t e^{-\lambda t} \to 0\) (exponential decay dominates polynomial growth). So the boundary term vanishes entirely. The remaining integral:</p>
+        \[
+        = \int_0^\infty e^{-\lambda t}\, dt = \left[ -\frac{1}{\lambda} e^{-\lambda t} \right]_0^\infty = 0 - \left( -\frac{1}{\lambda} \right) = \frac{1}{\lambda}
+        \]
+        <p>The mean waiting time is \(1/\lambda\). Higher rate → shorter expected wait. This reciprocal relationship is fundamental to queueing theory, reliability engineering, and survival analysis.</p>
+
+        <h3>Worked example: server response times</h3>
+        <p>A web server handles requests with an average response time of 200ms. Assuming exponential response times, what is the probability a request takes longer than 500ms?</p>
+        <p>The mean is \(1/\lambda = 200\)ms, so \(\lambda = 1/200 = 0.005\) per ms. We want \(P(T > 500)\):</p>
+        \[
+        P(T > 500) = 1 - F_T(500) = e^{-\lambda \cdot 500}
+        \]
+        <p>Substitute \(\lambda = 0.005\):</p>
+        \[
+        = e^{-0.005 \times 500} = e^{-2.5}
+        \]
+        <p>Compute: \(e^{-2.5} \approx 0.0821\).</p>
+        <p>Approximately 8.2% of requests exceed 500ms. Despite the mean being only 200ms, the exponential distribution's heavy right tail means extreme delays aren't negligible. This is why percentiles (e.g., p99 latency) matter more than means in performance engineering.</p>
+
+        <p><strong>Edge case:</strong> what happens as \(\lambda \to \infty\)? The mean \(1/\lambda \to 0\) and the PDF concentrates entirely near zero — events happen instantaneously. As \(\lambda \to 0\), the mean diverges and the distribution flattens toward zero density everywhere — events almost never occur. These limits confirm the rate parameter controls temporal scale intuitively.</p>
+
+        <h2>The Normal distribution: arising from aggregation</h2>
+        <p>Why does the bell curve appear everywhere? Not because nature prefers it aesthetically, but because it's the universal limiting distribution for sums of independent random variables (Central Limit Theorem, Chapter 11). But before we prove that theorem, we need to understand the Normal distribution itself.</p>
+        <p>A random variable \(X\) follows the <strong>Normal distribution</strong> with mean \(\mu\) and variance \(\sigma^2\) if its PDF is:</p>
+        \[
+        f(x) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp\!\left( -\frac{(x-\mu)^2}{2\sigma^2} \right)
+        \]
+        <p>Written \(X \sim \mathcal{N}(\mu, \sigma^2)\). The special case \(\mu = 0, \sigma^2 = 1\) is the <strong>Standard Normal</strong>, denoted \(Z \sim \mathcal{N}(0,1)\), with PDF:</p>
+        \[
+        \phi(z) = \frac{1}{\sqrt{2\pi}} e^{-z^2/2}
+        \]
+
+        <h3>Verifying normalization of the Standard Normal</h3>
+        <p>We need to show \(\int_{-\infty}^{\infty} \phi(z)\, dz = 1\), i.e.:</p>
+        \[
+        \int_{-\infty}^{\infty} e^{-z^2/2}\, dz = \sqrt{2\pi}
+        \]
+        <p>This integral has no elementary antiderivative, so we use a clever trick. Let \(I = \int_{-\infty}^{\infty} e^{-z^2/2}\, dz\). Square it:</p>
+        \[
+        I^2 = \left( \int_{-\infty}^{\infty} e^{-x^2/2}\, dx \right) \left( \int_{-\infty}^{\infty} e^{-y^2/2}\, dy \right) = \int_{-\infty}^{\infty} \int_{-\infty}^{\infty} e^{-(x^2+y^2)/2}\, dx\, dy
+        \]
+        <p>Convert to polar coordinates: \(x = r\cos\theta\), \(y = r\sin\theta\), \(dx\,dy = r\,dr\,d\theta\), and \(x^2 + y^2 = r^2\):</p>
+        \[
+        I^2 = \int_0^{2\pi} \int_0^\infty e^{-r^2/2} \cdot r\, dr\, d\theta
+        \]
+        <p>The inner integral: substitute \(u = r^2/2\), \(du = r\, dr\):</p>
+        \[
+        \int_0^\infty e^{-r^2/2} r\, dr = \int_0^\infty e^{-u}\, du = 1
+        \]
+        <p>The outer integral: \(\int_0^{2\pi} 1\, d\theta = 2\pi\). So \(I^2 = 2\pi\), hence \(I = \sqrt{2\pi}\). Dividing by this normalizing constant ensures the PDF integrates to 1.</p>
+
+        <h3>Standardization: connecting any Normal to the Standard Normal</h3>
+        <p>If \(X \sim \mathcal{N}(\mu, \sigma^2)\), then the transformed variable:</p>
+        \[
+        Z = \frac{X - \mu}{\sigma}
+        \]
+        <p>follows \(\mathcal{N}(0,1)\). This is verified by change-of-variables in the PDF (Jacobian = \(1/\sigma\)), but intuitively: subtracting \(\mu\) centers the distribution at zero, dividing by \(\sigma\) rescales variance to 1. This transformation lets us compute probabilities for any Normal using Standard Normal tables or software:</p>
+        \[
+        P(X \leq x) = P\!\left( Z \leq \frac{x - \mu}{\sigma} \right) = \Phi\!\left( \frac{x - \mu}{\sigma} \right)
+        \]
+        <p>where \(\Phi\) is the Standard Normal CDF. This reduction is why introductory statistics focuses so heavily on \(z\)-scores: they're standardized normals in disguise.</p>
+
+        <p><strong>Common mistake:</strong> assuming Normality based on visual appearance alone. Many distributions look bell-shaped but have heavier tails (t-distribution, Chapter 9) or skewness. Always test distributional assumptions formally (Chapter 12) rather than relying on eyeball tests. The Central Limit Theorem guarantees approximate Normality for <em>sums</em>, not for individual observations.</p>
+
+        <h2>Connecting forward</h2>
+        <p>Continuous distributions are the workhorses of statistical inference. The Normal distribution underpins z-tests and confidence intervals (Chapters 11–12). The Exponential connects to Poisson processes and survival models (Chapter 9). Most importantly, the techniques developed here — deriving PDFs from structural assumptions, computing expectations via integration, standardizing to canonical forms — extend directly to multivariate continuous distributions and to the asymptotic theory that justifies frequentist inference. Chapter 9 introduces three more distributions (Poisson, t, chi-squared) that bridge discrete and continuous worlds and complete the toolkit needed for hypothesis testing.</p>      </article>      <div class="chapter-nav">        <a class="chapter-nav-link prev" href="../ch7/index.html">          <span class="chapter-nav-label">← Previous</span>          <span class="chapter-nav-title">7. Random Variables and Discrete Distributions</span>        </a>        <a class="chapter-nav-link next" href="../ch9/index.html">          <span class="chapter-nav-label">Next →</span>          <span class="chapter-nav-title">9. Special Distributions: Poisson, t, and Chi-Squared</span>        </a>      </div>    </div>  </main>  <footer>    <div class="wrap">      <span>© 2026 iTube. Read forever, free forever.</span>      <span>No video was harmed in the making of this platform.</span>    </div>  </footer>  <script src="../../theme.js"></script>  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>  <script defer src="../../app.js"></script></body></html>
