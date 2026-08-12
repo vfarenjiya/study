@@ -1,202 +1,252 @@
-<!-- File: /<slug>/ch14/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>14. Feed-Forward Neural Network — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
-<meta name="description" content="Backpropagation derivation via chain rule, computational graphs, SGD with momentum and Adam, regularization techniques, and a hand-computed backward pass continuing the Chapter 13 example.">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap" rel="stylesheet">
-<link rel="manifest" href="../../manifest.json">
-<link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="../../icons/icon-192.svg">
-<meta name="theme-color" content="#1B1B1F">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="iTube">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script>
-(function(){
-  var saved = localStorage.getItem("itube-theme");
-  var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-  document.documentElement.setAttribute("data-theme", theme);
-})();
-</script>
-<link rel="stylesheet" href="../../style.css">
+  <title>14. Dimensionality Reduction &amp; Principal Component Analysis — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
+  <meta name="description" content="How do we find low-dimensional representations that preserve the most information? We derive PCA from both maximum-variance and minimum-reconstruction-error objectives, prove their equivalence via eigendecomposition, and work through a complete numeric example showing principal component extraction, variance retention, and reconstruction.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
 </head>
 <body data-depth="2">
-<header class="top">
-  <div class="wrap">
-    <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
-    <div class="top-actions">
-      <div class="font-controls" role="group" aria-label="Adjust text size">
-        <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
-        <span id="font-size-label">100%</span>
-        <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
-        <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
       </div>
-      <button id="theme-btn" title="Toggle light/dark">◐</button>
     </div>
-  </div>
-</header>
-<main>
-<div class="wrap narrow">
-  <div class="breadcrumb">
-    <a href="../../index.html">iTube</a><span class="sep">/</span>
-    <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
-    <span>Ch. 14</span>
-  </div>
-  <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
-  <h1>14. Feed-Forward Neural Network</h1>
-  <div class="chapter-meta">
-    <span>Chapter 14 of 17</span>
-    <span class="read-badge">27 min read</span>
-  </div>
-  <article>
+  </header>
 
-<h2>Training as optimization: from architecture to learning</h2>
-<p>Chapter 13 defined the feed-forward neural network as a compositional function \(\hat y = f(\mathbf{x}; \boldsymbol\theta)\) parameterized by weights and biases \(\boldsymbol\theta = \{W^{(\ell)}, \mathbf{b}^{(\ell)}\}_{\ell=1}^L\). This chapter addresses the complementary question: <em>how do we find good parameters?</em> Training a neural network is an instance of <strong>empirical risk minimization</strong> (Chapter 1): minimize the average loss over training data,</p>
-\[
-\min_{\boldsymbol\theta} \hat R(\boldsymbol\theta) = \frac{1}{n} \sum_{i=1}^{n} L\big(f(\mathbf{x}_i; \boldsymbol\theta), y_i\big)
-\]
-<p>Unlike linear models (Chapters 2–5), this objective is non-convex in \(\boldsymbol\theta\) due to nonlinear activations. Global optimization is NP-hard in general; practical training relies on <strong>gradient-based local optimization</strong>. The key enabler is <strong>backpropagation</strong>, an efficient algorithm for computing gradients \(\nabla_{\boldsymbol\theta} \hat R\) via the chain rule. Once gradients are available, iterative update rules (SGD, momentum, Adam) navigate the loss landscape toward locally optimal parameters.</p>
-<p>This chapter derives backpropagation from first principles, presents the major optimization algorithms with their trade-offs, covers regularization techniques specific to neural networks (dropout, batch normalization, weight decay), and completes the hand-computed example from Chapter 13 with a full backward pass. Together, these two chapters provide the complete foundation for understanding modern deep learning.</p>
-<p><strong>Common mistake:</strong> treating backpropagation as a learning algorithm rather than a gradient computation algorithm. Backpropagation computes \(\nabla_{\boldsymbol\theta} L\); it does not update parameters. The learning algorithm is the optimizer (SGD, Adam, etc.) that uses those gradients. Confusing the two leads to misunderstandings about what can be modified independently: you can change optimizers without changing backpropagation, and vice versa (e.g., for custom gradient estimators).</p>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
+        <span>Ch. 14</span>
+      </div>
+      <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
+      <h1>14. Dimensionality Reduction &amp; Principal Component Analysis</h1>
+      <div class="chapter-meta">
+        <span>Chapter 14 of 14</span>
+        <span class="read-badge">30 min read</span>
+      </div>
 
-<h2>Backpropagation: deriving gradients via the chain rule</h2>
-<p>Consider a single training example \((\mathbf{x}, y)\) and loss \(L(\hat y, y)\). The forward pass computes intermediate activations layer by layer:</p>
-\[
-\mathbf{z}^{(\ell)} = W^{(\ell)} \mathbf{h}^{(\ell-1)} + \mathbf{b}^{(\ell)}, \quad \mathbf{h}^{(\ell)} = \sigma(\mathbf{z}^{(\ell)}), \quad \ell = 1, \dots, L
-\]
-<p>with \(\mathbf{h}^{(0)} = \mathbf{x}\) and \(\hat y = g(\mathbf{z}^{(L)})\). Backpropagation computes \(\partial L / \partial W^{(\ell)}\) and \(\partial L / \partial \mathbf{b}^{(\ell)}\) for all layers by applying the chain rule <em>backwards</em> from output to input. Define the <strong>error signal</strong> at layer \(\ell\) as:</p>
-\[
-\boldsymbol\delta^{(\ell)} = \frac{\partial L}{\partial \mathbf{z}^{(\ell)}}
-\]
-<p><strong>Output layer:</strong> By the chain rule through the output activation \(g\):</p>
-\[
-\boldsymbol\delta^{(L)} = \frac{\partial L}{\partial \hat y} \cdot \frac{\partial \hat y}{\partial \mathbf{z}^{(L)}} = \nabla_{\hat y} L \odot g'(\mathbf{z}^{(L)})
-\]
-<p>where \(\odot\) denotes element-wise multiplication. For cross-entropy loss with softmax output, this simplifies beautifully to \(\boldsymbol\delta^{(L)} = \hat{\mathbf{y}} - \mathbf{y}\) (one-hot encoded), eliminating the explicit derivative term entirely — a key reason this pairing is standard for classification.</p>
-<p><strong>Hidden layers:</strong> Propagating backwards through layer \(\ell\):</p>
-\[
-\boldsymbol\delta^{(\ell)} = \left( (W^{(\ell+1)})^\top \boldsymbol\delta^{(\ell+1)} \right) \odot \sigma'(\mathbf{z}^{(\ell)})
-\]
-<p>This is the core recurrence: the error signal at layer \(\ell\) equals the transposed weight matrix times the next layer's error, modulated by the local activation derivative. The transpose arises because gradients flow "backwards" through the same linear transformation that propagated activations forward.</p>
-<p><strong>Parameter gradients:</strong> Once \(\boldsymbol\delta^{(\ell)}\) is computed, parameter gradients follow directly:</p>
-\[
-\frac{\partial L}{\partial W^{(\ell)}} = \boldsymbol\delta^{(\ell)} (\mathbf{h}^{(\ell-1)})^\top, \qquad \frac{\partial L}{\partial \mathbf{b}^{(\ell)}} = \boldsymbol\delta^{(\ell)}
-\]
-<p>The entire backward pass requires one pass through the network (same cost as forward pass), yielding all parameter gradients simultaneously. This efficiency — \(O(\text{forward cost})\) rather than \(O(p \times \text{forward cost})\) for finite differences — is what makes training deep networks feasible.</p>
-<p><strong>Edge case:</strong> when \(\sigma'(z) = 0\) (saturated sigmoid/tanh or dead ReLU), \(\boldsymbol\delta^{(\ell)} = \mathbf{0}\) and all upstream gradients vanish. This is the <strong>vanishing gradient problem</strong> that motivated ReLU activations (Chapter 13) and residual connections. Conversely, if \(\|W^{(\ell+1)}\|\) is large and \(\sigma'\) doesn't sufficiently dampen, gradients can explode exponentially through layers. Gradient clipping (capping \(\|\nabla L\|\) at a threshold) prevents numerical overflow but doesn't solve the underlying instability. Proper initialization (He/Xavier) and batch normalization mitigate both pathologies.</p>
+      <article>
 
-<h3>Worked example: complete backward pass</h3>
-<p>We continue the exact network from Chapter 13's forward pass example. Recall: input \(\mathbf{x} = (1, 2)^\top\), true label \(y = 1\) (binary classification), hidden ReLU, sigmoid output. Forward pass yielded \(\mathbf{z}^{(1)} = (-1, 2)^\top\), \(\mathbf{h}^{(1)} = (0, 2)^\top\), \(z^{(2)} = -3.5\), \(\hat y = 0.0293\).</p>
-<p><strong>Loss:</strong> Binary cross-entropy \(L = -[y \log \hat y + (1-y)\log(1-\hat y)] = -\log(0.0293) = 3.530\).</p>
-<p><strong>Output layer gradient:</strong> For BCE + sigmoid, \(\delta^{(2)} = \hat y - y = 0.0293 - 1 = -0.9707\).</p>
-<p><strong>Gradients for \(W^{(2)}, b^{(2)}\):</strong></p>
-\[
-\frac{\partial L}{\partial W^{(2)}} = \delta^{(2)} (\mathbf{h}^{(1)})^\top = -0.9707 \begin{pmatrix} 0 & 2 \end{pmatrix} = \begin{pmatrix} 0 & -1.9414 \end{pmatrix}
-\]
-\[
-\frac{\partial L}{\partial b^{(2)}} = \delta^{(2)} = -0.9707
-\]
-<p>Note \(\partial L / \partial W_{11}^{(2)} = 0\) because \(h_1^{(1)} = 0\) (dead ReLU) — consistent with forward pass observation.</p>
-<p><strong>Backpropagate to hidden layer:</strong> ReLU derivative: \(\sigma'(z) = \mathbb{1}[z > 0]\). So \(\sigma'(\mathbf{z}^{(1)}) = (0, 1)^\top\) (first unit dead, second active).</p>
-\[
-\boldsymbol\delta^{(1)} = \left( (W^{(2)})^\top \delta^{(2)} \right) \odot \sigma'(\mathbf{z}^{(1)}) = \left[ \begin{pmatrix} 1 \\ -2 \end{pmatrix} (-0.9707) \right] \odot \begin{pmatrix} 0 \\ 1 \end{pmatrix} = \begin{pmatrix} -0.9707 \\ 1.9414 \end{pmatrix} \odot \begin{pmatrix} 0 \\ 1 \end{pmatrix} = \begin{pmatrix} 0 \\ 1.9414 \end{pmatrix}
-\]
-<p>First component is zeroed by dead ReLU — no gradient flows to first hidden unit's incoming weights.</p>
-<p><strong>Gradients for \(W^{(1)}, \mathbf{b}^{(1)}\):</strong></p>
-\[
-\frac{\partial L}{\partial W^{(1)}} = \boldsymbol\delta^{(1)} \mathbf{x}^\top = \begin{pmatrix} 0 \\ 1.9414 \end{pmatrix} \begin{pmatrix} 1 & 2 \end{pmatrix} = \begin{pmatrix} 0 & 0 \\ 1.9414 & 3.8828 \end{pmatrix}
-\]
-\[
-\frac{\partial L}{\partial \mathbf{b}^{(1)}} = \boldsymbol\delta^{(1)} = \begin{pmatrix} 0 \\ 1.9414 \end{pmatrix}
-\]
-<p><strong>Interpretation:</strong> The gradient pushes \(W_{21}^{(1)}\) and \(W_{22}^{(1)}\) upward (positive gradient → decrease loss by decreasing weights? Wait: gradient descent updates \(W \leftarrow W - \eta \nabla_W L\). Positive gradient means weight decreases. Here \(\partial L/\partial W_{21}^{(1)} = 1.94 > 0\), so \(W_{21}^{(1)}\) decreases. Since \(W_{21}^{(1)} = 1\) currently contributed positively to \(z_2^{(1)} = 2\), reducing it would reduce \(h_2^{(1)}\), which currently feeds negatively into \(z^{(2)}\) via \(W_{12}^{(2)} = -2\). Reducing \(h_2^{(1)}\) increases \(z^{(2)}\) (less negative), increasing \(\hat y\) toward the true label 1. ✓ Gradient direction is correct. <strong>Sensitivity check:</strong> if the first hidden unit were alive (\(z_1^{(1)} > 0\)), \(\delta_1^{(1)}\) would be nonzero and \(W_{11}^{(1)}, W_{12}^{(1)}\) would receive gradients. Dead units create permanent blind spots unless reactivated by noise, different data, or Leaky ReLU — illustrating why initialization and activation choice matter critically for trainability.</p>
+        <h2>The curse and the cure</h2>
 
-<h2>Optimization algorithms: SGD, momentum, and Adam</h2>
-<p>With gradients computed, parameters are updated iteratively. Three algorithms dominate practice:</p>
-<h3>Stochastic Gradient Descent (SGD)</h3>
-\[
-\boldsymbol\theta_{t+1} = \boldsymbol\theta_t - \eta \nabla_{\boldsymbol\theta} \hat R_B(\boldsymbol\theta_t)
-\]
-<p>where \(\hat R_B\) is the loss on a mini-batch \(B\) of size \(m \ll n\), and \(\eta\) is the learning rate. Mini-batching provides noisy but cheap gradient estimates, enabling progress before full-data passes complete. Learning rate selection is critical: too large diverges; too small stagnates. Schedules (step decay, cosine annealing, warmup) adapt \(\eta\) during training.</p>
-<h3>Momentum</h3>
-\[
-\mathbf{v}_{t+1} = \mu \mathbf{v}_t + \nabla_{\boldsymbol\theta} \hat R_B(\boldsymbol\theta_t), \quad \boldsymbol\theta_{t+1} = \boldsymbol\theta_t - \eta \mathbf{v}_{t+1}
-\]
-<p>Momentum accumulates past gradients with exponential decay \(\mu \in [0, 1)\) (typically 0.9). Benefits: accelerates convergence along consistent gradient directions, dampens oscillations in ravine-shaped loss landscapes, and helps escape shallow local minima. Nesterov accelerated gradient evaluates the gradient at the lookahead position \(\boldsymbol\theta_t - \mu \mathbf{v}_t\), providing better theoretical convergence rates.</p>
-<h3>Adam (Adaptive Moment Estimation)</h3>
-\[
-\mathbf{m}_t = \beta_1 \mathbf{m}_{t-1} + (1-\beta_1) \mathbf{g}_t, \quad \mathbf{v}_t = \beta_2 \mathbf{v}_{t-1} + (1-\beta_2) \mathbf{g}_t^2
-\]
-\[
-\hat{\mathbf{m}}_t = \mathbf{m}_t / (1-\beta_1^t), \quad \hat{\mathbf{v}}_t = \mathbf{v}_t / (1-\beta_2^t), \quad \boldsymbol\theta_{t+1} = \boldsymbol\theta_t - \frac{\eta}{\sqrt{\hat{\mathbf{v}}_t} + \epsilon} \hat{\mathbf{m}}_t
-\]
-<p>Adam maintains per-parameter adaptive learning rates via running averages of first moment (mean) and second moment (variance) of gradients. Bias correction compensates for initialization at zero. Default hyperparameters \(\beta_1 = 0.9, \beta_2 = 0.999, \epsilon = 10^{-8}\) work well across diverse tasks. Adam converges faster than SGD initially but may generalize slightly worse; SGD with momentum often achieves better final test accuracy with careful tuning.</p>
-<p><strong>Common mistake:</strong> using Adam's default learning rate \(\eta = 0.001\) universally. While reasonable as a starting point, optimal \(\eta\) varies by orders of magnitude across architectures and datasets. Always perform learning rate sweeps or use LR finders. Also beware that Adam's adaptivity can mask poor conditioning; if Adam trains but SGD fails, the loss landscape may be ill-conditioned and worth diagnosing rather than papering over.</p>
+        <p>In Chapter 5, we encountered the curse of dimensionality: as the number of features \(p\) grows, distances between points become uninformative, density estimation requires exponentially more data, and algorithms like kNN degrade. In Chapter 12, clustering in high dimensions produces misleading partitions because noise dimensions dominate distance calculations. Even supervised models suffer: with \(p > n\), OLS (Chapter 2) is undefined, LDA (Chapter 7) has singular covariance estimates, and overfitting becomes nearly inevitable.</p>
 
-<h2>Regularization for neural networks</h2>
-<p>Neural networks have enormous capacity and overfit readily. Beyond classical regularization (weight decay = \(\ell_2\) penalty, Chapter 4), three techniques are specific to deep learning:</p>
-<h3>Dropout</h3>
-<p>During training, randomly zero each hidden unit's activation with probability \(p\) (typically 0.2–0.5), scaling surviving activations by \(1/(1-p)\) to preserve expected values. At test time, use full network without dropout. Dropout prevents co-adaptation of features (units cannot rely on specific partners being present), effectively training an ensemble of \(2^m\) subnetworks. Mathematically equivalent to adding multiplicative noise to hidden representations.</p>
-<h3>Batch Normalization</h3>
-<p>Normalize each mini-batch's layer inputs to zero mean and unit variance, then apply learnable scale \(\gamma\) and shift \(\beta\): \(\hat{\mathbf{z}} = \gamma \odot \frac{\mathbf{z} - \hat{\boldsymbol\mu}_B}{\sqrt{\hat{\boldsymbol\sigma}_B^2 + \epsilon}} + \boldsymbol\beta\). Stabilizes training by reducing internal covariate shift, allows higher learning rates, and acts as mild regularizer due to mini-batch noise. At test time, use running population statistics instead of batch statistics.</p>
-<h3>Weight Decay vs. \(\ell_2\) Regularization</h3>
-<p>In SGD, weight decay (\(\boldsymbol\theta \leftarrow (1-\lambda)\boldsymbol\theta - \eta \nabla L\)) and \(\ell_2\) regularization (\(\nabla(L + \frac{\lambda}{2}\|\boldsymbol\theta\|^2)\)) are equivalent. In adaptive optimizers (Adam), they differ: decoupled weight decay applies decay directly to parameters independent of gradient history, while \(\ell_2\) modifies the gradient before adaptation. Decoupled weight decay (AdamW) generally outperforms \(\ell_2\) regularization with Adam and is now the recommended default.</p>
-<p><strong>Edge case:</strong> dropout applied to recurrent connections or attention mechanisms requires specialized variants (variational dropout, DropConnect) to maintain temporal consistency. Batch normalization interacts poorly with very small batch sizes (< 8); Layer Normalization or Group Normalization are preferred alternatives. Weight decay should typically NOT be applied to bias terms or batch norm parameters, as these don't contribute to overfitting in the same way.</p>
+        <p>The question dimensionality reduction answers is: <strong>can we find a lower-dimensional representation of the data that preserves the essential structure while discarding noise and redundancy?</strong></p>
 
-<h3>Worked example: comparing optimizer trajectories</h3>
-<p>Minimize \(f(w_1, w_2) = 0.1 w_1^2 + 10 w_2^2\) (elongated valley, condition number 100). Start at \((5, 5)\), \(\eta = 0.01\).</p>
-<p><strong>SGD:</strong> \(\nabla f = (w_1, 20w_2)\). Step 1: \((5, 5) - 0.01(1, 100) = (4.99, 4.0)\). Step 2: \((4.99, 4.0) - 0.01(0.998, 80) = (4.98, 3.2)\). Oscillates heavily in \(w_2\) direction while barely moving in \(w_1\). After 100 steps: approximately \((4.0, 0.07)\) — still far from optimum in \(w_1\).</p>
-<p><strong>Momentum (\(\mu=0.9\)):</strong> Accumulates velocity in consistent \(w_2\) direction, damping oscillations. After 100 steps: approximately \((2.5, 0.001)\) — much further along \(w_1\) due to accumulated momentum carrying through the valley.</p>
-<p><strong>Adam:</strong> Adapts per-parameter LR: \(w_2\) gets smaller effective LR (large gradient variance), \(w_1\) gets larger effective LR (small gradient). After 100 steps: approximately \((0.3, 0.0001)\) — near optimum in both dimensions. <strong>Sensitivity check:</strong> with \(\eta = 0.1\), SGD diverges immediately (overshoots in \(w_2\)); momentum overshoots then recovers; Adam remains stable due to adaptivity. With \(\eta = 0.001\), all converge but SGD takes ~10× longer. This illustrates why adaptive methods dominate early-stage prototyping while tuned SGD+momentum wins final performance in competitive settings.</p>
+        <p>Principal Component Analysis (PCA) is the foundational technique. It finds orthogonal directions of maximum variance in the data and projects onto the top \(k\) of them. Despite being entirely linear and unsupervised, PCA serves as preprocessing for virtually every downstream task in this book: visualization, denoising, compression, and improving the conditioning of supervised and unsupervised algorithms alike.</p>
 
-<h2>Vanishing and exploding gradients: diagnosis and remedies</h2>
-<p>Gradient flow through deep networks is governed by products of Jacobians. For a network with \(L\) layers, the gradient w.r.t. early-layer parameters involves:</p>
-\[
-\frac{\partial L}{\partial \mathbf{z}^{(1)}} = \prod_{\ell=1}^{L-1} \operatorname{diag}(\sigma'(\mathbf{z}^{(\ell)})) \, (W^{(\ell+1)})^\top \cdot \boldsymbol\delta^{(L)}
-\]
-<p>If \(\|\operatorname{diag}(\sigma') (W^{(\ell+1)})^\top\| < 1\) consistently, gradients decay exponentially (<strong>vanishing</strong>); if \(> 1\), they grow exponentially (<strong>exploding</strong>). Sigmoid/tanh saturate (\(\sigma' \leq 0.25\)), causing vanishing. Large weight norms cause exploding. Both prevent learning in deep networks.</p>
-<p><strong>Remedies:</strong></p>
-<ul>
-<li><strong>ReLU activations:</strong> \(\sigma' = 1\) for active units, avoiding systematic attenuation.</li>
-<li><strong>Careful initialization:</strong> He initialization (\(W \sim \mathcal{N}(0, 2/n_{\text{in}})\)) for ReLU; Xavier (\(W \sim \mathcal{N}(0, 1/n_{\text{in}})\)) for sigmoid/tanh. Maintains unit variance through layers.</li>
-<li><strong>Residual connections:</strong> \(\mathbf{h}^{(\ell+1)} = F(\mathbf{h}^{(\ell)}) + \mathbf{h}^{(\ell)}\) provides identity shortcut for gradient flow even when \(F\) has small derivatives.</li>
-<li><strong>Batch/Layer Normalization:</strong> Keeps activations in non-saturating regime.</li>
-<li><strong>Gradient clipping:</strong> Caps global norm \(\|\nabla L\| \leq c\) to prevent explosion (essential for RNNs).</li>
-</ul>
-<p><strong>Edge case:</strong> even with ReLU, deep networks can suffer from "dying ReLU" where units permanently deactivate, creating zero-gradient pathways. Leaky ReLU, ELU, or GELU maintain nonzero gradients for negative inputs. Also note that vanishing gradients affect <em>training</em>, not inference; a trained network with small gradients can still compute correct outputs. The problem is learnability, not expressivity.</p>
+        <h2>Two equivalent objectives</h2>
 
-<h2>Connection to the broader framework</h2>
-<p>Feed-forward network training unifies nearly every concept in this book. Chapter 1's ERM is the objective; backpropagation enables its optimization. Chapter 4's ridge regularization reappears as weight decay. Chapter 5's logistic regression is the single-layer special case with BCE loss. Chapter 11's bias-variance trade-off governs architecture and regularization choices. Chapter 12's cross-validation selects hyperparameters (learning rate, dropout rate, batch norm). And Chapter 13's architecture defines the function class whose parameters this chapter learns.</p>
-<p>Master feed-forward training not as a collection of tricks but as the systematic application of calculus, optimization, and statistical principles to compositional functions. If you can derive backpropagation from the chain rule, implement a backward pass by hand, explain why Adam adapts per-parameter learning rates, diagnose vanishing gradients from activation statistics, and articulate when SGD beats Adam (and vice versa), you have internalized the machinery that powers modern AI. Everything beyond this — CNNs, transformers, diffusion models — builds on these foundations.</p>
+        <p>PCA can be motivated from two seemingly different perspectives that turn out to be mathematically equivalent. Understanding both deepens intuition.</p>
 
-  </article>
-  <div class="chapter-nav">
-    <a class="chapter-nav-link prev" href="../ch13/index.html">
-      <span class="chapter-nav-label">← Previous</span>
-      <span class="chapter-nav-title">13. Multi-Layer Perceptron</span>
-    </a>
-    <a class="chapter-nav-link next" href="../ch15/index.html">
-      <span class="chapter-nav-label">Next →</span>
-      <span class="chapter-nav-title">15. Clustering: k-Means and k-Medoids</span>
-    </a>
-  </div>
-</div>
-</main>
-<footer>
-  <div class="wrap">
-    <span>© 2026 iTube. Read forever, free forever.</span>
-    <span>No video was harmed in the making of this platform.</span>
-  </div>
-</footer>
-<script src="../../theme.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-<script defer src="../../app.js"></script>
+        <h3>Objective 1: Maximum projected variance</h3>
+
+        <p>We seek a unit vector \(\mathbf{u}_1 \in \mathbb{R}^p\) such that projecting the centered data onto \(\mathbf{u}_1\) captures the maximum possible variance. Let \(X \in \mathbb{R}^{n \times p}\) be the centered data matrix (each column has mean zero). The projection of all \(n\) points onto \(\mathbf{u}_1\) is \(X\mathbf{u}_1 \in \mathbb{R}^n\). Its sample variance is:</p>
+
+        \[\frac{1}{n}(X\mathbf{u}_1)^\top (X\mathbf{u}_1) = \frac{1}{n}\mathbf{u}_1^\top X^\top X \mathbf{u}_1 = \mathbf{u}_1^\top \hat{\Sigma} \mathbf{u}_1\]
+
+        <p>where \(\hat{\Sigma} = \frac{1}{n}X^\top X\) is the sample covariance matrix (using the centered data). We want to maximize this quadratic form subject to \(\|\mathbf{u}_1\| = 1\):</p>
+
+        \[\max_{\mathbf{u}_1} \mathbf{u}_1^\top \hat{\Sigma} \mathbf{u}_1 \quad \text{s.t.} \quad \mathbf{u}_1^\top \mathbf{u}_1 = 1\]
+
+        <h3>Objective 2: Minimum reconstruction error</h3>
+
+        <p>Alternatively, we seek a rank-\(k\) approximation \(\hat{X}\) of \(X\) that minimizes the total squared reconstruction error:</p>
+
+        \[\min_{\text{rank}(\hat{X}) = k} \|X - \hat{X}\|_F^2\]
+
+        <p>For \(k = 1\), \(\hat{X} = \mathbf{u}_1 \mathbf{u}_1^\top X\) (projecting each row onto \(\mathbf{u}_1\) and back). The reconstruction error is:</p>
+
+        \[\|X - \mathbf{u}_1 \mathbf{u}_1^\top X\|_F^2 = \|X\|_F^2 - \mathbf{u}_1^\top X^\top X \mathbf{u}_1\]
+
+        <p>Since \(\|X\|_F^2\) is constant, minimizing reconstruction error is equivalent to maximizing \(\mathbf{u}_1^\top X^\top X \mathbf{u}_1\) — exactly Objective 1. <strong>Maximum variance and minimum reconstruction error are the same optimization problem.</strong></p>
+
+        <h2>Solving via eigendecomposition</h2>
+
+        <p>The constrained maximization \(\max \mathbf{u}^\top \hat{\Sigma} \mathbf{u}\) subject to \(\|\mathbf{u}\| = 1\) is solved by Lagrange multipliers. The Lagrangian is:</p>
+
+        \[\mathcal{L}(\mathbf{u}, \lambda) = \mathbf{u}^\top \hat{\Sigma} \mathbf{u} - \lambda(\mathbf{u}^\top \mathbf{u} - 1)\]
+
+        <p>Taking the gradient with respect to \(\mathbf{u}\) and setting to zero:</p>
+
+        \[2\hat{\Sigma}\mathbf{u} - 2\lambda \mathbf{u} = \mathbf{0} \implies \hat{\Sigma}\mathbf{u} = \lambda \mathbf{u}\]
+
+        <p>This is the eigenvalue equation! The optimal projection directions are the <strong>eigenvectors</strong> of \(\hat{\Sigma}\), and the corresponding eigenvalues \(\lambda\) equal the projected variance \(\mathbf{u}^\top \hat{\Sigma} \mathbf{u} = \lambda \mathbf{u}^\top \mathbf{u} = \lambda\).</p>
+
+        <p>Since \(\hat{\Sigma}\) is symmetric positive semidefinite, its eigenvalues are real and non-negative: \(\lambda_1 \geq \lambda_2 \geq \cdots \geq \lambda_p \geq 0\), with corresponding orthonormal eigenvectors \(\mathbf{u}_1, \ldots, \mathbf{u}_p\). The first principal component is \(\mathbf{u}_1\) (direction of maximum variance \(\lambda_1\)), the second is \(\mathbf{u}_2\) (maximum variance among directions orthogonal to \(\mathbf{u}_1\)), and so on.</p>
+
+        <p>The \(k\)-dimensional PCA representation of point \(x_i\) is:</p>
+
+        \[z_i = (\mathbf{u}_1^\top x_i, \mathbf{u}_2^\top x_i, \ldots, \mathbf{u}_k^\top x_i)^\top \in \mathbb{R}^k\]
+
+        <p>The fraction of total variance retained by the first \(k\) components is:</p>
+
+        \[\boxed{\text{Variance Retained} = \frac{\sum_{j=1}^{k} \lambda_j}{\sum_{j=1}^{p} \lambda_j}}</\]
+
+        <h3>Worked example</h3>
+
+        <h4>PCA on four points in \(\mathbb{R}^2\)</h4>
+
+        <p>Data: \(x_1 = (1, 2)\), \(x_2 = (2, 4)\), \(x_3 = (3, 3)\), \(x_4 = (4, 5)\).</p>
+
+        <p><strong>Step 1: Center the data.</strong></p>
+
+        \[\bar{x} = \left(\frac{1+2+3+4}{4}, \frac{2+4+3+5}{4}\right) = (2.5, 3.5)\]
+
+        <p>Centered data matrix \(X\):</p>
+
+        \[X = \begin{pmatrix} -1.5 & -1.5 \\ -0.5 & 0.5 \\ 0.5 & -0.5 \\ 1.5 & 1.5 \end{pmatrix}\]
+
+        <p><strong>Step 2: Compute the covariance matrix.</strong></p>
+
+        \[\hat{\Sigma} = \frac{1}{4} X^\top X = \frac{1}{4} \begin{pmatrix} -1.5 & -0.5 & 0.5 & 1.5 \\ -1.5 & 0.5 & -0.5 & 1.5 \end{pmatrix} \begin{pmatrix} -1.5 & -1.5 \\ -0.5 & 0.5 \\ 0.5 & -0.5 \\ 1.5 & 1.5 \end{pmatrix}\]
+
+        <p>Computing entries:</p>
+        <ul>
+          <li>\((1,1)\): \(\frac{1}{4}(2.25 + 0.25 + 0.25 + 2.25) = \frac{5}{4} = 1.25\)</li>
+          <li>\((1,2)\): \(\frac{1}{4}(2.25 - 0.25 - 0.25 + 2.25) = \frac{4}{4} = 1.0\)</li>
+          <li>\((2,1)\): \(1.0\) (symmetric)</li>
+          <li>\((2,2)\): \(\frac{1}{4}(2.25 + 0.25 + 0.25 + 2.25) = 1.25\)</li>
+        </ul>
+
+        \[\hat{\Sigma} = \begin{pmatrix} 1.25 & 1.0 \\ 1.0 & 1.25 \end{pmatrix}\]
+
+        <p><strong>Step 3: Find eigenvalues.</strong></p>
+
+        <p>Solve \(\det(\hat{\Sigma} - \lambda I) = 0\):</p>
+
+        \[(1.25 - \lambda)^2 - 1.0^2 = 0 \implies (1.25 - \lambda)^2 = 1 \implies 1.25 - \lambda = \pm 1\]
+
+        \[\lambda_1 = 1.25 + 1 = 2.25, \quad \lambda_2 = 1.25 - 1 = 0.25\]
+
+        <p>Total variance: \(\lambda_1 + \lambda_2 = 2.5\).</p>
+
+        <p><strong>Step 4: Find eigenvectors.</strong></p>
+
+        <p>For \(\lambda_1 = 2.25\): solve \((\hat{\Sigma} - 2.25I)\mathbf{u} = \mathbf{0}\):</p>
+
+        \[\begin{pmatrix} -1.0 & 1.0 \\ 1.0 & -1.0 \end{pmatrix} \begin{pmatrix} u_1 \\ u_2 \end{pmatrix} = \mathbf{0} \implies u_1 = u_2\]
+
+        <p>Normalized: \(\mathbf{u}_1 = \frac{1}{\sqrt{2}}(1, 1)^\top \approx (0.707, 0.707)^\top\).</p>
+
+        <p>For \(\lambda_2 = 0.25\): solve \((\hat{\Sigma} - 0.25I)\mathbf{u} = \mathbf{0}\):</p>
+
+        \[\begin{pmatrix} 1.0 & 1.0 \\ 1.0 & 1.0 \end{pmatrix} \begin{pmatrix} u_1 \\ u_2 \end{pmatrix} = \mathbf{0} \implies u_1 = -u_2\]
+
+        <p>Normalized: \(\mathbf{u}_2 = \frac{1}{\sqrt{2}}(1, -1)^\top \approx (0.707, -0.707)^\top\).</p>
+
+        <p><strong>Step 5: Interpret.</strong></p>
+
+        <p>The first principal component \(\mathbf{u}_1\) points along the diagonal direction \((1,1)\), capturing variance \(\lambda_1 = 2.25\). The second PC \(\mathbf{u}_2\) is orthogonal, pointing along \((1,-1)\), capturing only \(\lambda_2 = 0.25\). Variance retained by PC1 alone:</p>
+
+        \[\frac{2.25}{2.5} = 0.9 = 90\%\]
+
+        <p>Projecting onto just the first PC retains 90% of the total variance, reducing dimensionality from 2 to 1 with minimal information loss.</p>
+
+        <p><strong>Step 6: Project and reconstruct.</strong></p>
+
+        <p>Projections onto PC1: \(z_i = \mathbf{u}_1^\top (x_i - \bar{x})\):</p>
+        <ul>
+          <li>\(z_1 = 0.707(-1.5) + 0.707(-1.5) = -2.121\)</li>
+          <li>\(z_2 = 0.707(-0.5) + 0.707(0.5) = 0\)</li>
+          <li>\(z_3 = 0.707(0.5) + 0.707(-0.5) = 0\)</li>
+          <li>\(z_4 = 0.707(1.5) + 0.707(1.5) = 2.121\)</li>
+        </ul>
+
+        <p>Reconstruction: \(\hat{x}_i = \bar{x} + z_i \mathbf{u}_1\):</p>
+        <ul>
+          <li>\(\hat{x}_1 = (2.5, 3.5) + (-2.121)(0.707, 0.707) = (2.5 - 1.5, 3.5 - 1.5) = (1.0, 2.0)\)</li>
+          <li>\(\hat{x}_2 = (2.5, 3.5) + 0 = (2.5, 3.5)\)</li>
+          <li>\(\hat{x}_3 = (2.5, 3.5) + 0 = (2.5, 3.5)\)</li>
+          <li>\(\hat{x}_4 = (2.5, 3.5) + (2.121)(0.707, 0.707) = (4.0, 5.0)\)</li>
+        </ul>
+
+        <p>Points \(x_2\) and \(x_3\) collapse to the same reconstruction because they differ only along PC2, which was discarded. The reconstruction error is entirely in the PC2 direction, totaling \(n \cdot \lambda_2 = 4 \times 0.25 = 1.0\).</p>
+
+        <h2>Choosing the number of components</h2>
+
+        <p>Common strategies include:</p>
+        <ul>
+          <li><strong>Variance threshold:</strong> Choose smallest \(k\) such that cumulative variance exceeds a target (e.g., 95%). Simple and interpretable.</li>
+          <li><strong>Scree plot:</strong> Plot eigenvalues vs. component index; look for an "elbow" where eigenvalues drop sharply then flatten. Subjective but visually informative.</li>
+          <li><strong>Kaiser criterion:</strong> Retain components with \(\lambda_j > 1\) (when using correlation matrix instead of covariance). Widely used in factor analysis but sometimes retains too many or too few components.</li>
+          <li><strong>Cross-validation:</strong> When PCA is preprocessing for a downstream task, choose \(k\) by CV on the downstream metric (Chapter 10).</li>
+        </ul>
+
+        <h2>Whitening: decorrelating and rescaling</h2>
+
+        <p>Standard PCA produces uncorrelated components with variances \(\lambda_1 \geq \lambda_2 \geq \cdots\). Sometimes we want components with <em>unit</em> variance as well. <strong>PCA whitening</strong> transforms the projected data:</p>
+
+        \[z_i^{\text{white}} = \Lambda_k^{-1/2} U_k^\top (x_i - \bar{x})\]
+
+        <p>where \(\Lambda_k = \text{diag}(\lambda_1, \ldots, \lambda_k)\) and \(U_k = [\mathbf{u}_1, \ldots, \mathbf{u}_k]\). The whitened representation has identity covariance, making it suitable for algorithms that assume spherical data (e.g., k-means, ICA). The tradeoff: whitening amplifies noise in low-variance directions by dividing by small \(\sqrt{\lambda_j}\), so it should be used judiciously.</p>
+
+        <h2>Common mistake</h2>
+
+        <p><strong>Common mistake:</strong> Students often apply PCA without centering the data first. Without centering, the first principal component points toward the mean of the data rather than the direction of maximum variance. The covariance matrix \(X^\top X / n\) only equals the true sample covariance when \(X\) is centered; otherwise it includes a rank-1 contribution from the mean that dominates the eigendecomposition. Always subtract column means before computing PCA. A related mistake: interpreting principal components as meaningful latent variables. PCs are linear combinations optimized for variance, not interpretability. A PC might mix age, income, and height in proportions that maximize spread but have no semantic meaning. If interpretable factors are desired, consider factor analysis or domain-guided feature engineering instead.</p>
+
+        <h2>Edge case</h2>
+
+        <p><strong>What happens when multiple eigenvalues are equal?</strong> The corresponding eigenspace is multidimensional, and any orthonormal basis within it is equally valid. Different software may return different eigenvectors for degenerate eigenvalues, but the subspace spanned is unique. The variance explained by the group of equal eigenvalues is well-defined even though individual components within the group are not. This occurs naturally when data has rotational symmetry (e.g., points uniformly distributed on a sphere).</p>
+
+        <p><strong>What about nonlinear structure?</strong> PCA is fundamentally linear: it can only capture variance along straight-line directions. Data lying on a curved manifold (e.g., a Swiss roll) will not be well-represented by PCA even if the intrinsic dimensionality is low. Nonlinear extensions like kernel PCA, Isomap, and t-SNE address this, but they are beyond the GATE DA syllabus scope. Recognizing when PCA fails (reconstruction error remains high despite many components, or visualizations show curved patterns) is as important as knowing how to apply it.</p>
+
+        <h2>Completing the syllabus</h2>
+
+        <p>With this chapter, we have covered every topic on the GATE DA machine learning syllabus: supervised learning (regression, classification, SVMs, decision trees, neural networks), model evaluation (bias-variance, cross-validation), and unsupervised learning (clustering, dimensionality reduction). The threads connecting these topics are the bias-variance tradeoff (Chapter 10), which governs every hyperparameter choice; the geometry of high-dimensional spaces, which motivates both regularization and dimensionality reduction; and the principle that every algorithm encodes assumptions about data structure that must be matched to the problem at hand. Mastery comes not from memorizing formulas but from understanding why each method exists, what it assumes, and when it fails.</p>
+
+      </article>
+
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch13/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">13. Hierarchical Clustering</span>
+        </a>
+        <div class="chapter-nav-empty"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
 </body>
 </html>
