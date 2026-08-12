@@ -1,176 +1,251 @@
-<!-- File: /<slug>/ch6/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>6. k-Nearest Neighbour — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
-<meta name="description" content="The kNN algorithm for classification and regression, distance metrics, bias-variance analysis of k, curse of dimensionality, and hand-computed examples with sensitivity checks.">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap" rel="stylesheet">
-<link rel="manifest" href="../../manifest.json">
-<link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="../../icons/icon-192.svg">
-<meta name="theme-color" content="#1B1B1F">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="iTube">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script>
-(function(){
-  var saved = localStorage.getItem("itube-theme");
-  var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-  document.documentElement.setAttribute("data-theme", theme);
-})();
-</script>
-<link rel="stylesheet" href="../../style.css">
+  <title>6. Naive Bayes Classifier — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
+  <meta name="description" content="How do we build a probabilistic classifier from Bayes' theorem? We derive the Naive Bayes decision rule, expose the conditional independence assumption, work through a full numeric example with Laplace smoothing, and analyze when the 'naive' assumption fails.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
 </head>
 <body data-depth="2">
-<header class="top">
-  <div class="wrap">
-    <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
-    <div class="top-actions">
-      <div class="font-controls" role="group" aria-label="Adjust text size">
-        <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
-        <span id="font-size-label">100%</span>
-        <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
-        <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
       </div>
-      <button id="theme-btn" title="Toggle light/dark">◐</button>
     </div>
-  </div>
-</header>
-<main>
-<div class="wrap narrow">
-  <div class="breadcrumb">
-    <a href="../../index.html">iTube</a><span class="sep">/</span>
-    <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
-    <span>Ch. 6</span>
-  </div>
-  <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
-  <h1>6. k-Nearest Neighbour</h1>
-  <div class="chapter-meta">
-    <span>Chapter 6 of 17</span>
-    <span class="read-badge">22 min read</span>
-  </div>
-  <article>
+  </header>
 
-<h2>The algorithm: learning by analogy</h2>
-<p><strong>k-nearest neighbour</strong> (kNN) is the simplest supervised learning algorithm and the most direct instantiation of the Bayes-optimal predictor introduced in Chapter 1. It has no training phase: the entire dataset <em>is</em> the model. To predict at a query point \(\mathbf{x}_q\), find the \(k\) training points closest to \(\mathbf{x}_q\) under some distance metric, then aggregate their labels:</p>
-<ul>
-<li><p><strong>Classification:</strong> majority vote among the \(k\) neighbours' labels. Ties are broken randomly, by nearest-neighbour priority, or by weighted voting.</p></li>
-<li><p><strong>Regression:</strong> average of the \(k\) neighbours' responses: \(\hat y(\mathbf{x}_q) = \frac{1}{k}\sum_{i \in \mathcal{N}_k(\mathbf{x}_q)} y_i\).</p></li>
-</ul>
-<p>kNN is <strong>nonparametric</strong>: it makes no assumption about the functional form of \(f^*(\mathbf{x}) = \mathbb{E}[Y \mid X = \mathbf{x}]\). As \(n \to \infty\) and \(k \to \infty\) with \(k/n \to 0\), the kNN estimator converges to the true conditional expectation (for regression) or the Bayes classifier (for classification). This universal consistency is its theoretical justification. But finite-sample performance depends critically on three choices: the distance metric, the value of \(k\), and the feature scaling — each of which we analyze in detail below.</p>
-<p><strong>Common mistake:</strong> treating kNN as "parameter-free." While it has no <em>model</em> parameters like \(\boldsymbol\beta\) in linear regression, \(k\) and the distance metric are <em>hyperparameters</em> that must be tuned via cross-validation (Chapter 12). Choosing \(k = 1\) because it seems natural often leads to severe overfitting; choosing Euclidean distance without standardizing features lets high-variance predictors dominate. These are not implementation details — they are the entire substance of applying kNN well.</p>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
+        <span>Ch. 6</span>
+      </div>
+      <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
+      <h1>6. Naive Bayes Classifier</h1>
+      <div class="chapter-meta">
+        <span>Chapter 6 of 14</span>
+        <span class="read-badge">25 min read</span>
+      </div>
 
-<h2>Distance metrics and feature scaling</h2>
-<p>The notion of "nearest" depends entirely on the chosen <strong>distance metric</strong>. The most common is <strong>Euclidean distance</strong> (\(\ell_2\)):</p>
-\[
-d_2(\mathbf{x}, \mathbf{x}') = \sqrt{\sum_{j=1}^{p} (x_j - x_j')^2}
-\]
-<p>Other choices include <strong>Manhattan distance</strong> (\(\ell_1\)): \(d_1(\mathbf{x}, \mathbf{x}') = \sum_j |x_j - x_j'|\), which is more robust to outliers and performs better in high dimensions; <strong>Minkowski distance</strong> (\(\ell_p\)): \((\sum_j |x_j - x_j'|^p)^{1/p}\), generalizing both; and domain-specific metrics like cosine similarity for text or Mahalanobis distance when features are correlated.</p>
-<p>Critical prerequisite: <strong>features must be on comparable scales</strong>. If \(x_1\) ranges over \([0, 1]\) and \(x_2\) over \([0, 1000]\), Euclidean distance is dominated entirely by \(x_2\), rendering \(x_1\) irrelevant regardless of its true predictive power. Standard practice is to standardize each feature to zero mean and unit variance before computing distances, or to use min-max scaling to \([0,1]\). When features have different units or semantic meanings, consider whether Euclidean distance is even appropriate — sometimes a domain-informed metric outperforms any generic choice.</p>
-<p><strong>Edge case:</strong> in very high dimensions (\(p \gg 10\)), all pairwise distances tend to concentrate around a single value, making "nearest" nearly meaningless. For points drawn uniformly from \([0,1]^p\), the ratio \(\max d / \min d \to 1\) as \(p \to \infty\). This is the <strong>curse of dimensionality</strong>, discussed in detail below. Practical remedies include dimensionality reduction (PCA, Chapter 17), feature selection, or switching to \(\ell_1\) distance, which concentrates less severely than \(\ell_2\). Also note that tied distances are common with discrete or quantized features; deterministic tie-breaking (e.g., by index order) introduces arbitrary bias — randomized or weighted tie-breaking is preferred.</p>
+      <article>
 
-<h3>Worked example: distance computation and scale sensitivity</h3>
-<p>Consider three training points in \(\mathbb{R}^2\) with labels: \(A = (1, 100), y_A = 0\); \(B = (2, 200), y_B = 1\); \(C = (3, 150), y_C = 1\). Query point \(\mathbf{x}_q = (2.5, 160)\).</p>
-<p><strong>Without scaling:</strong> Euclidean distances:</p>
-\[
-d(A, \mathbf{x}_q) = \sqrt{(2.5-1)^2 + (160-100)^2} = \sqrt{2.25 + 3600} = \sqrt{3602.25} \approx 60.02
-\]
-\[
-d(B, \mathbf{x}_q) = \sqrt{(2.5-2)^2 + (160-200)^2} = \sqrt{0.25 + 1600} = \sqrt{1600.25} \approx 40.00
-\]
-\[
-d(C, \mathbf{x}_q) = \sqrt{(2.5-3)^2 + (160-150)^2} = \sqrt{0.25 + 100} = \sqrt{100.25} \approx 10.01
-\]
-<p>For \(k = 2\), nearest neighbours are \(C\) and \(B\) (both label 1) → predict 1. Feature \(x_2\) dominates completely; \(x_1\) contributes negligibly.</p>
-<p><strong>With standardization:</strong> means \(\bar x_1 = 2\), \(\bar x_2 = 150\); std devs \(s_1 = 0.816\), \(s_2 = 40.82\). Standardized points: \(A' = (-1.225, -1.225)\), \(B' = (0, 1.225)\), \(C' = (1.225, 0)\), \(\mathbf{x}_q' = (0.612, 0.245)\). Distances:</p>
-\[
-d(A', \mathbf{x}_q') = \sqrt{(0.612+1.225)^2 + (0.245+1.225)^2} = \sqrt{3.376 + 2.161} = \sqrt{5.537} \approx 2.353
-\]
-\[
-d(B', \mathbf{x}_q') = \sqrt{(0.612)^2 + (0.245-1.225)^2} = \sqrt{0.375 + 0.960} = \sqrt{1.335} \approx 1.155
-\]
-\[
-d(C', \mathbf{x}_q') = \sqrt{(0.612-1.225)^2 + (0.245)^2} = \sqrt{0.376 + 0.060} = \sqrt{0.436} \approx 0.660
-\]
-<p>Ranking unchanged here (\(C, B, A\)), but the relative gaps shifted dramatically: unscaled, \(d(C)/d(B) \approx 0.25\); scaled, \(d(C)/d(B) \approx 0.57\). In other datasets, scaling can flip the neighbour ranking entirely. <strong>Sensitivity check:</strong> if \(y_A = 1\) instead of 0, unscaled 2-NN still predicts 1 (neighbours \(C,B\)); scaled 2-NN also predicts 1 (neighbours \(C,B\)). But if \(y_B = 0\), unscaled 2-NN predicts 0 (neighbours \(C,A\) since \(d(A) \lt d(B)\)? No — \(d(A) = 60 > d(B) = 40\), so neighbours remain \(C,B\) → predict 0. Scaled: same neighbours → predict 0. The prediction is robust here, but the margin (distance gap between included and excluded neighbours) differs, affecting confidence estimates.</p>
+        <h2>Classifying by reversing causality</h2>
 
-<h2>Bias-variance trade-off in k</h2>
-<p>The choice of \(k\) controls the fundamental <strong>bias-variance trade-off</strong> (previewed in Chapter 1, formalized in Chapter 11). Small \(k\) yields low bias but high variance; large \(k\) yields high bias but low variance.</p>
-<p><strong>Small \(k\) (e.g., \(k = 1\)):</strong> The prediction at \(\mathbf{x}_q\) equals the label of the single nearest neighbour. Bias is minimal (the nearest neighbour's label is an unbiased estimate of \(P(Y|X)\) at a nearby point), but variance is maximal: moving \(\mathbf{x}_q\) slightly can change which point is nearest, causing the prediction to jump discontinuously. The decision boundary is jagged and passes through every training point, memorizing noise.</p>
-<p><strong>Large \(k\) (e.g., \(k = n\)):</strong> The prediction is the global mean \(\bar y\) everywhere. Variance is zero (prediction doesn't depend on local data), but bias is maximal unless the true function is constant. The decision boundary disappears entirely.</p>
-<p><strong>Optimal \(k\):</strong> Balances these forces. Theory suggests \(k \propto n^{2/(2+d)}\) for \(d\)-dimensional data under smoothness assumptions, but in practice \(k\) is selected by cross-validation (Chapter 12). Odd \(k\) is preferred for binary classification to avoid ties. Weighted kNN (weighting votes by inverse distance) smooths the transition between \(k\) values and reduces sensitivity to the exact choice.</p>
-<p><strong>Common mistake:</strong> selecting \(k\) based on training error. Training error monotonically decreases with \(k\) (1-NN achieves zero training error trivially), so it provides no signal about generalization. Always use held-out validation or cross-validation. Also beware that the optimal \(k\) depends on sample size: what works for \(n = 100\) may overfit at \(n = 10000\) or underfit at \(n = 50\). Re-tune \(k\) whenever \(n\) changes substantially.</p>
+        <p>In logistic regression (Chapter 4), we modeled \(P(y|x)\) directly using a parametric sigmoid function. In k-nearest neighbours (Chapter 5), we avoided modeling probabilities altogether and classified by local voting. Both approaches sidestep a natural question: <strong>what if we already know (or can estimate) how features are generated within each class?</strong></p>
 
-<h3>Worked example: effect of k on predictions</h3>
-<p>Training data: five points on the real line with labels: \((1, 0), (2, 0), (3, 1), (4, 1), (5, 0)\). Query \(\mathbf{x}_q = 2.8\). Distances to query: \(|2.8-1|=1.8\), \(|2.8-2|=0.8\), \(|2.8-3|=0.2\), \(|2.8-4|=1.2\), \(|2.8-5|=2.2\). Sorted neighbours: \(x=3\) (dist 0.2, label 1), \(x=2\) (0.8, label 0), \(x=4\) (1.2, label 1), \(x=1\) (1.8, label 0), \(x=5\) (2.2, label 0).</p>
-<p>Predictions for different \(k\):</p>
-\[
-\begin{array}{c|l|c}
-k & \text{Neighbours (labels)} & \text{Prediction} \\ \hline
-1 & \{3: 1\} & 1 \\
-2 & \{3: 1, 2: 0\} & \text{tie} \to \text{break to } 1 \text{ (closer)} \\
-3 & \{3: 1, 2: 0, 4: 1\} & 1 \text{ (majority)} \\
-4 & \{3: 1, 2: 0, 4: 1, 1: 0\} & \text{tie} \to \text{break to } 0 \text{ or } 1 \\
-5 & \{3: 1, 2: 0, 4: 1, 1: 0, 5: 0\} & 0 \text{ (majority)}
-\end{array}
-\]
-<p>The prediction flips from 1 to 0 between \(k = 3\) and \(k = 5\). At \(k = 3\), the local neighborhood captures the positive region around \(x = 3\); at \(k = 5\), the global majority (three zeros) dominates. <strong>Sensitivity check:</strong> if the true boundary were at \(x = 2.5\) (so \(x = 3\) is genuinely positive), \(k = 3\) is correct and \(k = 5\) is biased. If the true boundary were at \(x = 3.5\) (so \(x = 3\) is actually negative due to label noise), \(k = 1\) and \(k = 3\) are wrong while \(k = 5\) is right. Without knowing the truth, only cross-validation can distinguish these cases — illustrating why \(k\) selection is essential and cannot be done by inspection.</p>
+        <p>Consider spam detection. It is often easier to describe what spam emails <em>look like</em> — they contain words like "free," "winner," "click here," have many capital letters, suspicious links — than to directly model the boundary between spam and ham. We can naturally estimate \(P(\text{features} | \text{spam})\) and \(P(\text{features} | \text{ham})\) from labeled examples. But classification requires \(P(\text{spam} | \text{features})\), the reverse direction. Bayes' theorem bridges this gap.</p>
 
-<h2>The curse of dimensionality</h2>
-<p>kNN's performance degrades rapidly as the number of features \(p\) increases, a phenomenon known as the <strong>curse of dimensionality</strong>. The core issue is geometric: in high dimensions, volume grows exponentially, and data become sparse relative to the space they occupy. Concretely, for \(n\) points uniformly distributed in \([0,1]^p\), the expected distance to the nearest neighbour scales as \(n^{-1/p}\). To maintain the same nearest-neighbour distance when doubling \(p\), you need to square \(n\). At \(p = 20\), achieving the same local density as \(p = 2\) with \(n = 100\) requires \(n \approx 100^{10} = 10^{20}\) points — utterly infeasible.</p>
-<p>Beyond sparsity, distance concentration renders neighbourhoods uninformative. For i.i.d. points in \([0,1]^p\), the ratio of maximum to minimum pairwise distances converges to 1 as \(p \to \infty\):</p>
-\[
-\frac{\max_{i,j} d(\mathbf{x}_i, \mathbf{x}_j)}{\min_{i \neq j} d(\mathbf{x}_i, \mathbf{x}_j)} \xrightarrow{p \to \infty} 1
-\]
-<p>When all distances are nearly equal, "nearest" loses discriminative power and kNN degenerates toward random guessing. This affects \(\ell_2\) distance most severely; \(\ell_1\) concentrates more slowly, and fractional \(\ell_p\) norms (\(p \lt 1\)) can sometimes help, though they violate the triangle inequality.</p>
-<p><strong>Edge case:</strong> the curse assumes features are roughly equally informative. When only a few features carry signal and the rest are noise, the effective dimensionality is much lower than \(p\). Feature selection or PCA (Chapter 17) can recover performance by removing noise dimensions. Also note that structured data (images, text) often lie on low-dimensional manifolds embedded in high-dimensional space; kNN can work well in such cases because intrinsic dimensionality is low even if ambient dimensionality is high. Manifold learning methods exploit this explicitly.</p>
+        <h2>Bayes' theorem for classification</h2>
 
-<h2>Computational considerations</h2>
-<p>Naive kNN requires computing distances from the query to all \(n\) training points, costing \(O(np)\) per prediction. For large \(n\), this is prohibitive at test time. Two families of acceleration exist:</p>
-<ul>
-<li><p><strong>Exact methods:</strong> KD-trees and ball trees partition space hierarchically, enabling \(O(p \log n)\) average-case queries in low dimensions (\(p \lt 20\)). Performance degrades to \(O(np)\) in high dimensions due to the curse.</p></li>
-<li><p><strong>Approximate methods:</strong> Locality-sensitive hashing (LSH), approximate nearest neighbour (ANN) libraries (FAISS, Annoy, HNSW) sacrifice exactness for speed, returning points that are near-nearest with high probability. Speedups of 100–1000× are typical at modest recall loss.</p></li>
-</ul>
-<p>kNN also stores the entire training set, requiring \(O(np)\) memory. For streaming or memory-constrained settings, condensation algorithms (e.g., CNN, ENN) select a representative subset that preserves classification boundaries. Editing removes noisy or redundant points; condensing retains only points near decision boundaries.</p>
-<p><strong>Common mistake:</strong> using naive kNN in production without considering computational cost. A model that takes milliseconds to train (because training is free) but seconds per prediction is unusable for real-time systems. Always benchmark query latency at expected \(n\) and \(p\), and invest in indexing or approximation early. Also note that kNN is inherently sequential-friendly but GPU-unfriendly (irregular memory access patterns); neural networks (Chapters 13–14) often win on hardware despite higher algorithmic complexity because they parallelize efficiently.</p>
+        <p>For a feature vector \(x = (x_1, x_2, \ldots, x_p)\) and class label \(c \in \{1, \ldots, C\}\), Bayes' theorem gives:</p>
 
-<h3>Worked example: weighted vs. unweighted kNN</h3>
-<p>Same five-point dataset as before: \((1,0), (2,0), (3,1), (4,1), (5,0)\). Query \(\mathbf{x}_q = 2.8\), \(k = 3\). Neighbours: \(x=3\) (dist 0.2, label 1), \(x=2\) (dist 0.8, label 0), \(x=4\) (dist 1.2, label 1).</p>
-<p><strong>Unweighted:</strong> votes: 1 gets 2, 0 gets 1 → predict 1.</p>
-<p><strong>Inverse-distance weighted:</strong> weights \(w_i = 1/d_i\): \(w_3 = 1/0.2 = 5.0\), \(w_2 = 1/0.8 = 1.25\), \(w_4 = 1/1.2 = 0.833\). Weighted votes: class 1 gets \(5.0 + 0.833 = 5.833\), class 0 gets \(1.25\). Predict 1 with much higher confidence (ratio 5.833/1.25 ≈ 4.67 vs. unweighted 2/1 = 2.0).</p>
-<p><strong>Sensitivity check:</strong> move query to \(\mathbf{x}_q = 2.6\). Distances: \(x=3\) (0.4), \(x=2\) (0.6), \(x=4\) (1.4). Unweighted 3-NN: same neighbours, same prediction (1). Weighted: \(w_3 = 2.5\), \(w_2 = 1.667\), \(w_4 = 0.714\). Class 1: \(2.5 + 0.714 = 3.214\); class 0: \(1.667\). Still predicts 1, but confidence ratio dropped from 4.67 to 1.93 — reflecting increased proximity to the boundary. Weighted kNN provides a continuous confidence signal that unweighted voting discards, making it preferable when downstream decisions depend on prediction certainty (e.g., threshold tuning for cost-sensitive classification).</p>
+        \[P(y = c | x) = \frac{P(x | y = c) \, P(y = c)}{P(x)}\]
 
-<h2>Connection to the broader framework</h2>
-<p>kNN occupies a unique position in the supervised learning landscape. Chapter 1 defined the Bayes-optimal predictor; kNN is the most direct empirical approximation to it, requiring no parametric assumptions. Chapter 5's logistic regression models \(P(Y|X)\) parametrically via log-odds; kNN estimates it nonparametrically via local averaging, trading interpretability for flexibility. Chapter 11's bias-variance decomposition applies directly: \(k\) is the knob that trades bias for variance, exactly analogous to \(\lambda\) in ridge regression (Chapter 4) or tree depth in decision trees (Chapter 10). Chapter 12's cross-validation is the primary tool for selecting \(k\), since training error is useless. Chapter 15's k-means clustering can be viewed as an unsupervised analogue: replacing labelled neighbours with cluster centroids. And Chapter 17's PCA is often applied before kNN to mitigate the curse of dimensionality, connecting supervised and unsupervised learning in practice.</p>
-<p>kNN also serves as a diagnostic baseline. If a complex model (SVM, neural network) cannot beat kNN on your task, either the problem is simple enough that kNN suffices, or the complex model is misconfigured. Conversely, if kNN fails badly while parametric models succeed, the curse of dimensionality or inappropriate distance metric is likely the culprit. Master kNN not as a production algorithm (though it remains useful for small, low-dimensional problems) but as the conceptual anchor connecting nonparametric estimation, the bias-variance trade-off, and the geometry of feature spaces.</p>
+        <p>The three components have names: \(P(y=c)\) is the <strong>prior</strong> (how common is class \(c\) overall?), \(P(x|y=c)\) is the <strong>likelihood</strong> (how probable are these features under class \(c\)?), and \(P(x)\) is the <strong>evidence</strong> (a normalizing constant that ensures the posterior probabilities sum to 1 across classes).</p>
 
-  </article>
-  <div class="chapter-nav">
-    <a class="chapter-nav-link prev" href="../ch5/index.html">
-      <span class="chapter-nav-label">← Previous</span>
-      <span class="chapter-nav-title">5. Logistic Regression</span>
-    </a>
-    <a class="chapter-nav-link next" href="../ch7/index.html">
-      <span class="chapter-nav-label">Next →</span>
-      <span class="chapter-nav-title">7. Naive Bayes Classifier</span>
-    </a>
-  </div>
-</div>
-</main>
-<footer>
-  <div class="wrap">
-    <span>© 2026 iTube. Read forever, free forever.</span>
-    <span>No video was harmed in the making of this platform.</span>
-  </div>
-</footer>
-<script src="../../theme.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-<script defer src="../../app.js"></script>
+        <p>For classification, we don't need the exact posterior probability — we only need to pick the class with the highest posterior. Since \(P(x)\) does not depend on \(c\), it cancels out in comparisons. The decision rule becomes:</p>
+
+        \[\hat{y} = \arg\max_{c} P(x | y = c) \, P(y = c)\]
+
+        <p>This is clean in principle but catastrophic in practice. The likelihood \(P(x | y = c)\) is a joint distribution over \(p\) features. Estimating a full joint distribution from finite data requires an exponential number of parameters: for \(p\) binary features, there are \(2^p\) possible feature combinations per class. With \(p = 30\), that's over a billion parameters per class — completely infeasible.</p>
+
+        <p>We need a simplifying assumption that makes the likelihood tractable. This is where "naive" enters.</p>
+
+        <h2>The conditional independence assumption</h2>
+
+        <p>Naive Bayes assumes that <strong>features are conditionally independent given the class</strong>:</p>
+
+        \[P(x_1, x_2, \ldots, x_p | y = c) = \prod_{j=1}^{p} P(x_j | y = c)\]
+
+        <p>This factorization reduces the number of parameters from exponential in \(p\) to linear in \(p\). For binary features and \(C\) classes, we need only \(C \times p\) conditional probabilities plus \(C\) priors, instead of \(C \times 2^p\).</p>
+
+        <p>Why call it "naive"? Because the assumption is almost never literally true. Words in emails are correlated ("free" and "winner" co-occur far more often than independence would predict). Medical symptoms cluster. Pixel values in images are spatially dependent. Yet Naive Bayes works surprisingly well in practice. Why?</p>
+
+        <p>Because classification only requires getting the <em>ranking</em> of posteriors correct, not their exact values. Even when the independence assumption distorts individual probability estimates, the distortions often affect all classes similarly, preserving which class has the highest posterior. The bias introduced by the assumption trades off against dramatically reduced variance from having far fewer parameters to estimate — another instance of the bias-variance tradeoff we will formalize in Chapter 10.</p>
+
+        <h2>The Naive Bayes decision rule</h2>
+
+        <p>Substituting the factorized likelihood into the MAP decision rule:</p>
+
+        \[\boxed{\hat{y} = \arg\max_{c} \left[ P(y = c) \prod_{j=1}^{p} P(x_j | y = c) \right]}</\]
+
+        <p>In practice, we work in log-space to avoid numerical underflow (multiplying many small probabilities produces numbers smaller than floating-point precision):</p>
+
+        \[\hat{y} = \arg\max_{c} \left[ \log P(y = c) + \sum_{j=1}^{p} \log P(x_j | y = c) \right]\]
+
+        <p>The log transform converts products to sums and preserves the argmax (since log is monotone increasing). This is the form used in all practical implementations.</p>
+
+        <h2>Estimating the parameters from data</h2>
+
+        <p>Given training data \(\{(x_i, y_i)\}_{i=1}^n\), the parameters are estimated by simple counting:</p>
+
+        \[\hat{P}(y = c) = \frac{n_c}{n}\]
+
+        <p>where \(n_c\) is the number of training examples with label \(c\). For categorical features, the conditional probabilities are:</p>
+
+        \[\hat{P}(x_j = v | y = c) = \frac{n_{c,j,v}}{n_c}\]
+
+        <p>where \(n_{c,j,v}\) is the number of training examples with class \(c\) and feature \(j\) equal to value \(v\). For continuous features, we typically assume a Gaussian distribution within each class and estimate the mean and variance per feature per class (Gaussian Naive Bayes), or discretize the feature first.</p>
+
+        <h3>Worked example</h3>
+
+        <h4>Spam classification with three words</h4>
+
+        <p>Suppose we have \(n = 8\) training emails, each described by the presence (1) or absence (0) of three words: "free," "money," "meeting." Labels: Spam (S) or Ham (H).</p>
+
+        <table style="border-collapse:collapse; margin:1em 0;">
+          <tr style="border-bottom:2px solid var(--stone);">
+            <th style="padding:4px 8px; text-align:left;">Email</th>
+            <th style="padding:4px 8px; text-align:center;">free</th>
+            <th style="padding:4px 8px; text-align:center;">money</th>
+            <th style="padding:4px 8px; text-align:center;">meeting</th>
+            <th style="padding:4px 8px; text-align:center;">Label</th>
+          </tr>
+          <tr><td style="padding:4px 8px;">1</td><td style="text-align:center;">1</td><td style="text-align:center;">1</td><td style="text-align:center;">0</td><td style="text-align:center;">S</td></tr>
+          <tr><td style="padding:4px 8px;">2</td><td style="text-align:center;">1</td><td style="text-align:center;">0</td><td style="text-align:center;">0</td><td style="text-align:center;">S</td></tr>
+          <tr><td style="padding:4px 8px;">3</td><td style="text-align:center;">0</td><td style="text-align:center;">1</td><td style="text-align:center;">0</td><td style="text-align:center;">S</td></tr>
+          <tr><td style="padding:4px 8px;">4</td><td style="text-align:center;">1</td><td style="text-align:center;">1</td><td style="text-align:center;">0</td><td style="text-align:center;">S</td></tr>
+          <tr><td style="padding:4px 8px;">5</td><td style="text-align:center;">0</td><td style="text-align:center;">0</td><td style="text-align:center;">1</td><td style="text-align:center;">H</td></tr>
+          <tr><td style="padding:4px 8px;">6</td><td style="text-align:center;">0</td><td style="text-align:center;">0</td><td style="text-align:center;">1</td><td style="text-align:center;">H</td></tr>
+          <tr><td style="padding:4px 8px;">7</td><td style="text-align:center;">0</td><td style="text-align:center;">1</td><td style="text-align:center;">1</td><td style="text-align:center;">H</td></tr>
+          <tr><td style="padding:4px 8px;">8</td><td style="text-align:center;">0</td><td style="text-align:center;">0</td><td style="text-align:center;">0</td><td style="text-align:center;">H</td></tr>
+        </table>
+
+        <p><strong>Step 1: Estimate priors.</strong></p>
+
+        \[\hat{P}(S) = \frac{4}{8} = 0.5, \quad \hat{P}(H) = \frac{4}{8} = 0.5\]
+
+        <p><strong>Step 2: Estimate conditional probabilities (without smoothing, for now).</strong></p>
+
+        <p>For Spam (\(n_S = 4\)):</p>
+        <ul>
+          <li>\(\hat{P}(\text{free}=1 | S) = \frac{3}{4} = 0.75\), \(\hat{P}(\text{free}=0 | S) = \frac{1}{4} = 0.25\)</li>
+          <li>\(\hat{P}(\text{money}=1 | S) = \frac{3}{4} = 0.75\), \(\hat{P}(\text{money}=0 | S) = \frac{1}{4} = 0.25\)</li>
+          <li>\(\hat{P}(\text{meeting}=1 | S) = \frac{0}{4} = 0\), \(\hat{P}(\text{meeting}=0 | S) = \frac{4}{4} = 1.0\)</li>
+        </ul>
+
+        <p>For Ham (\(n_H = 4\)):</p>
+        <ul>
+          <li>\(\hat{P}(\text{free}=1 | H) = \frac{0}{4} = 0\), \(\hat{P}(\text{free}=0 | H) = \frac{4}{4} = 1.0\)</li>
+          <li>\(\hat{P}(\text{money}=1 | H) = \frac{1}{4} = 0.25\), \(\hat{P}(\text{money}=0 | H) = \frac{3}{4} = 0.75\)</li>
+          <li>\(\hat{P}(\text{meeting}=1 | H) = \frac{3}{4} = 0.75\), \(\hat{P}(\text{meeting}=0 | H) = \frac{1}{4} = 0.25\)</li>
+        </ul>
+
+        <p><strong>Step 3: Classify a new email \(x^* = (\text{free}=1, \text{money}=0, \text{meeting}=1)\).</strong></p>
+
+        <p>Compute unnormalized posteriors (ignoring \(P(x)\)):</p>
+
+        \[P(S) \cdot P(\text{free}=1|S) \cdot P(\text{money}=0|S) \cdot P(\text{meeting}=1|S) = 0.5 \times 0.75 \times 0.25 \times 0 = 0\]
+
+        \[P(H) \cdot P(\text{free}=1|H) \cdot P(\text{money}=0|H) \cdot P(\text{meeting}=1|H) = 0.5 \times 0 \times 0.75 \times 0.75 = 0\]
+
+        <p>Both scores are zero! The word "free" never appeared in Ham, and "meeting" never appeared in Spam, so any test email containing both gets assigned zero probability under both classes. This is the <strong>zero-frequency problem</strong>, and it reveals a critical flaw in raw frequency estimation.</p>
+
+        <h2>Laplace smoothing: fixing zero frequencies</h2>
+
+        <p>The solution is <strong>Laplace smoothing</strong> (also called additive smoothing). Instead of estimating \(P(x_j = v | y = c) = n_{c,j,v} / n_c\), we add a pseudocount \(\alpha > 0\) to every count:</p>
+
+        \[\hat{P}(x_j = v | y = c) = \frac{n_{c,j,v} + \alpha}{n_c + \alpha \cdot V_j}\]
+
+        <p>where \(V_j\) is the number of possible values for feature \(j\). For binary features, \(V_j = 2\). Setting \(\alpha = 1\) gives Laplace smoothing; \(\alpha = 0.5\) gives Lidstone smoothing.</p>
+
+        <p><strong>Recomputing with \(\alpha = 1\):</strong></p>
+
+        <p>For Spam (\(n_S = 4, V = 2\)):</p>
+        <ul>
+          <li>\(\hat{P}(\text{free}=1 | S) = \frac{3+1}{4+2} = \frac{4}{6} \approx 0.667\)</li>
+          <li>\(\hat{P}(\text{free}=0 | S) = \frac{1+1}{4+2} = \frac{2}{6} \approx 0.333\)</li>
+          <li>\(\hat{P}(\text{money}=1 | S) = \frac{3+1}{6} = \frac{4}{6} \approx 0.667\)</li>
+          <li>\(\hat{P}(\text{money}=0 | S) = \frac{1+1}{6} = \frac{2}{6} \approx 0.333\)</li>
+          <li>\(\hat{P}(\text{meeting}=1 | S) = \frac{0+1}{6} = \frac{1}{6} \approx 0.167\)</li>
+          <li>\(\hat{P}(\text{meeting}=0 | S) = \frac{4+1}{6} = \frac{5}{6} \approx 0.833\)</li>
+        </ul>
+
+        <p>For Ham (\(n_H = 4, V = 2\)):</p>
+        <ul>
+          <li>\(\hat{P}(\text{free}=1 | H) = \frac{0+1}{6} = \frac{1}{6} \approx 0.167\)</li>
+          <li>\(\hat{P}(\text{free}=0 | H) = \frac{4+1}{6} = \frac{5}{6} \approx 0.833\)</li>
+          <li>\(\hat{P}(\text{money}=1 | H) = \frac{1+1}{6} = \frac{2}{6} \approx 0.333\)</li>
+          <li>\(\hat{P}(\text{money}=0 | H) = \frac{3+1}{6} = \frac{4}{6} \approx 0.667\)</li>
+          <li>\(\hat{P}(\text{meeting}=1 | H) = \frac{3+1}{6} = \frac{4}{6} \approx 0.667\)</li>
+          <li>\(\hat{P}(\text{meeting}=0 | H) = \frac{1+1}{6} = \frac{2}{6} \approx 0.333\)</li>
+        </ul>
+
+        <p><strong>Re-classifying \(x^* = (1, 0, 1)\):</strong></p>
+
+        \[\text{Score}(S) = 0.5 \times 0.667 \times 0.333 \times 0.167 \approx 0.5 \times 0.0371 \approx 0.0186\]
+
+        \[\text{Score}(H) = 0.5 \times 0.167 \times 0.667 \times 0.667 \approx 0.5 \times 0.0741 \approx 0.0371\]
+
+        <p>Now \(\text{Score}(H) > \text{Score}(S)\), so the email is classified as <strong>Ham</strong>. The smoothing prevented the zero-probability catastrophe and allowed the model to make a meaningful comparison. Note that without smoothing, the model was completely broken for this input; with smoothing, it correctly identifies that an email with "meeting" present and "money" absent looks more like Ham despite containing "free."</p>
+
+        <h2>Common mistake</h2>
+
+        <p><strong>Common mistake:</strong> Students often forget to apply Laplace smoothing consistently — smoothing some conditional probabilities but not others, or forgetting to adjust the denominator by \(\alpha V_j\). If you add \(\alpha\) to the numerator but not \(\alpha V_j\) to the denominator, the probabilities no longer sum to 1 across values of \(x_j\), breaking the probabilistic interpretation. Always smooth every conditional probability table uniformly, and always use the corrected denominator. A related mistake: applying smoothing to the prior \(P(y=c)\). Smoothing is needed for conditionals where unseen feature-value/class combinations cause zeros; the prior is estimated from class counts that are rarely zero in reasonable datasets, and smoothing it changes the base rate unjustifiably unless specifically warranted.</p>
+
+        <h2>Edge case</h2>
+
+        <p><strong>What happens as \(\alpha \to \infty\)?</strong> Every conditional probability \(\hat{P}(x_j = v | y = c) \to \frac{\alpha}{\alpha V_j} = \frac{1}{V_j}\), regardless of the data. All features become uniformly distributed within every class, and the classifier ignores all feature information, predicting purely based on the prior. This is the maximum-bias extreme: complete smoothing erases the signal. Conversely, as \(\alpha \to 0\), we recover the unsmoothed MLE with its zero-frequency vulnerabilities. The optimal \(\alpha\) balances these extremes and should be tuned by cross-validation (Chapter 10), though \(\alpha = 1\) is a widely-used default that works reasonably well in practice.</p>
+
+        <p><strong>What if features are continuous?</strong> The categorical formulation above doesn't apply directly. Two common solutions: (1) <strong>Gaussian Naive Bayes</strong> assumes \(x_j | y=c \sim \mathcal{N}(\mu_{jc}, \sigma^2_{jc})\) and estimates \(\mu_{jc}, \sigma^2_{jc}\) per feature per class; the likelihood is then evaluated using the Gaussian PDF. (2) <strong>Discretization</strong>: bin continuous features into discrete categories and apply the categorical version. Gaussian NB is more common but assumes normality within each class; discretization is nonparametric but loses information at bin boundaries.</p>
+
+        <h2>Where we go next</h2>
+
+        <p>Naive Bayes is a generative model: it models how data is produced within each class and uses Bayes' theorem to invert that into a classifier. Logistic regression (Chapter 4) is a discriminative model: it models the decision boundary directly without describing the data-generating process. Both are linear classifiers under appropriate conditions, but they arrive at linearity from fundamentally different starting points. Chapter 7 introduces <strong>Linear Discriminant Analysis (LDA)</strong>, which occupies a middle ground: like Naive Bayes, it is generative and assumes Gaussian class-conditional densities, but unlike Naive Bayes, it allows features to be correlated within classes (shared covariance matrix). LDA provides a principled bridge between the naive independence assumption and fully flexible density estimation.</p>
+
+      </article>
+
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch5/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">5. k-Nearest Neighbour</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch7/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">7. Linear Discriminant Analysis</span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
 </body>
 </html>
