@@ -1,0 +1,182 @@
+<!-- File: /<slug>/ch7/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>7. Naive Bayes Classifier — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
+<meta name="description" content="Bayes' rule derivation, conditional independence assumption, Gaussian/Multinomial/Bernoulli variants, Laplace smoothing, and a hand-computed text classification example.">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap" rel="stylesheet">
+<link rel="manifest" href="../../manifest.json">
+<link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+<meta name="theme-color" content="#1B1B1F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="iTube">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script>
+(function(){
+  var saved = localStorage.getItem("itube-theme");
+  var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", theme);
+})();
+</script>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+    <div class="top-actions">
+      <div class="font-controls" role="group" aria-label="Adjust text size">
+        <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+        <span id="font-size-label">100%</span>
+        <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+        <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+      </div>
+      <button id="theme-btn" title="Toggle light/dark">◐</button>
+    </div>
+  </div>
+</header>
+<main>
+<div class="wrap narrow">
+  <div class="breadcrumb">
+    <a href="../../index.html">iTube</a><span class="sep">/</span>
+    <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
+    <span>Ch. 7</span>
+  </div>
+  <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
+  <h1>7. Naive Bayes Classifier</h1>
+  <div class="chapter-meta">
+    <span>Chapter 7 of 17</span>
+    <span class="read-badge">23 min read</span>
+  </div>
+  <article>
+
+<h2>Bayes’ rule as a classifier</h2>
+<p>The <strong>Naive Bayes classifier</strong> applies Bayes’ theorem to predict class labels by modeling how likely each feature is under each class. For a feature vector \(\mathbf{x} = (x_1, \dots, x_p)\) and class label \(y \in \{1, \dots, K\}\), Bayes’ rule gives:</p>
+\[
+P(Y = k \mid X = \mathbf{x}) = \frac{P(X = \mathbf{x} \mid Y = k) \, P(Y = k)}{P(X = \mathbf{x})}
+\]
+<p>The denominator \(P(X = \mathbf{x})\) is constant across classes for a fixed \(\mathbf{x}\), so classification reduces to comparing numerators. The Bayes-optimal classifier (Chapter 1) picks the class maximizing this posterior probability:</p>
+\[
+\hat y(\mathbf{x}) = \arg\max_{k} P(Y = k \mid X = \mathbf{x}) = \arg\max_{k} P(X = \mathbf{x} \mid Y = k) \, P(Y = k)
+\]
+<p>This reframes classification as a <em>generative</em> problem: instead of learning the decision boundary directly (as logistic regression or SVMs do), we model the joint distribution \(P(X, Y) = P(X \mid Y) P(Y)\) and recover the posterior via Bayes’ rule. The advantage is that generative models can handle missing data naturally (marginalize over missing features), incorporate prior knowledge through \(P(Y)\), and often require less training data than discriminative alternatives because they exploit structure in \(X\) itself.</p>
+<p><strong>Common mistake:</strong> confusing \(P(X \mid Y)\) with \(P(Y \mid X)\). The likelihood \(P(X \mid Y=k)\) describes how typical feature vector \(\mathbf{x}\) is within class \(k\); the posterior \(P(Y=k \mid X=\mathbf{x})\) describes how probable class \(k\) is given observed features. These are fundamentally different quantities related by the prior \(P(Y=k)\). A rare disease with highly specific symptoms may have high \(P(\text{symptoms} \mid \text{disease})\) but low \(P(\text{disease} \mid \text{symptoms})\) because the prior \(P(\text{disease})\) is tiny. Always apply Bayes’ rule explicitly rather than intuiting posteriors from likelihoods alone.</p>
+
+<h2>The “naive” conditional independence assumption</h2>
+<p>Estimating \(P(X = \mathbf{x} \mid Y = k)\) directly is infeasible when \(p\) is large: the number of possible feature combinations grows exponentially. For binary features alone, there are \(2^p\) configurations per class. The <strong>naive Bayes assumption</strong> resolves this by positing that features are conditionally independent given the class label:</p>
+\[
+P(X = \mathbf{x} \mid Y = k) = \prod_{j=1}^{p} P(X_j = x_j \mid Y = k)
+\]
+<p>This factorization reduces estimation from one \(p\)-dimensional distribution to \(p\) univariate distributions per class — a dramatic simplification that makes the model tractable even for thousands of features (e.g., word counts in text classification). Substituting into Bayes’ rule:</p>
+\[
+\hat y(\mathbf{x}) = \arg\max_{k} P(Y = k) \prod_{j=1}^{p} P(X_j = x_j \mid Y = k)
+\]
+<p>In practice, we work in log-space to avoid numerical underflow from multiplying many small probabilities:</p>
+\[
+\hat y(\mathbf{x}) = \arg\max_{k} \left[ \log P(Y = k) + \sum_{j=1}^{p} \log P(X_j = x_j \mid Y = k) \right]
+\]
+<p>This transforms products into sums, making computation stable and revealing that naive Bayes is essentially a linear classifier in the space of log-probabilities (though nonlinear in the original feature space due to the feature-specific transformations).</p>
+<p><strong>Edge case:</strong> the conditional independence assumption is almost never literally true in real data. Words in documents co-occur systematically; medical symptoms share underlying causes; pixel intensities in images are spatially correlated. Yet naive Bayes often performs surprisingly well despite this misspecification. Why? Classification depends only on which class has the highest posterior, not on calibrated probability values. Systematic biases in estimated likelihoods may shift all posteriors similarly without changing their ranking. However, when accurate probability estimates matter (e.g., risk scoring, threshold tuning), naive Bayes tends to be poorly calibrated, and discriminative models like logistic regression (Chapter 5) are preferred.</p>
+
+<h3>Worked example: why conditional independence matters computationally</h3>
+<p>Suppose we classify emails using \(p = 1000\) binary word-presence features and \(K = 2\) classes (spam/not spam). Without the naive assumption, estimating \(P(X \mid Y=k)\) requires specifying \(2^{1000} - 1\) parameters per class — approximately \(10^{301}\) numbers, vastly exceeding the atoms in the universe. With the naive assumption, we need only \(2 \times 1000 = 2000\) parameters per class (one probability per feature per class), plus 1 prior parameter. Total: 4001 parameters instead of \(2 \times 10^{301}\). Even with millions of training documents, direct estimation is impossible; naive Bayes makes it trivial. <strong>Sensitivity check:</strong> if features were actually dependent (e.g., "free" and "money" always co-occur in spam), the naive model would double-count their evidence, inflating confidence in spam predictions. But as long as both words point toward the same class, the argmax remains correct — illustrating why naive Bayes survives its own assumption violation for classification tasks.</p>
+
+<h2>Variants: Gaussian, Multinomial, and Bernoulli</h2>
+<p>The naive Bayes framework is generic; what changes across variants is the assumed form of \(P(X_j \mid Y=k)\). Three variants dominate practice:</p>
+<h3>Gaussian Naive Bayes</h3>
+<p>For continuous features, assume each feature follows a class-conditional Gaussian distribution:</p>
+\[
+P(X_j = x_j \mid Y = k) = \frac{1}{\sqrt{2\pi\sigma_{jk}^2}} \exp\left(-\frac{(x_j - \mu_{jk})^2}{2\sigma_{jk}^2}\right)
+\]
+<p>Parameters \(\mu_{jk}, \sigma_{jk}^2\) are estimated as sample mean and variance of feature \(j\) within class \(k\). This variant connects directly to Linear Discriminant Analysis (Chapter 8): when all classes share a common covariance matrix (here, diagonal due to the naive assumption), the resulting decision boundaries are linear. Gaussian NB is appropriate for measurements like height, weight, or sensor readings where normality is plausible.</p>
+<h3>Multinomial Naive Bayes</h3>
+<p>For discrete count data (e.g., word frequencies in documents), assume features follow a multinomial distribution. Let \(x_j\) be the count of word \(j\) in a document, and \(\theta_{jk}\) be the probability of word \(j\) in class \(k\). Then:</p>
+\[
+P(X = \mathbf{x} \mid Y = k) \propto \prod_{j=1}^{p} \theta_{jk}^{x_j}
+\]
+<p>(The multinomial coefficient depends only on \(\mathbf{x}\), not \(k\), so it cancels in argmax.) Parameters \(\theta_{jk}\) are estimated as relative word frequencies within class \(k\). This is the standard choice for text classification with bag-of-words representations.</p>
+<h3>Bernoulli Naive Bayes</h3>
+<p>For binary features indicating presence/absence (not counts), assume each feature is an independent Bernoulli trial:</p>
+\[
+P(X_j = x_j \mid Y = k) = \theta_{jk}^{x_j} (1 - \theta_{jk})^{1-x_j}
+\]
+<p>Unlike multinomial NB, Bernoulli NB explicitly models the absence of words (\(1 - \theta_{jk}\) term), making it sensitive to which words do NOT appear. This matters when word absence is informative (e.g., technical jargon absent suggests non-technical document). For short texts or vocabulary-rich domains, Bernoulli often outperforms multinomial; for long documents where frequency matters, multinomial wins.</p>
+<p><strong>Common mistake:</strong> applying Gaussian NB to skewed or bounded data (e.g., word counts, percentages). Gaussians assign nonzero density to negative values and assume symmetry; violating these assumptions degrades performance. Transform features (log, Box-Cox) or switch to an appropriate discrete variant. Similarly, don’t use multinomial NB on TF-IDF weighted features — TF-IDF produces non-integer, potentially negative values incompatible with the multinomial likelihood. Use Gaussian NB or treat TF-IDF as continuous with appropriate preprocessing.</p>
+
+<h2>Laplace smoothing and zero probabilities</h2>
+<p>A critical practical issue arises when a feature value never appears in training data for some class: \(P(X_j = x_j \mid Y = k) = 0\). Under multiplication, a single zero annihilates the entire posterior, regardless of overwhelming evidence from other features. This is especially common in text classification with large vocabularies and limited training data.</p>
+<p><strong>Laplace smoothing</strong> (add-one smoothing) resolves this by adding a pseudocount \(\alpha > 0\) to every feature-class combination:</p>
+\[
+\hat P(X_j = x_j \mid Y = k) = \frac{\text{count}(X_j = x_j, Y = k) + \alpha}{\text{count}(Y = k) + \alpha \cdot V_j}
+\]
+<p>where \(V_j\) is the number of distinct values feature \(j\) can take (vocabulary size for text). When \(\alpha = 1\), this is Laplace smoothing; \(\alpha = 0.5\) is Lidstone smoothing; \(\alpha \to 0\) recovers maximum likelihood (unsmoothed). Smoothing ensures no probability is exactly zero and pulls extreme estimates toward uniformity, acting as a form of regularization analogous to ridge regression’s shrinkage (Chapter 4).</p>
+<p><strong>Edge case:</strong> excessive smoothing (\(\alpha\) too large) overwhelms the data, pushing all posteriors toward the prior and destroying discriminative power. Insufficient smoothing leaves zeros or near-zeros that cause numerical instability. Cross-validation (Chapter 12) selects \(\alpha\) optimally. Also note that smoothing affects calibration: smoothed probabilities are biased toward uniformity, so predicted class probabilities should not be interpreted as true frequencies without recalibration (e.g., Platt scaling or isotonic regression).</p>
+
+<h3>Worked example: Laplace smoothing in text classification</h3>
+<p>Training corpus: 3 spam emails, 2 ham emails. Vocabulary: {free, money, meeting}. Word counts in spam: free=5, money=3, meeting=0. Total spam words: 8. Unsmoothed MLE:</p>
+\[
+\hat P(\text{meeting} \mid \text{spam}) = \frac{0}{8} = 0
+\]
+<p>A new spam email containing "meeting" would receive zero posterior probability regardless of other words. Apply Laplace smoothing (\(\alpha = 1\), \(V = 3\)):</p>
+\[
+\hat P(\text{meeting} \mid \text{spam}) = \frac{0 + 1}{8 + 1 \cdot 3} = \frac{1}{11} \approx 0.0909
+\]
+\[
+\hat P(\text{free} \mid \text{spam}) = \frac{5 + 1}{11} = \frac{6}{11} \approx 0.5455, \quad \hat P(\text{money} \mid \text{spam}) = \frac{3 + 1}{11} = \frac{4}{11} \approx 0.3636
+\]
+<p>All probabilities are now positive and sum to 1. <strong>Sensitivity check:</strong> with \(\alpha = 0.1\) (Lidstone), \(\hat P(\text{meeting} \mid \text{spam}) = 0.1 / (8 + 0.3) = 0.1/8.3 \approx 0.012\); with \(\alpha = 10\), it becomes \(10/(8+30) = 10/38 \approx 0.263\), approaching uniformity \(1/3 \approx 0.333\). Larger \(\alpha\) reduces sensitivity to rare events but increases robustness to sampling noise. The optimal \(\alpha\) balances these forces and must be tuned empirically.</p>
+
+<h3>Worked example: full classification with log-posteriors</h3>
+<p>Using smoothed estimates above for spam. Suppose ham word counts: free=1, money=0, meeting=4; total ham words=5. Smoothed (\(\alpha=1\)):</p>
+\[
+\hat P(\text{free} \mid \text{ham}) = \frac{2}{8} = 0.25, \quad \hat P(\text{money} \mid \text{ham}) = \frac{1}{8} = 0.125, \quad \hat P(\text{meeting} \mid \text{ham}) = \frac{5}{8} = 0.625
+\]
+<p>Priors: \(P(\text{spam}) = 3/5 = 0.6\), \(P(\text{ham}) = 2/5 = 0.4\). New document: \(\mathbf{x} = (\text{free}=1, \text{money}=0, \text{meeting}=1)\). Log-posteriors (ignoring constant \(\log P(\mathbf{x})\)):</p>
+\[
+\log P(\text{spam}) + \log \hat P(\text{free}|\text{spam}) + \log \hat P(\text{money}|\text{spam}) + \log \hat P(\text{meeting}|\text{spam})
+\]
+\[
+= \log(0.6) + \log(0.5455) + \log(0.0909) + \log(0.3636) = -0.511 - 0.606 - 2.398 - 1.012 = -4.527
+\]
+<p>For ham:</p>
+\[
+\log(0.4) + \log(0.25) + \log(0.125) + \log(0.625) = -0.916 - 1.386 - 2.079 - 0.470 = -4.851
+\]
+<p>Since \(-4.527 > -4.851\), classify as spam. Note that despite "meeting" being more frequent in ham, the combination of "free" and "meeting" together favors spam due to stronger association. <strong>Sensitivity check:</strong> if the document had \(\text{money}=1\) instead of 0, spam log-posterior gains \(\log(0.3636) - \log(0.0909) = -1.012 - (-2.398) = +1.386\), becoming \(-3.141\); ham gains \(\log(0.125) - \log(0.125) = 0\) (wait — money|ham was already 0.125 after smoothing, but count was 0, so adding money=1 changes nothing? No: in evaluation, we use precomputed \(\hat P\); the test document’s content doesn’t retrain. Correct comparison: original had money=0 contributing \(\log(0.0909)\) for spam; new has money=1 contributing \(\log(0.3636)\). Difference is indeed +1.386. Spam becomes decisively favored.) This shows how individual word contributions add linearly in log-space, enabling interpretable attribution.</p>
+
+<h2>Connection to other classifiers and limitations</h2>
+<p>Naive Bayes occupies a unique niche among supervised learners. Unlike kNN (Chapter 6), it summarizes the entire dataset in compact parameter estimates, enabling fast prediction independent of \(n\). Unlike logistic regression (Chapter 5), it is generative rather than discriminative, modeling \(P(X,Y)\) rather than \(P(Y|X)\) directly. When the conditional independence assumption holds, naive Bayes is statistically efficient (fewer parameters to estimate); when it fails badly, logistic regression typically wins. Chapter 8’s LDA shares the generative philosophy but assumes multivariate Gaussian class densities with shared covariance, capturing feature correlations that naive Bayes ignores — at the cost of more parameters and stricter distributional assumptions.</p>
+<p>Key limitations beyond conditional independence: (1) poor probability calibration as noted earlier; (2) inability to capture feature interactions unless explicitly engineered; (3) sensitivity to irrelevant features (each adds noise to the product); (4) difficulty with continuous features unless parametric form is correct. Remedies include feature selection, semi-naive extensions (AODE, TAN) that relax independence selectively, and ensemble methods that combine naive Bayes with other learners.</p>
+<p>Despite these limitations, naive Bayes remains a vital baseline and teaching tool. Its simplicity reveals core Bayesian principles applicable throughout machine learning: updating beliefs via evidence, trading off prior and likelihood, managing uncertainty through probability. Master it not just as a classifier but as the clearest illustration of probabilistic reasoning in action.</p>
+
+  </article>
+  <div class="chapter-nav">
+    <a class="chapter-nav-link prev" href="../ch6/index.html">
+      <span class="chapter-nav-label">← Previous</span>
+      <span class="chapter-nav-title">6. k-Nearest Neighbour</span>
+    </a>
+    <a class="chapter-nav-link next" href="../ch8/index.html">
+      <span class="chapter-nav-label">Next →</span>
+      <span class="chapter-nav-title">8. Linear Discriminant Analysis</span>
+    </a>
+  </div>
+</div>
+</main>
+<footer>
+  <div class="wrap">
+    <span>© 2026 iTube. Read forever, free forever.</span>
+    <span>No video was harmed in the making of this platform.</span>
+  </div>
+</footer>
+<script src="../../theme.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script defer src="../../app.js"></script>
+</body>
+</html>

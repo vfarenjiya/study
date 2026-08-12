@@ -1,0 +1,223 @@
+<!-- File: /<slug>/ch1/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>1. Supervised Learning: Regression and Classification Problems — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
+<meta name="description" content="Labeled data, hypothesis classes, expected and empirical risk, loss functions for regression and classification, the Bayes-optimal predictor, and decision boundaries.">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap" rel="stylesheet">
+<link rel="manifest" href="../../manifest.json">
+<link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+<meta name="theme-color" content="#1B1B1F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="iTube">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script>
+(function(){
+  var saved = localStorage.getItem("itube-theme");
+  var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", theme);
+})();
+</script>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+    <div class="top-actions">
+      <div class="font-controls" role="group" aria-label="Adjust text size">
+        <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+        <span id="font-size-label">100%</span>
+        <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+        <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+      </div>
+      <button id="theme-btn" title="Toggle light/dark">◐</button>
+    </div>
+  </div>
+</header>
+<main>
+<div class="wrap narrow">
+  <div class="breadcrumb">
+    <a href="../../index.html">iTube</a><span class="sep">/</span>
+    <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
+    <span>Ch. 1</span>
+  </div>
+  <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
+  <h1>1. Supervised Learning: Regression and Classification Problems</h1>
+  <div class="chapter-meta">
+    <span>Chapter 1 of 17</span>
+    <span class="read-badge">19 min read</span>
+  </div>
+  <article>
+
+<h2>What supervised learning means</h2>
+<p><strong>Supervised learning</strong> is the problem of learning a function from inputs to outputs using labeled examples. We observe a <strong>training set</strong> of \(n\) input–output pairs,</p>
+\[
+S = \big\{(x_1, y_1),\ (x_2, y_2),\ \dots,\ (x_n, y_n)\big\},
+\]
+<p>where each input \(x_i\) (also called a <strong>feature vector</strong> or covariate) is typically a point in \(\mathbb{R}^d\) — a list of \(d\) measured quantities — and each output \(y_i\) is the <strong>label</strong> (target, response) we want the learner to predict. A patient's age, blood pressure, and cholesterol readings might form \(x_i\); whether they develop heart disease within five years is \(y_i\). The word "supervised" refers to the presence of these labels: they act as a teacher's answer key, supplying the correct output for every training input.</p>
+<p>The learner searches a family of candidate functions, called the <strong>hypothesis class</strong> \(\mathcal{H}\), and returns one <strong>hypothesis</strong> \(f : \mathcal{X} \to \mathcal{Y}\) chosen from it. The algorithms in this book differ almost entirely in three ingredients: the hypothesis class \(\mathcal{H}\) (linear functions in Chapters 2–5, trees in Chapter 10, neural networks in Chapters 13–14), a <strong>loss function</strong> \(L\) that scores how wrong a prediction is, and an optimization procedure that searches \(\mathcal{H}\) for the hypothesis with the smallest loss.</p>
+<p>The goal is not to reproduce the training labels. It is <strong>generalization</strong>: small loss on new inputs drawn from the same process that produced the training data. We formalize that process as an unknown joint distribution \(P(X, Y)\) from which the training pairs are drawn independently and identically — the <strong>i.i.d. assumption</strong>. Every guarantee and every pathology discussed in this book flows from the tension between fitting the observed sample and approximating the unobserved distribution.</p>
+
+<h2>Regression and classification: two output spaces</h2>
+<p>The cleanest way to split supervised problems is by the nature of the label space \(\mathcal{Y}\).</p>
+<ul>
+<li><p><strong>Regression</strong>: \(\mathcal{Y}\) is continuous, usually \(\mathbb{R}\) or \(\mathbb{R}^m\). The prediction is a quantity — a price, a temperature, a probability estimate. Errors have magnitude and direction: predicting \(102\) when the truth is \(100\) is twice as bad as predicting \(101\). Chapters 2–5 are devoted to regression models.</p></li>
+<li><p><strong>Classification</strong>: \(\mathcal{Y}\) is a finite set of discrete <strong>classes</strong>. When \(|\mathcal{Y}| = 2\) the task is <strong>binary classification</strong>, and we will almost always encode the two labels as \(\{-1, +1\}\), because products like \(y\,f(x)\) then carry a clean geometric meaning (positive means correct sign). When \(|\mathcal{Y}| = K \geq 3\) it is <strong>multiclass classification</strong> with \(\mathcal{Y} = \{1, \dots, K\}\). Chapters 5–10 cover classifiers.</p></li>
+</ul>
+<p>This distinction lives in the <em>output space and the loss function</em>, not in the algorithm's internals. Many learners come in both flavors: a linear model always computes a real number; whether we call the result a regressor or a classifier depends on what we do with that number and how we penalize mistakes. Chapters 2 and 5 make this precise — ordinary least squares and logistic regression share the same weighted sum of features, but use different label spaces and different losses.</p>
+<p><strong>Common mistake:</strong> students often file algorithms into "regression algorithms" and "classification algorithms", then are surprised when logistic regression (a classification method) is built on a regression-like score, or when a regression output is thresholded into a classifier. The task is defined by \(\mathcal{Y}\) and \(L\); the algorithm is merely the mechanism. Ask "what kind of label am I predicting, and what does an error cost?" before asking "which algorithm do I use?"</p>
+<h3>Worked example</h3>
+<p>A spam filter outputs a real-valued score \(s \in [0, 1]\) for each message; the true label of a certain message is \(y = 1\) (spam). Suppose the filter outputs \(s = 0.72\). Framed as <em>regression</em>, the squared error is \((0.72 - 1)^2 = (-0.28)^2 = 0.0784\). Framed as <em>classification</em> with threshold \(0.5\), the prediction is \(\hat y = 1\), which is correct, so the 0–1 loss is \(0\). Now suppose the filter instead outputs \(s = 0.43\) for a truly spam message. The regression view reports squared error \((0.43 - 1)^2 = (-0.57)^2 = 0.3249\) — worse than before, but still partial credit. The classification view predicts \(\hat y = 0\), which is simply wrong: the 0–1 loss is \(1\), with no partial credit at all. Same model, same numbers — but the two task framings produce two different notions of "how wrong", and therefore two different optimization targets.</p>
+
+<h2>Risk, empirical risk, and empirical risk minimization</h2>
+<p>We assume the data is drawn i.i.d. from an unknown joint distribution \(P(X, Y)\). The quantity we truly care about is the <strong>expected risk</strong> — the average loss a hypothesis incurs over the entire population of possible inputs, not just the sample we happened to observe:</p>
+\[
+R(f) = \mathbb{E}_{(X, Y) \sim P}\big[\, L(f(X), Y) \,\big]
+\]
+<p>Here \(L\) is the loss function (next section) and the expectation is over the true, unknown distribution. If we could evaluate \(R(f)\) for every candidate \(f \in \mathcal{H}\), learning would be trivial: pick the minimizer. The entire difficulty of the subject is that \(P\) is unknown, so \(R(f)\) cannot be computed.</p>
+<p>The standard workaround is to replace the population expectation by a sample average. Formally, replace \(P\) by the <em>empirical distribution</em> that places probability \(1/n\) on each observed pair; the expectation of \(L\) under that discrete distribution is exactly the <strong>empirical risk</strong>:</p>
+\[
+\hat R(f) = \frac{1}{n} \sum_{i=1}^{n} L\big(f(x_i), y_i\big)
+\]
+<p>This substitution is justified by the law of large numbers: for any fixed \(f\), \(\hat R(f) \to R(f)\) as \(n \to \infty\). Choosing the hypothesis that minimizes \(\hat R(f)\) is called <strong>empirical risk minimization</strong> (ERM), and it is the template that every concrete algorithm in this book instantiates — ordinary least squares (Chapter 2), logistic regression (Chapter 5), support vector machines (Chapter 9), and neural network training (Chapter 14) are all ERM with a particular \(\mathcal{H}\) and \(L\).</p>
+<p><strong>Common mistake:</strong> treating "small training error" and "small true risk" as interchangeable. They are not. A hypothesis class rich enough can drive \(\hat R(f)\) all the way to zero while \(R(f)\) remains large — the model memorizes the sample instead of learning the generating process. This gap is <em>overfitting</em>, and managing it is the subject of Chapters 4, 11, and 12 (regularization, the bias–variance trade-off, and cross-validation respectively).</p>
+<h3>Worked example</h3>
+<p>Take five emails, each described by a single feature \(x\) = number of exclamation marks, labeled \(y = 1\) for spam and \(y = 0\) otherwise:</p>
+\[
+(x_i, y_i) \in \{(1, 0),\ (2, 0),\ (4, 1),\ (5, 1),\ (6, 0)\}
+\]
+<p>Consider the threshold classifier \(f(x) = 1\) if \(x \gt 3\), else \(0\). Evaluating each term of the 0–1 empirical risk \(\hat R(f) = \frac{1}{5}\sum_i \mathbb{1}[f(x_i) \neq y_i]\):</p>
+\[
+f(1) = 0 = y_1 \Rightarrow 0,\quad f(2) = 0 = y_2 \Rightarrow 0,\quad f(4) = 1 = y_3 \Rightarrow 0
+\]
+\[
+f(5) = 1 = y_4 \Rightarrow 0,\quad f(6) = 1 \neq y_5 = 0 \Rightarrow 1
+\]
+<p>The sum of indicators is \(0 + 0 + 0 + 0 + 1 = 1\), so \(\hat R(f) = 1/5 = 0.2\). Now compare \(g(x) = 1\) if \(x \gt 5.5\), else \(0\): \(g\) predicts \((0, 0, 0, 0, 1)\), which errs at \(x = 4\), at \(x = 5\), and at \(x = 6\), giving \(\hat R(g) = 3/5 = 0.6\). ERM prefers \(f\). Notice what ERM did <em>not</em> tell us: whether either rule will classify tomorrow's email well. That depends on \(R(f)\), which neither we nor the algorithm can compute — only estimate, which is exactly what Chapter 12 shows.</p>
+
+<h2>Loss functions for regression and classification</h2>
+<p>The loss function \(L(\hat y, y)\) encodes what an error costs, and the choice of loss shapes everything downstream: whether the risk is convex, whether it is differentiable, and what the risk-minimizing prediction even is.</p>
+<h3>Regression losses</h3>
+<p>The two canonical choices are <strong>squared error</strong> and <strong>absolute error</strong>:</p>
+\[
+L_{\text{sq}}(\hat y, y) = (\hat y - y)^2 , \qquad L_{\text{abs}}(\hat y, y) = \lvert \hat y - y \rvert
+\]
+<p>Squared error penalizes large errors disproportionately (an error of \(4\) costs \(16\) times as much as an error of \(1\), not \(4\) times), is differentiable everywhere, and leads to closed-form solutions for linear models — which is why Chapters 2–4 build on it. Absolute error is more robust to outliers but non-differentiable at zero error, complicating optimization. <strong>Edge case:</strong> under squared loss a single extreme outlier can dominate the sum and drag the fitted function toward it; when robustness matters more than optimality under light-tailed noise, absolute or Huber losses are preferred. We derive in the next section exactly why squared loss targets the conditional mean rather than any other statistic.</p>
+<h3>Classification losses</h3>
+<p>The natural classification loss is the <strong>0–1 loss</strong>, which simply counts mistakes:</p>
+\[
+L_{0/1}(\hat y, y) = \mathbb{1}[\hat y \neq y]
+\]
+<p>It is exactly what accuracy measures, since \(\text{accuracy} = 1 - \hat R_{0/1}\). Unfortunately \(L_{0/1}\) is discontinuous and non-convex as a function of a real-valued score, so directly minimizing its risk over most hypothesis classes is computationally intractable. Every major classifier in this book therefore minimizes a convex <em>surrogate</em> loss on a score \(s = f(x) \in \mathbb{R}\), writing the labels as \(y \in \{-1, +1\}\):</p>
+\[
+\text{logistic: } \log\big(1 + e^{-y s}\big) \qquad \text{hinge: } \max\big(0,\ 1 - y s\big)
+\]
+<p>Logistic regression (Chapter 5) minimizes the logistic loss and support vector machines (Chapter 9) the hinge loss; boosting methods use an exponential loss. Each surrogate upper-bounds the 0–1 loss in the sense that zero surrogate loss implies a correct classification, so minimizing the surrogate pushes toward correct classifications while remaining optimizable. <strong>Edge case:</strong> the hinge loss reaches \(0\) as soon as \(y s \geq 1\) — once a point is classified correctly with sufficient margin, further improvements contribute nothing to the risk. This is the mathematical origin of the SVM's sparse set of <em>support vectors</em> in Chapter 9.</p>
+<h3>Worked example</h3>
+<p>Let \(y = +1\) and suppose a scoring model outputs \(s = -0.4\), so the sign rule misclassifies the point. The three losses disagree dramatically:</p>
+\[
+L_{0/1} = \mathbb{1}[\operatorname{sign}(-0.4) \neq +1] = \mathbb{1}[-1 \neq +1] = 1
+\]
+\[
+L_{\text{sq}} = (s - y)^2 = (-0.4 - 1)^2 = (-1.4)^2 = 1.96
+\]
+\[
+L_{\text{log}} = \log\big(1 + e^{-y s}\big) = \log\big(1 + e^{0.4}\big) = \log(1 + 1.4918) = \log(2.4918) \approx 0.913
+\]
+<p>The 0–1 loss reports only "wrong". The other two report <em>how confidently</em> wrong: if the score had been \(s = -2\) instead, the 0–1 loss would remain exactly \(1\), but the logistic loss would grow to \(\log(1 + e^{2}) = \log(8.389) \approx 2.127\). This is precisely why gradient-based optimization can work with surrogates but not with the 0–1 loss: the 0–1 risk is flat almost everywhere and provides no signal about how to adjust the score, while surrogates penalize confidently-wrong predictions heavily and nearly-correct ones lightly, supplying a useful gradient at every point.</p>
+
+<h2>The Bayes-optimal predictor</h2>
+<p>What is the best predictor possible, even with unlimited knowledge of \(P(X, Y)\)? The answer is the <strong>Bayes-optimal predictor</strong>, and its form is worth deriving once because every supervised algorithm in this book can be read as an attempt to estimate it from finite data.</p>
+<h3>Regression: the conditional mean</h3>
+<p>Under squared loss, fix an input \(x\) and minimize the conditional expected loss over the prediction \(c\). Expanding the square inside the expectation:</p>
+\[
+g(c) = \mathbb{E}\big[(c - Y)^2 \mid X = x\big] = c^2 - 2c\,\mathbb{E}[Y \mid X = x] + \mathbb{E}[Y^2 \mid X = x]
+\]
+<p>Differentiating, \(g'(c) = 2c - 2\,\mathbb{E}[Y \mid X = x]\), which vanishes at \(c = \mathbb{E}[Y \mid X = x]\); the second derivative is \(2 \gt 0\), confirming a minimum. Therefore:</p>
+\[
+f^*(x) = \mathbb{E}[Y \mid X = x]
+\]
+<p>Linear regression (Chapter 2) is the special case where this conditional mean is assumed to be a linear function of \(x\); everything else in that chapter follows from estimating this object by least squares.</p>
+<h3>Classification: the most probable label</h3>
+<p>Under 0–1 loss, again fix \(x\) and suppose we predict class \(c\). The conditional expected loss is</p>
+\[
+\mathbb{E}\big[L_{0/1}(c, Y) \mid X = x\big] = \sum_{y} \mathbb{1}[c \neq y]\, P(Y = y \mid X = x) = 1 - P(Y = c \mid X = x)
+\]
+<p>Minimizing over \(c\) means maximizing the posterior class probability, giving the <strong>Bayes classifier</strong>:</p>
+\[
+f^*(x) = \arg\max_{y}\; P(Y = y \mid X = x)
+\]
+<p>Its risk, the <strong>Bayes error rate</strong> \(R^* = \mathbb{E}_X\big[1 - \max_y P(Y = y \mid X)\big]\), is the lowest error any classifier can achieve. It is generally nonzero: if two classes genuinely overlap at some \(x\), no rule can always be right there. This <em>irreducible error</em> is why chasing zero test error is usually a mistake, and why Chapter 11 decomposes the excess error \(R(f) - R^*\) into bias and variance rather than demanding \(R(f) = 0\).</p>
+<p><strong>Common mistake:</strong> treating the Bayes classifier as an algorithm one can run. It is not — it requires knowing \(P(Y \mid X)\), which is exactly the unknown object of the problem. It is an ideal benchmark: every classifier estimates it in some way (k-nearest neighbours by local voting in Chapter 6, naive Bayes by a factored likelihood in Chapter 7, LDA by Gaussian class densities in Chapter 8).</p>
+<p><strong>Edge case:</strong> consider the two extremes of label uncertainty. Where two classes tie, \(P(Y = 1 \mid X = x) = P(Y = 0 \mid X = x) = 0.5\), every tie-breaking choice errs half the time and the local contribution to the Bayes error is \(0.5\) — maximum uncertainty. At the opposite extreme, when labels are a deterministic function of \(x\) (one posterior probability equals \(1\)), the Bayes error is \(0\) and a sufficiently flexible learner can in principle achieve perfect accuracy. Also beware the imbalanced extreme: if \(95\%\) of the population is class \(0\), the trivial constant classifier \(\hat y = 0\) has error only \(0.05\), so "95% accuracy" can indicate a useless model. Accuracy on imbalanced data must always be read against the majority-class baseline.</p>
+<h3>Worked example</h3>
+<p>Suppose the joint distribution of weather \(X \in \{\text{sunny}, \text{rain}\}\) and delivery outcome \(Y \in \{0 = \text{on time},\ 1 = \text{late}\}\) is:</p>
+\[
+\begin{array}{c|cc}
+ & Y = 0 & Y = 1 \\ \hline
+X = \text{sunny} & 0.3 & 0.2 \\
+X = \text{rain} & 0.1 & 0.4
+\end{array}
+\]
+<p>Marginals: \(P(X = \text{sunny}) = 0.3 + 0.2 = 0.5\) and \(P(X = \text{rain}) = 0.1 + 0.4 = 0.5\). Conditionals at sunny:</p>
+\[
+P(Y = 1 \mid \text{sunny}) = \frac{0.2}{0.5} = 0.4, \qquad P(Y = 0 \mid \text{sunny}) = \frac{0.3}{0.5} = 0.6
+\]
+<p>so the Bayes rule predicts \(0\) (on time) on sunny days, contributing error \(P(\text{sunny}) \cdot (1 - 0.6) = 0.5 \times 0.4 = 0.2\). At rain:</p>
+\[
+P(Y = 1 \mid \text{rain}) = \frac{0.4}{0.5} = 0.8, \qquad P(Y = 0 \mid \text{rain}) = \frac{0.1}{0.5} = 0.2
+\]
+<p>so the Bayes rule predicts \(1\) (late) when it rains, contributing \(0.5 \times (1 - 0.8) = 0.1\). The Bayes classifier is therefore "predict late if and only if rain", and the Bayes error rate is \(0.2 + 0.1 = 0.3\). No classifier — no matter how clever, no matter how much data — can push the error below \(30\%\) under this distribution; a model measured at \(35\%\) is already close to optimal, and further tuning buys almost nothing.</p>
+
+<h2>Decision boundaries and the geometry of classifiers</h2>
+<p>Many classifiers work by computing a real-valued <strong>score function</strong> \(s(x)\) and thresholding: \(\hat y = \operatorname{sign}(s(x))\). The set \(\{x : s(x) = 0\}\) is the <strong>decision boundary</strong>, the surface that partitions the input space into predicted-class regions. A <em>linear</em> score \(s(x) = w^\top x + b\) produces a hyperplane boundary; Chapter 3 studies these in dimension \(d \gt 1\), Chapter 9 (SVMs) chooses among many separating hyperplanes the one with maximum margin, and Chapter 10 (decision trees) builds piecewise axis-aligned boundaries instead.</p>
+<h3>Worked example</h3>
+<p>Let \(s(x) = 2x_1 - x_2 - 3\), i.e. \(w = (2, -1)\) and \(b = -3\), and classify by the sign of the score. For \(x^{(1)} = (1, 1)\):</p>
+\[
+s(x^{(1)}) = 2(1) - 1(1) - 3 = 2 - 1 - 3 = -2 \lt 0 \;\Rightarrow\; \hat y = -1
+\]
+<p>For \(x^{(2)} = (3, 2)\):</p>
+\[
+s(x^{(2)}) = 2(3) - 1(2) - 3 = 6 - 2 - 3 = +1 \gt 0 \;\Rightarrow\; \hat y = +1
+\]
+<p>The boundary is the line \(2x_1 - x_2 - 3 = 0\), or \(x_2 = 2x_1 - 3\): points above it (large \(x_2\)) get negative scores, points below it positive scores. <em>Sensitivity check:</em> changing only the intercept to \(b = 0\) gives \(s(x^{(1)}) = 2 - 1 = 1 \gt 0\), flipping \(x^{(1)}\)'s predicted class — the intercept translates the boundary parallel to itself, and points near the boundary are exactly the ones whose classification is fragile. This observation, that only points near the boundary matter, is the seed of the maximum-margin idea in Chapter 9.</p>
+
+<h2>How this book fits together</h2>
+<p>Every remaining chapter instantiates the four objects defined here — \(\mathcal{H}\), \(L\), the optimization of \(\hat R\), and the implicit estimate of \(f^*\).</p>
+<ul>
+<li><p><strong>Chapters 2–5 (linear supervised models).</strong> Simple and multiple linear regression minimize squared risk over linear functions; ridge regression adds a penalty on coefficient size to control overfitting; logistic regression swaps squared loss for logistic loss and targets \(P(Y = 1 \mid X)\) directly.</p></li>
+<li><p><strong>Chapters 6–10 (beyond linearity).</strong> k-nearest neighbours estimates \(\mathbb{E}[Y \mid X = x]\) by local voting; naive Bayes and linear discriminant analysis model the class-conditional distributions \(P(X \mid Y)\) and invert them with Bayes' rule; support vector machines maximize the geometric margin; decision trees recursively partition the input space.</p></li>
+<li><p><strong>Chapters 11–12 (evaluation).</strong> The bias–variance trade-off decomposes \(R(f) - R^*\); cross-validation (LOO and k-fold) estimates \(R(f)\) from data alone — exactly the missing piece flagged in this chapter.</p></li>
+<li><p><strong>Chapters 13–14 (neural networks)</strong> enlarge \(\mathcal{H}\) to composed nonlinear maps trained by gradient descent; <strong>Chapters 15–17 (unsupervised)</strong> drop the labels entirely — there is no \(y\), no risk of the form above, and "correct answer" is replaced by structure: clusters or directions of variance.</p></li>
+</ul>
+<p>Keep the template — hypothesis class, loss, empirical risk, Bayes target — in mind as you read: it turns thirteen seemingly different algorithms into thirteen settings of the same four dials.</p>
+
+  </article>
+  <div class="chapter-nav">
+    <div class="chapter-nav-empty"></div>
+    <a class="chapter-nav-link next" href="../ch2/index.html">
+      <span class="chapter-nav-label">Next →</span>
+      <span class="chapter-nav-title">2. Simple Linear Regression</span>
+    </a>
+  </div>
+</div>
+</main>
+<footer>
+  <div class="wrap">
+    <span>© 2026 iTube. Read forever, free forever.</span>
+    <span>No video was harmed in the making of this platform.</span>
+  </div>
+</footer>
+<script src="../../theme.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script defer src="../../app.js"></script>
+</body>
+</html>

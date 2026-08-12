@@ -1,0 +1,234 @@
+<!-- File: /<slug>/ch2/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>2. Simple Linear Regression — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
+<meta name="description" content="The OLS estimator derived from first principles, geometric interpretation, R-squared, residuals, and numerical worked examples with sensitivity checks.">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap" rel="stylesheet">
+<link rel="manifest" href="../../manifest.json">
+<link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+<meta name="theme-color" content="#1B1B1F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="iTube">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script>
+(function(){
+  var saved = localStorage.getItem("itube-theme");
+  var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", theme);
+})();
+</script>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+    <div class="top-actions">
+      <div class="font-controls" role="group" aria-label="Adjust text size">
+        <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+        <span id="font-size-label">100%</span>
+        <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+        <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+      </div>
+      <button id="theme-btn" title="Toggle light/dark">◐</button>
+    </div>
+  </div>
+</header>
+<main>
+<div class="wrap narrow">
+  <div class="breadcrumb">
+    <a href="../../index.html">iTube</a><span class="sep">/</span>
+    <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
+    <span>Ch. 2</span>
+  </div>
+  <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
+  <h1>2. Simple Linear Regression</h1>
+  <div class="chapter-meta">
+    <span>Chapter 2 of 17</span>
+    <span class="read-badge">22 min read</span>
+  </div>
+  <article>
+
+<h2>The model and its assumptions</h2>
+<p><strong>Simple linear regression</strong> is the most fundamental supervised learning algorithm and the template against which every other method in this book is measured. It posits that the relationship between a single scalar input \(x\) and a continuous output \(y\) is approximately linear, corrupted by noise:</p>
+\[
+y_i = \beta_0 + \beta_1 x_i + \varepsilon_i, \quad i = 1, \dots, n
+\]
+<p>Here \(\beta_0\) is the <strong>intercept</strong>, \(\beta_1\) is the <strong>slope</strong>, and \(\varepsilon_i\) are unobserved random errors. The pair \((\beta_0, \beta_1)\) are the <strong>parameters</strong> we wish to estimate from data; they define the hypothesis class \(\mathcal{H} = \{ f(x) = \beta_0 + \beta_1 x : \beta_0, \beta_1 \in \mathbb{R} \}\). This is a <em>parametric</em> model: the functional form is fixed in advance, and learning reduces to estimating two real numbers regardless of how large \(n\) grows.</p>
+<p>The classical statistical assumptions on the errors are: \(\mathbb{E}[\varepsilon_i] = 0\) (unbiasedness), \(\operatorname{Var}(\varepsilon_i) = \sigma^2\) (homoscedasticity), and \(\operatorname{Cov}(\varepsilon_i, \varepsilon_j) = 0\) for \(i \neq j\) (independence). Under these assumptions plus normality (\(\varepsilon_i \sim \mathcal{N}(0, \sigma^2)\)), the ordinary least squares estimator derived below coincides with the maximum likelihood estimator and enjoys exact finite-sample inference properties. In the machine learning framing of Chapter 1, however, we care primarily about prediction: even when these assumptions fail, the OLS estimator still minimizes empirical squared risk, and its predictive performance can be evaluated empirically via cross-validation (Chapter 12).</p>
+<p><strong>Common mistake:</strong> confusing the <em>model assumption</em> (linearity in parameters) with <em>linearity in features</em>. Simple linear regression is linear in \(\beta_0, \beta_1\), but one can regress \(y\) on \(x^2\), \(\log x\), or \(\sin x\) and still be doing linear regression — the hypothesis remains a linear combination of basis functions. What makes it "simple" is that there is only <em>one</em> predictor variable, not that the relationship must be a straight line in the original feature space. Multiple linear regression (Chapter 3) generalizes to many predictors while retaining linearity in parameters.</p>
+
+<h2>Ordinary least squares: derivation from first principles</h2>
+<p>We choose \(\hat\beta_0, \hat\beta_1\) to minimize the <strong>residual sum of squares</strong> (RSS), which is exactly \(n\) times the empirical squared risk from Chapter 1:</p>
+\[
+\text{RSS}(\beta_0, \beta_1) = \sum_{i=1}^{n} (y_i - \beta_0 - \beta_1 x_i)^2
+\]
+<p>This is an unconstrained optimization problem in two variables. Since RSS is a sum of squares, it is convex and differentiable everywhere; the global minimum occurs where both partial derivatives vanish simultaneously.</p>
+<h3>Derivation of the closed-form estimators</h3>
+<p>Differentiate with respect to \(\beta_0\):</p>
+\[
+\frac{\partial \text{RSS}}{\partial \beta_0} = -2 \sum_{i=1}^{n} (y_i - \beta_0 - \beta_1 x_i) = 0
+\]
+<p>Dividing by \(-2\) and rearranging gives the first <strong>normal equation</strong>:</p>
+\[
+\sum_{i=1}^{n} y_i = n \beta_0 + \beta_1 \sum_{i=1}^{n} x_i \quad \Longrightarrow \quad \bar y = \beta_0 + \beta_1 \bar x
+\]
+<p>where \(\bar x = \frac{1}{n}\sum x_i\) and \(\bar y = \frac{1}{n}\sum y_i\). Solving for \(\beta_0\):</p>
+\[
+\hat\beta_0 = \bar y - \hat\beta_1 \bar x \tag{1}
+\]
+<p>This tells us something geometric immediately: <em>the fitted line always passes through the centroid</em> \((\bar x, \bar y)\) of the data, regardless of the slope. Now differentiate RSS with respect to \(\beta_1\):</p>
+\[
+\frac{\partial \text{RSS}}{\partial \beta_1} = -2 \sum_{i=1}^{n} x_i (y_i - \beta_0 - \beta_1 x_i) = 0
+\]
+<p>Substitute \(\hat\beta_0 = \bar y - \hat\beta_1 \bar x\) from equation (1) into this second normal equation:</p>
+\[
+\sum_{i=1}^{n} x_i \big(y_i - (\bar y - \hat\beta_1 \bar x) - \hat\beta_1 x_i\big) = 0
+\]
+<p>Expanding and regrouping terms:</p>
+\[
+\sum_{i=1}^{n} x_i (y_i - \bar y) - \hat\beta_1 \sum_{i=1}^{n} x_i (x_i - \bar x) = 0
+\]
+<p>Note that \(\sum x_i (y_i - \bar y) = \sum (x_i - \bar x)(y_i - \bar y)\) because \(\sum \bar x (y_i - \bar y) = \bar x \cdot 0 = 0\). Similarly, \(\sum x_i (x_i - \bar x) = \sum (x_i - \bar x)^2\). Therefore:</p>
+\[
+\hat\beta_1 = \frac{\sum_{i=1}^{n} (x_i - \bar x)(y_i - \bar y)}{\sum_{i=1}^{n} (x_i - \bar x)^2} \tag{2}
+\]
+<p>Equations (1) and (2) together give the complete <strong>ordinary least squares (OLS) estimator</strong>. The numerator is the sample covariance between \(x\) and \(y\) (up to a factor of \(n-1\)); the denominator is the sample variance of \(x\). The slope is therefore the ratio of how much \(x\) and \(y\) co-vary to how much \(x\) varies alone.</p>
+<p><strong>Edge case:</strong> if all \(x_i\) are identical, then \(\sum (x_i - \bar x)^2 = 0\) and \(\hat\beta_1\) is undefined — geometrically, infinitely many vertical lines pass through a column of points, and no unique best-fit line exists. In practice this means the feature carries no information; any implementation must check for zero variance before dividing. A related degenerate case is \(n = 1\): one point determines both \(\bar x\) and \(\bar y\), the denominator is zero, and again the fit is undefined. At least two distinct \(x\)-values are required for simple linear regression to be well-posed.</p>
+
+<h3>Worked example: hand-computed OLS fit</h3>
+<p>Consider five observations of study hours (\(x\)) and exam score (\(y\)):</p>
+\[
+(x_i, y_i) \in \{(1, 50),\ (2, 55),\ (3, 65),\ (4, 70),\ (5, 80)\}
+\]
+<p><strong>Step 1: Compute means.</strong></p>
+\[
+\bar x = \frac{1+2+3+4+5}{5} = \frac{15}{5} = 3, \qquad \bar y = \frac{50+55+65+70+80}{5} = \frac{320}{5} = 64
+\]
+<p><strong>Step 2: Compute deviations and products.</strong></p>
+\[
+\begin{array}{c|c|c|c}
+x_i - \bar x & y_i - \bar y & (x_i - \bar x)^2 & (x_i - \bar x)(y_i - \bar y) \\ \hline
+-2 & -14 & 4 & 28 \\
+-1 & -9 & 1 & 9 \\
+0 & 1 & 0 & 0 \\
+1 & 6 & 1 & 6 \\
+2 & 16 & 4 & 32
+\end{array}
+\]
+<p><strong>Step 3: Sum the last two columns.</strong></p>
+\[
+S_{xx} = \sum (x_i - \bar x)^2 = 4 + 1 + 0 + 1 + 4 = 10
+\]
+\[
+S_{xy} = \sum (x_i - \bar x)(y_i - \bar y) = 28 + 9 + 0 + 6 + 32 = 75
+\]
+<p><strong>Step 4: Apply equations (2) and (1).</strong></p>
+\[
+\hat\beta_1 = \frac{S_{xy}}{S_{xx}} = \frac{75}{10} = 7.5
+\]
+\[
+\hat\beta_0 = \bar y - \hat\beta_1 \bar x = 64 - 7.5 \times 3 = 64 - 22.5 = 41.5
+\]
+<p>The fitted line is \(\hat y = 41.5 + 7.5 x\). <strong>Interpretation:</strong> each additional hour of study is associated with a \(7.5\)-point increase in exam score, and a student who studies zero hours is predicted to score \(41.5\) (the intercept extrapolates beyond the observed range \(x \in [1,5]\), so treat it cautiously). <strong>Sensitivity check:</strong> if the last observation were \((5, 60)\) instead of \((5, 80)\), then \(\bar y\) would drop to \(60\), \(S_{xy}\) would become \(75 - 20 = 55\), and \(\hat\beta_1\) would fall to \(5.5\) — a single outlier in \(y\) shifts the slope substantially because squared loss penalizes large residuals quadratically. This is precisely the edge case flagged above and motivates robust alternatives discussed in Chapter 4.</p>
+
+<h2>Geometric interpretation and orthogonality</h2>
+<p>The OLS solution has an elegant geometric structure that foreshadows the projection viewpoint of multiple regression (Chapter 3) and principal component analysis (Chapter 17). Define vectors \(\mathbf{y} = (y_1, \dots, y_n)^\top\), \(\mathbf{x} = (x_1, \dots, x_n)^\top\), and \(\mathbf{1} = (1, \dots, 1)^\top\). The fitted values \(\hat{\mathbf{y}} = \hat\beta_0 \mathbf{1} + \hat\beta_1 \mathbf{x}\) lie in the two-dimensional subspace spanned by \(\mathbf{1}\) and \(\mathbf{x}\). The residual vector \(\mathbf{e} = \mathbf{y} - \hat{\mathbf{y}}\) satisfies:</p>
+\[
+\mathbf{1}^\top \mathbf{e} = 0 \quad \text{and} \quad \mathbf{x}^\top \mathbf{e} = 0
+\]
+<p>These are exactly the two normal equations rewritten in vector form. Geometrically, <strong>the residual vector is orthogonal to the column space of the design matrix</strong>. This means \(\hat{\mathbf{y}}\) is the <em>orthogonal projection</em> of \(\mathbf{y}\) onto \(\operatorname{span}\{\mathbf{1}, \mathbf{x}\}\), and among all vectors in that subspace, it is the unique closest point to \(\mathbf{y}\) in Euclidean norm. Minimizing RSS is therefore equivalent to finding the nearest-point projection.</p>
+<p>An immediate consequence is the <strong>Pythagorean decomposition</strong> of total variation. Write \(y_i - \bar y = (\hat y_i - \bar y) + e_i\). Squaring and summing, the cross-term vanishes because \(\sum (\hat y_i - \bar y) e_i = 0\) (this follows from orthogonality and the fact that \(\hat y_i - \bar y\) lies in the column space):</p>
+\[
+\underbrace{\sum_{i=1}^{n} (y_i - \bar y)^2}_{\text{TSS}} = \underbrace{\sum_{i=1}^{n} (\hat y_i - \bar y)^2}_{\text{ESS}} + \underbrace{\sum_{i=1}^{n} e_i^2}_{\text{RSS}}
+\]
+<p>Total Sum of Squares = Explained Sum of Squares + Residual Sum of Squares. This identity holds <em>only</em> when the model includes an intercept; without one, the cross-term does not generally vanish and TSS ≠ ESS + RSS. This is why \(R^2\) as defined below can be negative for intercept-free models.</p>
+<p><strong>Common mistake:</strong> interpreting orthogonality of residuals to \(\mathbf{x}\) as evidence that the model is "correct." Orthogonality is a <em>property of the OLS estimator</em>, guaranteed algebraically for any dataset, not a diagnostic of model adequacy. Residuals can be perfectly orthogonal to \(\mathbf{x}\) while exhibiting clear nonlinear patterns when plotted against \(x\) or \(\hat y\) — always inspect residual plots, not just summary statistics.</p>
+
+<h2>Coefficient of determination \(R^2\)</h2>
+<p>The Pythagorean decomposition motivates the most widely reported goodness-of-fit measure in regression:</p>
+\[
+R^2 = \frac{\text{ESS}}{\text{TSS}} = 1 - \frac{\text{RSS}}{\text{TSS}}
+\]
+<p>\(R^2\) is the fraction of total variance in \(y\) that the linear model explains. It ranges from \(0\) (the model predicts no better than the constant \(\bar y\)) to \(1\) (perfect fit, all residuals zero). In simple linear regression specifically, \(R^2\) equals the square of the Pearson correlation coefficient between \(x\) and \(y\):</p>
+\[
+R^2 = r_{xy}^2 = \left( \frac{S_{xy}}{\sqrt{S_{xx} S_{yy}}} \right)^2
+\]
+<p>This equivalence breaks down in multiple regression (Chapter 3), where \(R^2\) is still defined as \(1 - \text{RSS}/\text{TSS}\) but is no longer the square of any single bivariate correlation.</p>
+<p><strong>Edge case:</strong> \(R^2\) can be misleadingly high when \(n\) is small relative to the number of parameters, because adding any predictor (even pure noise) cannot decrease RSS and typically increases ESS slightly. With \(n = 3\) and one predictor, \(R^2\) is almost always large by chance. This is why adjusted \(R^2\) and cross-validated prediction error (Chapter 12) are preferred for model comparison. Also note that \(R^2\) says nothing about whether the linear <em>form</em> is appropriate: a perfect quadratic relationship sampled symmetrically around its vertex can yield \(R^2 \approx 0\) despite a deterministic relationship, while a weak but monotonic relationship with low noise can yield high \(R^2\) despite poor extrapolation behavior.</p>
+
+<h3>Worked example: computing \(R^2\) and interpreting it</h3>
+<p>Continuing the study-hours example from above, we already have \(S_{xx} = 10\) and \(S_{xy} = 75\). Compute \(S_{yy}\):</p>
+\[
+S_{yy} = \sum (y_i - \bar y)^2 = (-14)^2 + (-9)^2 + 1^2 + 6^2 + 16^2 = 196 + 81 + 1 + 36 + 256 = 570
+\]
+<p>Therefore:</p>
+\[
+r_{xy} = \frac{75}{\sqrt{10 \times 570}} = \frac{75}{\sqrt{5700}} = \frac{75}{75.498} \approx 0.9934
+\]
+\[
+R^2 = r_{xy}^2 \approx 0.9869
+\]
+<p>The model explains approximately \(98.7\%\) of the variance in exam scores. Equivalently, \(\text{RSS} = S_{yy}(1 - R^2) = 570 \times 0.0131 \approx 7.47\), meaning the typical residual is roughly \(\sqrt{7.47/5} \approx 1.22\) points — very tight. <strong>Sensitivity check:</strong> if we replaced the fifth point with \((5, 60)\) as in the earlier sensitivity exercise, \(S_{yy}\) would drop to \(370\), \(S_{xy}\) to \(55\), giving \(r_{xy} = 55/\sqrt{3700} \approx 0.904\) and \(R^2 \approx 0.817\). A single outlying \(y\)-value reduced explained variance by \(17\) percentage points, illustrating again that \(R^2\) inherits squared loss's sensitivity to outliers.</p>
+
+<h2>Residuals and diagnostic reasoning</h2>
+<p>The <strong>residuals</strong> \(e_i = y_i - \hat y_i\) are the observable counterpart of the unobservable errors \(\varepsilon_i\). They serve three distinct purposes: assessing model fit, checking assumptions, and identifying influential observations. Key algebraic properties follow directly from the normal equations:</p>
+<ul>
+<li>\(\sum e_i = 0\) (residuals sum to zero when an intercept is included).</li>
+<li>\(\sum x_i e_i = 0\) (residuals are uncorrelated with the predictor in-sample).</li>
+<li>\(\sum \hat y_i e_i = 0\) (fitted values and residuals are orthogonal).</li>
+</ul>
+<p>These are <em>identities</em>, not assumptions — they hold for every dataset and every OLS fit with an intercept. Diagnostic reasoning uses residuals to check what the model <em>did not</em> force: whether the variance of \(e_i\) is constant across \(x\) (homoscedasticity), whether residuals are approximately normally distributed (for inference), and whether there is systematic structure left unexplained (nonlinearity). Plotting \(e_i\) versus \(\hat y_i\) or \(x_i\) is the primary tool; formal tests (Breusch-Pagan, Shapiro-Wilk) supplement but do not replace visual inspection.</p>
+<p><strong>Edge case:</strong> when \(n\) is very small, residuals are heavily constrained by the algebraic identities above and cannot reveal much. With \(n = 3\) and two parameters, there is only one degree of freedom for residuals; the three residuals must satisfy two linear constraints, leaving essentially no room for pattern detection. Diagnostics become meaningful only when \(n\) is substantially larger than the number of parameters. Also beware <strong>leverage points</strong>: observations with extreme \(x\)-values have disproportionately large influence on \(\hat\beta_1\) because the denominator \(S_{xx}\) weights them heavily. A high-leverage point with a moderate residual may still be distorting the fit; Cook's distance combines leverage and residual size to flag such cases.</p>
+
+<h3>Worked example: residual analysis on the study-hours data</h3>
+<p>Using the fitted line \(\hat y = 41.5 + 7.5x\) from earlier, compute fitted values and residuals:</p>
+\[
+\begin{array}{c|c|c|c}
+x_i & y_i & \hat y_i = 41.5 + 7.5 x_i & e_i = y_i - \hat y_i \\ \hline
+1 & 50 & 49.0 & +1.0 \\
+2 & 55 & 56.5 & -1.5 \\
+3 & 65 & 64.0 & +1.0 \\
+4 & 70 & 71.5 & -1.5 \\
+5 & 80 & 79.0 & +1.0
+\end{array}
+\]
+<p>Verify the identities: \(\sum e_i = 1.0 - 1.5 + 1.0 - 1.5 + 1.0 = 0\) ✓. Check \(\sum x_i e_i = 1(1.0) + 2(-1.5) + 3(1.0) + 4(-1.5) + 5(1.0) = 1.0 - 3.0 + 3.0 - 6.0 + 5.0 = 0\) ✓. The residuals alternate in sign (+, −, +, −, +), which suggests the true relationship might be slightly curved rather than perfectly linear — a straight line systematically under-predicts at the extremes and over-predicts in the middle. With only five points this pattern is suggestive but not conclusive; with \(n = 50\) showing the same alternation, it would be strong evidence for adding a quadratic term. Note also that the largest absolute residual is \(1.5\), occurring at \(x = 2\) and \(x = 4\); neither is a high-leverage point (both are near \(\bar x = 3\)), so their influence on the slope is modest.</p>
+
+<h2>Connection to the broader framework</h2>
+<p>Simple linear regression instantiates every concept from Chapter 1 in its simplest possible setting. The hypothesis class is \(\mathcal{H} = \{\beta_0 + \beta_1 x\}\); the loss is squared error; ERM yields the closed-form OLS estimator; the Bayes-optimal predictor under squared loss is \(\mathbb{E}[Y \mid X = x]\), and OLS estimates it by restricting to linear functions. When the true conditional mean is indeed linear and errors are homoscedastic, OLS is not just ERM-optimal but statistically efficient (Gauss-Markov theorem). When these conditions fail, OLS remains the best <em>linear</em> predictor in the population sense, but nonlinear methods may dominate.</p>
+<p>This chapter's machinery extends directly forward: Chapter 3 generalizes to multiple predictors via matrix algebra, preserving the projection geometry and normal-equation structure derived here. Chapter 4 adds regularization (ridge regression) to handle collinearity and overfitting, modifying the denominator \(S_{xx}\) by a penalty term. Chapter 5 swaps squared loss for logistic loss to handle classification, replacing the closed-form solution with iterative optimization. Chapter 11 decomposes the expected squared error of \(\hat y\) into bias, variance, and irreducible noise — a decomposition whose intuition is built entirely on the residual/variance concepts introduced here. And Chapter 17's PCA can be understood as finding the direction that maximizes the \(R^2\) of a linear projection, closing the circle back to this chapter's core ideas.</p>
+<p>Master simple linear regression not as a toy but as the <em>canonical instance</em> of supervised learning. Every subtlety that arises later — overfitting, regularization, diagnostics, geometric interpretation, the gap between empirical and expected risk — is already present here in miniature, stripped of notational overhead. If you can derive, compute, diagnose, and critique the OLS fit by hand, you have the foundation for everything that follows.</p>
+
+  </article>
+  <div class="chapter-nav">
+    <a class="chapter-nav-link prev" href="../ch1/index.html">
+      <span class="chapter-nav-label">← Previous</span>
+      <span class="chapter-nav-title">1. Supervised Learning: Regression and Classification Problems</span>
+    </a>
+    <a class="chapter-nav-link next" href="../ch3/index.html">
+      <span class="chapter-nav-label">Next →</span>
+      <span class="chapter-nav-title">3. Multiple Linear Regression</span>
+    </a>
+  </div>
+</div>
+</main>
+<footer>
+  <div class="wrap">
+    <span>© 2026 iTube. Read forever, free forever.</span>
+    <span>No video was harmed in the making of this platform.</span>
+  </div>
+</footer>
+<script src="../../theme.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script defer src="../../app.js"></script>
+</body>
+</html>

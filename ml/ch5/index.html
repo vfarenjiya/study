@@ -1,0 +1,214 @@
+<!-- File: /<slug>/ch5/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>5. Logistic Regression — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
+<meta name="description" content="Deriving logistic regression from log-odds, maximum likelihood estimation, IRLS, deviance, decision boundaries, and a hand-computed binary classification example.">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap" rel="stylesheet">
+<link rel="manifest" href="../../manifest.json">
+<link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+<meta name="theme-color" content="#1B1B1F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="iTube">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script>
+(function(){
+  var saved = localStorage.getItem("itube-theme");
+  var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", theme);
+})();
+</script>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+    <div class="top-actions">
+      <div class="font-controls" role="group" aria-label="Adjust text size">
+        <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+        <span id="font-size-label">100%</span>
+        <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+        <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+      </div>
+      <button id="theme-btn" title="Toggle light/dark">◐</button>
+    </div>
+  </div>
+</header>
+<main>
+<div class="wrap narrow">
+  <div class="breadcrumb">
+    <a href="../../index.html">iTube</a><span class="sep">/</span>
+    <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
+    <span>Ch. 5</span>
+  </div>
+  <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
+  <h1>5. Logistic Regression</h1>
+  <div class="chapter-meta">
+    <span>Chapter 5 of 17</span>
+    <span class="read-badge">24 min read</span>
+  </div>
+  <article>
+
+<h2>From linear scores to probabilities</h2>
+<p>Linear regression (Chapters 2–4) models a continuous output as a linear function of inputs. Classification requires a discrete output, typically \(y \in \{0, 1\}\). A naive approach would be to fit OLS to binary labels and threshold at 0.5, but this fails catastrophically: predictions can lie outside \([0,1]\), squared loss penalizes confident correct predictions, and the conditional mean assumption \(\mathbb{E}[Y|X=x] = \beta_0 + \beta_1 x\) forces probability to grow without bound as \(x\) increases — impossible for a probability.</p>
+<p><strong>Logistic regression</strong> solves this by modeling the <em>probability</em> \(P(Y=1 \mid X=x)\) directly through a nonlinear link function that maps the entire real line into \((0,1)\). The model assumes:</p>
+\[
+P(Y = 1 \mid X = x) = \sigma(\beta_0 + \boldsymbol\beta^\top \mathbf{x}) = \frac{1}{1 + e^{-(\beta_0 + \boldsymbol\beta^\top \mathbf{x})}}
+\]
+<p>where \(\sigma(z) = 1/(1+e^{-z})\) is the <strong>logistic sigmoid</strong>. This is still called "regression" because it regresses a probability (a continuous quantity in \([0,1]\)) onto predictors; the classification decision \(\hat y = \mathbb{1}[\hat p \geq 0.5]\) is a post-hoc thresholding step. The hypothesis class remains linear in parameters (\(\beta_0 + \boldsymbol\beta^\top \mathbf{x}\)), but the output is transformed nonlinearly to respect the probability constraint.</p>
+<p><strong>Common mistake:</strong> interpreting \(\beta_j\) as the change in probability per unit change in \(x_j\). Because of the sigmoid nonlinearity, the marginal effect \(\partial P(Y=1|X)/\partial x_j = \beta_j \sigma(z)(1-\sigma(z))\) depends on the current value of \(z = \beta_0 + \boldsymbol\beta^\top \mathbf{x}\). At \(z = 0\) (probability 0.5), the effect is \(\beta_j/4\); at \(z = \pm 3\) (probabilities ~0.95 or ~0.05), the effect is nearly zero. Coefficients represent changes in <em>log-odds</em>, not probabilities — a distinction we derive next.</p>
+
+<h2>The log-odds derivation: why the sigmoid?</h2>
+<p>The sigmoid does not appear arbitrarily. It falls out naturally from modeling the <strong>log-odds</strong> (logit) of the event \(Y=1\) as a linear function of predictors. Define the odds as \(P(Y=1|X=x) / P(Y=0|X=x)\) and assume:</p>
+\[
+\log \frac{P(Y=1 \mid X=x)}{P(Y=0 \mid X=x)} = \beta_0 + \boldsymbol\beta^\top \mathbf{x}
+\]
+<p>This is the fundamental modeling assumption: the log-odds are linear in \(\mathbf{x}\). To recover \(P(Y=1|X=x)\), let \(p = P(Y=1|X=x)\) and \(z = \beta_0 + \boldsymbol\beta^\top \mathbf{x}\). Then:</p>
+\[
+\log \frac{p}{1-p} = z \quad \Longrightarrow \quad \frac{p}{1-p} = e^z \quad \Longrightarrow \quad p = e^z (1-p) \quad \Longrightarrow \quad p(1 + e^z) = e^z
+\]
+\[
+\Longrightarrow \quad p = \frac{e^z}{1 + e^z} = \frac{1}{1 + e^{-z}} = \sigma(z)
+\]
+<p>This derivation shows that the sigmoid is the unique inverse of the logit link. Other links exist (probit uses \(\Phi^{-1}\), complementary log-log uses \(\log(-\log(1-p))\)), but the logit has three advantages: (1) closed-form gradient and Hessian for MLE, (2) coefficients have interpretable odds-ratio meaning, and (3) it arises as the canonical link for the Bernoulli distribution in generalized linear model theory.</p>
+<p><strong>Edge case:</strong> as \(z \to +\infty\), \(\sigma(z) \to 1\); as \(z \to -\infty\), \(\sigma(z) \to 0\). The sigmoid saturates exponentially fast: at \(z = 5\), \(\sigma(5) \approx 0.9933\); at \(z = -5\), \(\sigma(-5) \approx 0.0067\). This saturation causes numerical issues in implementation (log of near-zero probabilities underflows) and explains why logistic regression cannot perfectly separate data with finite coefficients — achieving \(P = 1\) exactly requires \(\|\boldsymbol\beta\| \to \infty\). In the linearly separable case, the MLE does not exist as a finite vector; regularized logistic regression (ridge penalty on \(\boldsymbol\beta\)) resolves this, analogous to Chapter 4's treatment of singular \(X^\top X\).</p>
+
+<h3>Worked example: converting between probability, odds, and log-odds</h3>
+<p>Suppose a fitted logistic regression gives \(\hat\beta_0 = -2.0\) and \(\hat\beta_1 = 0.8\) for predicting exam pass (\(Y=1\)) from study hours (\(x\)). For a student who studies \(x = 3\) hours:</p>
+\[
+z = -2.0 + 0.8 \times 3 = -2.0 + 2.4 = 0.4
+\]
+\[
+\hat p = \sigma(0.4) = \frac{1}{1 + e^{-0.4}} = \frac{1}{1 + 0.6703} = \frac{1}{1.6703} \approx 0.5987
+\]
+<p>The predicted probability of passing is ~59.9%. The odds are \(\hat p / (1 - \hat p) = 0.5987 / 0.4013 \approx 1.492\), meaning the student is about 1.5 times more likely to pass than fail. The log-odds are \(\log(1.492) \approx 0.400\), which recovers \(z\) exactly (up to rounding). <strong>Sensitivity check:</strong> if the student studies one more hour (\(x = 4\)), then \(z = -2.0 + 3.2 = 1.2\), \(\hat p = \sigma(1.2) \approx 0.7685\), odds ≈ 3.32. The probability increased by only 0.17 (from 0.60 to 0.77), but the odds multiplied by \(e^{0.8} \approx 2.23\) (from 1.49 to 3.32). This illustrates the key interpretive point: \(\hat\beta_1 = 0.8\) means each additional hour multiplies the odds by \(e^{0.8} \approx 2.23\), regardless of the starting \(x\) — a constant multiplicative effect on odds, but a varying additive effect on probability.</p>
+
+<h2>Maximum likelihood estimation</h2>
+<p>Unlike OLS, logistic regression has no closed-form solution. Parameters are estimated by <strong>maximum likelihood</strong>. Assuming independent observations, the likelihood is:</p>
+\[
+L(\boldsymbol\beta) = \prod_{i=1}^{n} P(Y=y_i \mid X=\mathbf{x}_i) = \prod_{i=1}^{n} \sigma(\mathbf{x}_i^\top \boldsymbol\beta)^{y_i} \big(1 - \sigma(\mathbf{x}_i^\top \boldsymbol\beta)\big)^{1-y_i}
+\]
+<p>taking logs gives the <strong>log-likelihood</strong>:</p>
+\[
+\ell(\boldsymbol\beta) = \sum_{i=1}^{n} \Big[ y_i \log \sigma(\mathbf{x}_i^\top \boldsymbol\beta) + (1 - y_i) \log\big(1 - \sigma(\mathbf{x}_i^\top \boldsymbol\beta)\big) \Big]
+\]
+<p>Maximizing \(\ell(\boldsymbol\beta)\) is equivalent to minimizing the <strong>negative log-likelihood</strong>, also known as the <strong>logistic loss</strong> or <strong>cross-entropy loss</strong> introduced in Chapter 1:</p>
+\[
+-\ell(\boldsymbol\beta) = \sum_{i=1}^{n} \Big[ -y_i \log \sigma(z_i) - (1-y_i) \log(1 - \sigma(z_i)) \Big] = \sum_{i=1}^{n} \log\big(1 + e^{-y_i' z_i}\big)
+\]
+<p>where \(y_i' = 2y_i - 1 \in \{-1, +1\}\) is the recoded label. This confirms that logistic regression is ERM with logistic loss, exactly as previewed in Chapter 1. The gradient of the log-likelihood has a remarkably clean form. Using \(\sigma'(z) = \sigma(z)(1-\sigma(z))\):</p>
+\[
+\nabla_{\boldsymbol\beta} \ell(\boldsymbol\beta) = \sum_{i=1}^{n} (y_i - \sigma(\mathbf{x}_i^\top \boldsymbol\beta)) \mathbf{x}_i = X^\top (\mathbf{y} - \hat{\mathbf{p}})
+\]
+<p>Setting this to zero yields the MLE equations \(X^\top (\mathbf{y} - \hat{\mathbf{p}}) = \mathbf{0}\), which are nonlinear in \(\boldsymbol\beta\) (because \(\hat{\mathbf{p}} = \sigma(X\boldsymbol\beta)\)) and must be solved iteratively. The Hessian is:</p>
+\[
+H(\boldsymbol\beta) = -\sum_{i=1}^{n} \sigma(z_i)(1-\sigma(z_i)) \mathbf{x}_i \mathbf{x}_i^\top = -X^\top W X
+\]
+<p>where \(W = \operatorname{diag}(\sigma(z_i)(1-\sigma(z_i)))\) is a diagonal weight matrix. Since \(\sigma(z)(1-\sigma(z)) \gt 0\) for all finite \(z\), the Hessian is negative definite whenever \(X\) has full column rank, guaranteeing that \(\ell(\boldsymbol\beta)\) is strictly concave and the MLE is unique (when it exists).</p>
+<p><strong>Common mistake:</strong> assuming logistic regression always converges. When data are perfectly linearly separable, \(\ell(\boldsymbol\beta)\) increases without bound as \(\|\boldsymbol\beta\| \to \infty\) along the separating direction, and no finite MLE exists. Newton-Raphson will produce ever-larger coefficients until numerical overflow. Always check for separation (e.g., via complete/quasi-complete separation diagnostics) and apply regularization when detected. This parallels ridge regression's resolution of singular \(X^\top X\) in Chapter 4.</p>
+
+<h2>Iteratively reweighted least squares (IRLS)</h2>
+<p>The standard algorithm for fitting logistic regression is <strong>Newton-Raphson</strong>, which updates \(\boldsymbol\beta^{(t+1)} = \boldsymbol\beta^{(t)} - H^{-1} \nabla \ell\). Substituting the gradient and Hessian derived above:</p>
+\[
+\boldsymbol\beta^{(t+1)} = \boldsymbol\beta^{(t)} + (X^\top W^{(t)} X)^{-1} X^\top (\mathbf{y} - \hat{\mathbf{p}}^{(t)})
+\]
+<p>This can be rewritten as a <strong>weighted least squares</strong> problem. Define the working response \(z_i^{(t)} = \mathbf{x}_i^\top \boldsymbol\beta^{(t)} + (y_i - \hat p_i^{(t)}) / w_i^{(t)}\) where \(w_i^{(t)} = \hat p_i^{(t)}(1 - \hat p_i^{(t)})\). Then the update solves:</p>
+\[
+\boldsymbol\beta^{(t+1)} = \arg\min_{\boldsymbol\beta} \sum_{i=1}^{n} w_i^{(t)} \big(z_i^{(t)} - \mathbf{x}_i^\top \boldsymbol\beta\big)^2
+\]
+<p>This is exactly weighted OLS with weights \(W^{(t)}\) and targets \(\mathbf{z}^{(t)}\). Each Newton step refits a weighted linear regression to adjusted responses, hence the name <strong>iteratively reweighted least squares</strong>. The weights \(w_i = \hat p_i(1-\hat p_i)\) are largest when \(\hat p_i \approx 0.5\) (maximum uncertainty) and smallest when \(\hat p_i \approx 0\) or \(1\) (high confidence), so the algorithm naturally downweights observations whose predicted probabilities are already extreme.</p>
+<p>IRLS typically converges in 5–10 iterations for well-behaved data. Each iteration requires solving a weighted OLS problem, costing \(O(np^2)\) per step (same as OLS). For very large \(n\), stochastic gradient descent or L-BFGS may be preferred, but IRLS remains the default in statistical software due to its quadratic convergence rate near the optimum.</p>
+<p><strong>Edge case:</strong> when some \(\hat p_i\) approach 0 or 1 during iteration, \(w_i \to 0\) and the weighted least squares problem becomes numerically ill-conditioned. Implementations clamp weights away from zero (e.g., \(w_i \geq 10^{-8}\)) or use step-halving to prevent divergence. Also note that IRLS requires \(X^\top W X\) to be invertible at every step; if \(X\) is rank-deficient, add a small ridge penalty \(\lambda I\) (connecting directly to Chapter 4) to stabilize inversion throughout the iteration.</p>
+
+<h3>Worked example: one IRLS iteration by hand</h3>
+<p>Consider \(n = 3\) observations with one predictor (plus intercept): \((x_i, y_i) \in \{(0, 0), (1, 1), (2, 1)\}\). Start from \(\boldsymbol\beta^{(0)} = (0, 0)^\top\), so \(z_i = 0\) and \(\hat p_i = \sigma(0) = 0.5\) for all \(i\).</p>
+<p><strong>Step 1: Compute weights and working responses.</strong> \(w_i = 0.5 \times 0.5 = 0.25\) for all \(i\). Working responses:</p>
+\[
+z_i^{(0)} = 0 + \frac{y_i - 0.5}{0.25} = 4(y_i - 0.5) \Rightarrow z^{(0)} = (-2, 2, 2)^\top
+\]
+<p><strong>Step 2: Set up weighted OLS.</strong> Design matrix \(X = \left(\begin{smallmatrix}1&0\\1&1\\1&2\end{smallmatrix}\right)\), weight matrix \(W = 0.25 I\). Compute:</p>
+\[
+X^\top W X = 0.25 \begin{pmatrix} 3 & 3 \\ 3 & 5 \end{pmatrix} = \begin{pmatrix} 0.75 & 0.75 \\ 0.75 & 1.25 \end{pmatrix}
+\]
+\[
+X^\top W \mathbf{z}^{(0)} = 0.25 \begin{pmatrix} 1&1&1 \\ 0&1&2 \end{pmatrix} \begin{pmatrix} -2 \\ 2 \\ 2 \end{pmatrix} = 0.25 \begin{pmatrix} 2 \\ 6 \end{pmatrix} = \begin{pmatrix} 0.5 \\ 1.5 \end{pmatrix}
+\]
+<p><strong>Step 3: Solve.</strong> Determinant of \(X^\top W X\): \(0.75 \times 1.25 - 0.75^2 = 0.9375 - 0.5625 = 0.375\). Inverse:</p>
+\[
+(X^\top W X)^{-1} = \frac{1}{0.375} \begin{pmatrix} 1.25 & -0.75 \\ -0.75 & 0.75 \end{pmatrix} = \begin{pmatrix} 3.\overline{3} & -2 \\ -2 & 2 \end{pmatrix}
+\]
+\[
+\boldsymbol\beta^{(1)} = \begin{pmatrix} 3.\overline{3} & -2 \\ -2 & 2 \end{pmatrix} \begin{pmatrix} 0.5 \\ 1.5 \end{pmatrix} = \begin{pmatrix} 1.\overline{6} - 3 \\ -1 + 3 \end{pmatrix} = \begin{pmatrix} -1.\overline{3} \\ 2 \end{pmatrix}
+\]
+<p>After one IRLS iteration, \(\hat\beta_0 \approx -1.33\), \(\hat\beta_1 = 2.0\). Predicted probabilities: \(\sigma(-1.33) \approx 0.21\), \(\sigma(0.67) \approx 0.66\), \(\sigma(2.67) \approx 0.94\). Compare to true labels \((0,1,1)\): the model already assigns high probability to the two positive cases and low probability to the negative case after just one step. <strong>Sensitivity check:</strong> starting from \(\boldsymbol\beta^{(0)} = (-5, 5)^\top\) instead would give \(\hat p \approx (0.007, 0.5, 0.993)\), weights near zero for observations 1 and 3, and a much smaller update — illustrating how IRLS self-stabilizes when initial predictions are already extreme.</p>
+
+<h2>Deviance and goodness of fit</h2>
+<p>In OLS, \(R^2\) measures goodness of fit relative to the null model. In logistic regression, the analogous quantity is <strong>deviance</strong>. Define the saturated model as one that assigns \(\hat p_i = y_i\) perfectly (possible since there are \(n\) parameters for \(n\) observations). The deviance is twice the difference in log-likelihoods between the saturated model and the fitted model:</p>
+\[
+D = -2\big(\ell(\hat{\boldsymbol\beta}) - \ell_{\text{saturated}}\big) = -2 \sum_{i=1}^{n} \Big[ y_i \log \hat p_i + (1-y_i) \log(1 - \hat p_i) \Big]
+\]
+<p>(The saturated log-likelihood is 0 since \(\log 1 = 0\).) Smaller deviance indicates better fit. Under regularity conditions and large \(n\), \(D \sim \chi^2_{n-p-1}\) approximately, enabling goodness-of-fit tests. The <strong>null deviance</strong> \(D_0\) is computed similarly for the intercept-only model (\(\hat p_i = \bar y\) for all \(i\)). The difference \(D_0 - D\) follows \(\chi^2_p\) asymptotically, testing whether the predictors jointly improve fit over the null.</p>
+<p>A pseudo-\(R^2\) can be defined as \(1 - D/D_0\) (McFadden's \(R^2\)), ranging from 0 (no improvement over null) to 1 (perfect fit). Unlike OLS \(R^2\), values of 0.2–0.4 often indicate excellent fit in practice because binary outcomes are inherently noisy. Adjusted versions and alternative pseudo-\(R^2\) measures (Cox-Snell, Nagelkerke) exist but share the same limitation: they measure relative improvement, not absolute predictive accuracy. Cross-validation (Chapter 12) remains the gold standard for assessing generalization.</p>
+<p><strong>Edge case:</strong> when any \(\hat p_i = 0\) or \(1\) exactly (which occurs with perfect separation or numerical saturation), \(\log \hat p_i\) or \(\log(1-\hat p_i)\) is undefined. Implementations clamp predicted probabilities to \([\epsilon, 1-\epsilon]\) for small \(\epsilon\) (e.g., \(10^{-15}\)) before computing deviance. Also note that deviance-based \(\chi^2\) approximations break down when expected cell counts are small (sparse data); exact tests or bootstrap are then preferred.</p>
+
+<h3>Worked example: computing deviance and McFadden's R²</h3>
+<p>Using the three-point dataset from the IRLS example with final fit \(\hat{\boldsymbol\beta} \approx (-1.33, 2.0)\) after convergence (assume converged values \(\hat p = (0.18, 0.68, 0.95)\) for illustration):</p>
+\[
+\ell(\hat{\boldsymbol\beta}) = 0 \cdot \log(0.18) + 1 \cdot \log(0.68) + 1 \cdot \log(0.95) + 1 \cdot \log(1-0.18) + 0 \cdot \log(1-0.68) + 0 \cdot \log(1-0.95)
+\]
+\[
+= \log(0.68) + \log(0.95) + \log(0.82) = -0.3857 - 0.0513 - 0.1985 = -0.6355
+\]
+\[
+D = -2 \times (-0.6355) = 1.271
+\]
+<p>Null model: \(\bar y = 2/3\), so \(\hat p_i^{\text{null}} = 2/3\) for all \(i\):</p>
+\[
+\ell_{\text{null}} = 2 \log(2/3) + 1 \log(1/3) = 2(-0.4055) + (-1.0986) = -1.9096
+\]
+\[
+D_0 = -2 \times (-1.9096) = 3.819
+\]
+<p>McFadden's \(R^2 = 1 - D/D_0 = 1 - 1.271/3.819 = 1 - 0.333 = 0.667\). The likelihood ratio test statistic \(D_0 - D = 2.548\) with \(p = 1\) df gives p-value ≈ 0.11 — marginally significant with only \(n = 3\). <strong>Sensitivity check:</strong> if the fit were perfect (\(\hat p = (0.01, 0.99, 0.99)\)), then \(\ell \approx \log(0.99) + \log(0.99) + \log(0.99) \approx -0.0303\), \(D \approx 0.061\), and McFadden's \(R^2 \approx 0.984\). Deviance drops dramatically as fit improves, but never reaches exactly zero with finite coefficients — consistent with the saturation edge case discussed earlier.</p>
+
+<h2>Decision boundary and connection to other classifiers</h2>
+<p>The classification rule \(\hat y = \mathbb{1}[\hat p \geq 0.5]\) is equivalent to \(\mathbb{1}[\hat\beta_0 + \boldsymbol\beta^\top \mathbf{x} \geq 0]\) because \(\sigma(z) \geq 0.5 \iff z \geq 0\). Therefore, <strong>logistic regression produces a linear decision boundary</strong> in feature space, identical in form to the perceptron and linear SVM. What differs is what the boundary represents: in logistic regression, it is the set of points where \(P(Y=1|X) = 0.5\); in SVM (Chapter 9), it maximizes the geometric margin; in LDA (Chapter 8), it arises from equal Gaussian class densities.</p>
+<p>This shared linearity connects logistic regression to the entire family of linear classifiers. Changing the threshold from 0.5 to another value \(t\) shifts the boundary parallel to itself (since \(\sigma(z) \geq t \iff z \geq \sigma^{-1}(t)\)), allowing cost-sensitive classification when false positives and false negatives have unequal costs. The probabilistic output also enables ranking (ROC curves, AUC) rather than hard classification, making logistic regression the default baseline for binary classification tasks in applied machine learning.</p>
+<p><strong>Common mistake:</strong> assuming that a linear decision boundary implies linearly separable data. Logistic regression fits a linear boundary regardless of whether the data are separable; when they are not, it finds the boundary that maximizes the likelihood (equivalently, minimizes logistic loss), trading off misclassifications against confidence calibration. Only in the separable case does the boundary coincide with a perfect separator (and even then, only asymptotically as \(\|\boldsymbol\beta\| \to \infty\)). Non-separable data with complex boundaries require kernel methods, trees (Chapter 10), or neural networks (Chapters 13–14).</p>
+
+<h2>Connection to the broader framework</h2>
+<p>Logistic regression is the bridge between linear models and modern classification. Chapter 1 introduced logistic loss as the canonical surrogate for 0-1 loss; this chapter derives it from first principles via maximum likelihood. Chapter 4's ridge regularization applies directly here as \(\ell_2\)-penalized logistic regression, resolving the non-existence of MLE under separation and improving calibration. Chapter 6's k-nearest neighbours estimates \(P(Y=1|X)\) nonparametrically, providing a useful contrast to logistic regression's parametric assumption. Chapter 7's naive Bayes also models \(P(Y|X)\) but via factored class conditionals rather than a direct log-odds model. Chapter 8's LDA produces a linear boundary identical in form to logistic regression's but derived from Gaussian assumptions; when those assumptions hold, LDA is more efficient, but logistic regression is more robust to their violation. Chapter 9's SVM replaces logistic loss with hinge loss, sacrificing probability calibration for margin maximization. And Chapters 13–14's neural networks stack logistic (or ReLU) activations to learn nonlinear decision boundaries, with logistic regression as the single-layer special case.</p>
+<p>Master logistic regression not merely as a classifier but as the prototype of <em>generalized linear modeling</em>: choose a link function, write the likelihood, maximize via IRLS, assess via deviance. This template recurs throughout statistics and machine learning. If you can derive the sigmoid from log-odds, implement one IRLS step by hand, compute deviance, and explain why coefficients are log-odds ratios rather than probability changes, you have internalized the core machinery that powers half the supervised learning curriculum.</p>
+
+  </article>
+  <div class="chapter-nav">
+    <a class="chapter-nav-link prev" href="../ch4/index.html">
+      <span class="chapter-nav-label">← Previous</span>
+      <span class="chapter-nav-title">4. Ridge Regression</span>
+    </a>
+    <a class="chapter-nav-link next" href="../ch6/index.html">
+      <span class="chapter-nav-label">Next →</span>
+      <span class="chapter-nav-title">6. k-Nearest Neighbour</span>
+    </a>
+  </div>
+</div>
+</main>
+<footer>
+  <div class="wrap">
+    <span>© 2026 iTube. Read forever, free forever.</span>
+    <span>No video was harmed in the making of this platform.</span>
+  </div>
+</footer>
+<script src="../../theme.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script defer src="../../app.js"></script>
+</body>
+</html>

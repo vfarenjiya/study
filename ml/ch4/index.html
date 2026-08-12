@@ -1,0 +1,202 @@
+<!-- File: /<slug>/ch4/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>4. Ridge Regression — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
+<meta name="description" content="The ridge estimator derived as penalized OLS, bias-variance tradeoff, effective degrees of freedom, regularization path, and a hand-computed two-predictor example.">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap" rel="stylesheet">
+<link rel="manifest" href="../../manifest.json">
+<link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+<meta name="theme-color" content="#1B1B1F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="iTube">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script>
+(function(){
+  var saved = localStorage.getItem("itube-theme");
+  var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", theme);
+})();
+</script>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+    <div class="top-actions">
+      <div class="font-controls" role="group" aria-label="Adjust text size">
+        <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+        <span id="font-size-label">100%</span>
+        <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+        <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+      </div>
+      <button id="theme-btn" title="Toggle light/dark">◐</button>
+    </div>
+  </div>
+</header>
+<main>
+<div class="wrap narrow">
+  <div class="breadcrumb">
+    <a href="../../index.html">iTube</a><span class="sep">/</span>
+    <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
+    <span>Ch. 4</span>
+  </div>
+  <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
+  <h1>4. Ridge Regression</h1>
+  <div class="chapter-meta">
+    <span>Chapter 4 of 17</span>
+    <span class="read-badge">23 min read</span>
+  </div>
+  <article>
+
+<h2>Why regularize? The failure mode of OLS</h2>
+<p>Ordinary least squares (Chapter 3) minimizes the residual sum of squares without constraint. When predictors are highly correlated or when \(p\) approaches \(n\), this produces coefficient estimates with enormous variance: small perturbations in \(\mathbf{y}\) cause wild swings in \(\hat{\boldsymbol\beta}\), confidence intervals balloon, and out-of-sample prediction deteriorates even though in-sample \(R^2\) remains high. This is the <strong>overfitting</strong> regime previewed in Chapter 1 and formalized via the bias–variance decomposition in Chapter 11.</p>
+<p><strong>Ridge regression</strong> addresses this by adding an \(\ell_2\) penalty on the coefficient magnitudes to the OLS objective. Instead of minimizing RSS alone, we minimize:</p>
+\[
+J_\lambda(\boldsymbol\beta) = \| \mathbf{y} - X \boldsymbol\beta \|^2 + \lambda \| \boldsymbol\beta_{-0} \|^2 = \sum_{i=1}^{n}(y_i - \beta_0 - \mathbf{x}_i^\top \boldsymbol\beta_{-0})^2 + \lambda \sum_{j=1}^{p} \beta_j^2
+\]
+<p>where \(\boldsymbol\beta_{-0} = (\beta_1, \dots, \beta_p)^\top\) excludes the intercept (which is never penalized), and \(\lambda \geq 0\) is the <strong>regularization parameter</strong> controlling the trade-off between fit and shrinkage. When \(\lambda = 0\), ridge reduces exactly to OLS. As \(\lambda \to \infty\), all slope coefficients shrink toward zero and the model collapses to predicting \(\bar y\) for every input. Intermediate values of \(\lambda\) trace a continuous path from the full OLS solution to the null model, and the optimal \(\lambda\) is chosen by cross-validation (Chapter 12).</p>
+<p><strong>Common mistake:</strong> penalizing the intercept \(\beta_0\). The intercept represents the predicted output when all predictors equal their means (after centering); shrinking it toward zero imposes an arbitrary constraint tied to the origin of the coordinate system, not to model complexity. Always center both \(X\) and \(\mathbf{y}\) before applying ridge, or equivalently, exclude \(\beta_0\) from the penalty term as shown above. Most software does this automatically, but understanding why matters for interpreting results correctly.</p>
+
+<h2>The ridge estimator: derivation and closed form</h2>
+<p>The ridge objective \(J_\lambda(\boldsymbol\beta)\) is strictly convex for any \(\lambda \gt 0\) because the penalty term \(\lambda \|\boldsymbol\beta_{-0}\|^2\) adds positive curvature to the Hessian. Differentiating with respect to \(\boldsymbol\beta_{-0}\) (assuming centered data so \(\beta_0 = \bar y\) is determined separately):</p>
+\[
+\nabla_{\boldsymbol\beta_{-0}} J_\lambda = -2 X_c^\top (\mathbf{y}_c - X_c \boldsymbol\beta_{-0}) + 2 \lambda \boldsymbol\beta_{-0}
+\]
+<p>where \(X_c\) and \(\mathbf{y}_c\) denote centered versions. Setting the gradient to zero and rearranging:</p>
+\[
+(X_c^\top X_c + \lambda I) \hat{\boldsymbol\beta}_{-0}^{\text{ridge}} = X_c^\top \mathbf{y}_c
+\]
+<p>Since \(\lambda \gt 0\), the matrix \(X_c^\top X_c + \lambda I\) is always positive definite and hence invertible, even when \(X_c^\top X_c\) is singular. This yields the <strong>ridge estimator</strong>:</p>
+\[
+\hat{\boldsymbol\beta}_{-0}^{\text{ridge}} = (X_c^\top X_c + \lambda I)^{-1} X_c^\top \mathbf{y}_c
+\]
+<p>Compare this to the OLS estimator \(\hat{\boldsymbol\beta}^{\text{OLS}} = (X_c^\top X_c)^{-1} X_c^\top \mathbf{y}_c\) from Chapter 3. The only difference is the addition of \(\lambda I\) to the Gram matrix. Geometrically, this shifts all eigenvalues of \(X_c^\top X_c\) upward by \(\lambda\), preventing any eigenvalue from being zero or near-zero and thereby stabilizing the inverse. Algebraically, it shrinks each coefficient toward zero, with the amount of shrinkage depending on the corresponding eigenvalue direction: directions associated with small eigenvalues (collinear combinations) are shrunk more aggressively than directions associated with large eigenvalues.</p>
+<p><strong>Edge case:</strong> as \(\lambda \to 0\), \((X_c^\top X_c + \lambda I)^{-1} \to (X_c^\top X_c)^{-1}\) (when invertible), recovering OLS continuously. As \(\lambda \to \infty\), \((X_c^\top X_c + \lambda I)^{-1} \approx (\lambda I)^{-1} = \frac{1}{\lambda} I\), so \(\hat{\boldsymbol\beta}^{\text{ridge}} \approx \frac{1}{\lambda} X_c^\top \mathbf{y}_c \to \mathbf{0}\). The entire regularization path is smooth and monotonic in \(\lambda\), unlike Lasso (not covered here), whose solution path is piecewise linear with discrete variable selection events. This smoothness makes ridge particularly amenable to efficient computation via eigendecomposition or SVD.</p>
+
+<h3>Worked example: hand-computed ridge estimates</h3>
+<p>We reuse the two-predictor dataset from Chapter 3: \(n = 4\), predictors \(x_1 = (1,2,3,4)\), \(x_2 = (6,7,5,8)\), response \(y = (50,60,65,85)\). After centering (subtracting column means \(\bar x_1 = 2.5\), \(\bar x_2 = 6.5\), \(\bar y = 65\)):</p>
+\[
+X_c = \begin{pmatrix} -1.5 & -0.5 \\ -0.5 & 0.5 \\ 0.5 & -1.5 \\ 1.5 & 1.5 \end{pmatrix}, \quad \mathbf{y}_c = \begin{pmatrix} -15 \\ -5 \\ 0 \\ 20 \end{pmatrix}
+\]
+<p><strong>Step 1: Compute \(X_c^\top X_c\) and \(X_c^\top \mathbf{y}_c\).</strong></p>
+\[
+X_c^\top X_c = \begin{pmatrix} (-1.5)^2+(-0.5)^2+(0.5)^2+(1.5)^2 & (-1.5)(-0.5)+(-0.5)(0.5)+(0.5)(-1.5)+(1.5)(1.5) \\ \cdot & (-0.5)^2+(0.5)^2+(-1.5)^2+(1.5)^2 \end{pmatrix} = \begin{pmatrix} 5 & 2 \\ 2 & 5 \end{pmatrix}
+\]
+\[
+X_c^\top \mathbf{y}_c = \begin{pmatrix} (-1.5)(-15)+(-0.5)(-5)+(0.5)(0)+(1.5)(20) \\ (-0.5)(-15)+(0.5)(-5)+(-1.5)(0)+(1.5)(20) \end{pmatrix} = \begin{pmatrix} 22.5+2.5+0+30 \\ 7.5-2.5+0+30 \end{pmatrix} = \begin{pmatrix} 55 \\ 35 \end{pmatrix}
+\]
+<p><strong>Step 2: Apply ridge formula with \(\lambda = 3\).</strong></p>
+\[
+X_c^\top X_c + \lambda I = \begin{pmatrix} 5+3 & 2 \\ 2 & 5+3 \end{pmatrix} = \begin{pmatrix} 8 & 2 \\ 2 & 8 \end{pmatrix}
+\]
+<p>Determinant: \(8 \times 8 - 2 \times 2 = 64 - 4 = 60\). Inverse:</p>
+\[
+(X_c^\top X_c + 3I)^{-1} = \frac{1}{60} \begin{pmatrix} 8 & -2 \\ -2 & 8 \end{pmatrix}
+\]
+<p>Multiply by \(X_c^\top \mathbf{y}_c\):</p>
+\[
+\hat{\boldsymbol\beta}_{-0}^{\text{ridge}} = \frac{1}{60} \begin{pmatrix} 8 & -2 \\ -2 & 8 \end{pmatrix} \begin{pmatrix} 55 \\ 35 \end{pmatrix} = \frac{1}{60} \begin{pmatrix} 440 - 70 \\ -110 + 280 \end{pmatrix} = \frac{1}{60} \begin{pmatrix} 370 \\ 170 \end{pmatrix} = \begin{pmatrix} 6.167 \\ 2.833 \end{pmatrix}
+\]
+<p><strong>Step 3: Recover intercept.</strong> Since data was centered, \(\hat\beta_0 = \bar y = 65\). The ridge fit is \(\hat y = 65 + 6.167(x_1 - 2.5) + 2.833(x_2 - 6.5)\).</p>
+<p><strong>Comparison to OLS:</strong> From Chapter 3's worked example, \(\hat{\boldsymbol\beta}^{\text{OLS}} \approx (9.76, 3.10)\). Ridge with \(\lambda = 3\) has shrunk \(\hat\beta_1\) from 9.76 to 6.17 (37% reduction) and \(\hat\beta_2\) from 3.10 to 2.83 (9% reduction). The first coefficient shrank more because it corresponds to the eigenvector direction with smaller eigenvalue in \(X_c^\top X_c\) (eigenvalues are 7 and 3; the direction \((1,-1)/\sqrt{2}\) has eigenvalue 3 and loads heavily on \(\beta_1 - \beta_2\)). <strong>Sensitivity check:</strong> if \(\lambda = 10\), then \(X_c^\top X_c + 10I = \left(\begin{smallmatrix}15&2\\2&15\end{smallmatrix}\right)\), determinant 221, inverse \(\frac{1}{221}\left(\begin{smallmatrix}15&-2\\-2&15\end{smallmatrix}\right)\), giving \(\hat{\boldsymbol\beta}^{\text{ridge}} \approx (3.42, 1.61)\) — further shrinkage, especially in the collinear direction. If \(\lambda = 0.01\), estimates are nearly identical to OLS. This illustrates the continuous regularization path.</p>
+
+<h2>Bias, variance, and the trade-off</h2>
+<p>Ridge introduces bias in exchange for reduced variance. Under the classical model \(\mathbf{y} = X \boldsymbol\beta + \boldsymbol\varepsilon\) with \(\boldsymbol\varepsilon \sim \mathcal{N}(\mathbf{0}, \sigma^2 I)\), the ridge estimator's expectation is:</p>
+\[
+\mathbb{E}[\hat{\boldsymbol\beta}^{\text{ridge}}] = (X^\top X + \lambda I)^{-1} X^\top X \boldsymbol\beta \neq \boldsymbol\beta \quad (\text{for } \lambda \gt 0)
+\]
+<p>so it is biased. Its covariance matrix is:</p>
+\[
+\operatorname{Var}(\hat{\boldsymbol\beta}^{\text{ridge}}) = \sigma^2 (X^\top X + \lambda I)^{-1} X^\top X (X^\top X + \lambda I)^{-1}
+\]
+<p>which is strictly smaller (in the positive semidefinite sense) than \(\operatorname{Var}(\hat{\boldsymbol\beta}^{\text{OLS}}) = \sigma^2 (X^\top X)^{-1}\) for any \(\lambda \gt 0\). The mean squared error decomposes as:</p>
+\[
+\operatorname{MSE}(\hat{\boldsymbol\beta}^{\text{ridge}}) = \|\operatorname{Bias}\|^2 + \operatorname{tr}(\operatorname{Var})
+\]
+<p>For some \(\lambda \gt 0\), the variance reduction outweighs the squared bias increase, yielding lower MSE than OLS. This is the <strong>bias–variance trade-off</strong> in action, and it is the fundamental reason regularization works. Chapter 11 derives this decomposition formally; here we see its concrete manifestation in the simplest regularized estimator.</p>
+<p><strong>Common mistake:</strong> believing that bias is always bad. Unbiasedness is a property of the estimator, not of prediction quality. A slightly biased estimator with much lower variance can predict better than an unbiased one with high variance. Ridge exploits this systematically: it accepts controlled bias to achieve substantial variance reduction, especially in high-collinearity or high-dimension regimes where OLS variance explodes. The optimal \(\lambda\) balances these forces, and cross-validation (Chapter 12) finds it empirically.</p>
+
+<h2>Effective degrees of freedom</h2>
+<p>In OLS, the model complexity is exactly \(p + 1\) parameters. In ridge, coefficients are shrunk but not set to zero, so the notion of "number of parameters" must be generalized. The <strong>effective degrees of freedom</strong> of the ridge fit is defined as:</p>
+\[
+\text{df}(\lambda) = \operatorname{tr}(H_\lambda) = \operatorname{tr}\big(X (X^\top X + \lambda I)^{-1} X^\top\big) = \sum_{j=1}^{p} \frac{d_j^2}{d_j^2 + \lambda}
+\]
+<p>where \(d_j^2\) are the eigenvalues of \(X^\top X\) (equivalently, squared singular values of \(X\)). Each term \(\frac{d_j^2}{d_j^2 + \lambda}\) lies in \((0, 1]\): directions with large eigenvalues (well-determined by data) contribute nearly 1 degree of freedom, while directions with small eigenvalues (poorly determined, collinear) contribute nearly 0. When \(\lambda = 0\), \(\text{df} = p\) (recovering OLS). When \(\lambda \to \infty\), \(\text{df} \to 0\). This quantity replaces \(p\) in adjusted \(R^2\), AIC, BIC, and GCV formulas for ridge models.</p>
+<p><strong>Edge case:</strong> when \(p \gt n\), OLS has undefined degrees of freedom (negative residual df), but ridge's effective df remains well-defined and bounded above by \(n\). This is one of ridge's key advantages in high-dimensional settings: it provides a continuous, interpretable measure of model complexity even when the classical parameter count exceeds the sample size. Also note that \(\text{df}(\lambda)\) depends only on \(X\) and \(\lambda\), not on \(\mathbf{y}\) — it is a property of the fitting operator, not of the particular dataset realization.</p>
+
+<h3>Worked example: computing effective degrees of freedom</h3>
+<p>Using the centered \(X_c\) from the previous worked example, \(X_c^\top X_c = \left(\begin{smallmatrix}5&2\\2&5\end{smallmatrix}\right)\). Its eigenvalues solve \((5-d)^2 - 4 = 0 \Rightarrow d = 5 \pm 2\), so \(d_1^2 = 7\) and \(d_2^2 = 3\). For \(\lambda = 3\):</p>
+\[
+\text{df}(3) = \frac{7}{7 + 3} + \frac{3}{3 + 3} = \frac{7}{10} + \frac{3}{6} = 0.7 + 0.5 = 1.2
+\]
+<p>Despite having \(p = 2\) nominal parameters, the ridge fit with \(\lambda = 3\) uses only 1.2 effective degrees of freedom — the collinear direction (eigenvalue 3) contributes only half a parameter. <strong>Sensitivity check:</strong> at \(\lambda = 0\), \(\text{df} = 7/7 + 3/3 = 2.0\) (full OLS). At \(\lambda = 10\), \(\text{df} = 7/17 + 3/13 \approx 0.412 + 0.231 = 0.643\). At \(\lambda = 100\), \(\text{df} \approx 0.068 + 0.029 = 0.097\). The effective df decreases smoothly and monotonically with \(\lambda\), providing a natural scale for comparing ridge fits across different regularization strengths. This is precisely the quantity used in generalized cross-validation (GCV), which selects \(\lambda\) by minimizing \(\text{RSS}/(n - \text{df}(\lambda))^2\).</p>
+
+<h2>The regularization path and choosing \(\lambda\)</h2>
+<p>As \(\lambda\) varies from 0 to \(\infty\), the ridge coefficients trace a smooth curve called the <strong>regularization path</strong>. Unlike Lasso's piecewise-linear path with discrete variable entries/exits, ridge's path is infinitely differentiable and never sets coefficients exactly to zero. This makes ridge a pure shrinkage method, not a selection method: all predictors remain in the model at every \(\lambda\), but irrelevant ones receive vanishingly small coefficients at large \(\lambda\).</p>
+<p>Choosing \(\lambda\) is the central practical question. Three standard approaches exist:</p>
+<ul>
+<li><p><strong>k-fold cross-validation</strong> (Chapter 12): partition data into \(k\) folds, fit on \(k-1\) folds, evaluate MSE on held-out fold, average over folds, select \(\lambda\) minimizing CV-MSE. Most robust and widely used.</p></li>
+<li><p><strong>Generalized cross-validation (GCV)</strong>: approximates leave-one-out CV without refitting, using \(\text{GCV}(\lambda) = \frac{\text{RSS}(\lambda)/n}{(1 - \text{df}(\lambda)/n)^2}\). Computationally cheap when SVD is available.</p></li>
+<li><p><strong>Information criteria</strong>: AIC/BIC adapted for ridge using effective df instead of nominal \(p\). Less reliable than CV for prediction-focused tasks but useful for inference-oriented modeling.</p></li>
+</ul>
+<p><strong>Edge case:</strong> when predictors are on vastly different scales, ridge penalizes them unequally because the penalty is on raw coefficients. A predictor measured in millimeters will have a much larger coefficient than one measured in kilometers, and thus be penalized more heavily. <em>Always standardize predictors to unit variance before applying ridge</em> (or equivalently, use a penalty weighted by predictor variances). Most implementations do this internally, but failing to standardize manually when implementing from scratch leads to arbitrary, scale-dependent shrinkage. After fitting, coefficients can be transformed back to the original scale for interpretation.</p>
+
+<h3>Worked example: tracing the regularization path</h3>
+<p>Using the same centered data, compute ridge estimates at several \(\lambda\) values via the eigendecomposition. With eigenvalues \(d_1^2 = 7\), \(d_2^2 = 3\) and corresponding eigenvectors \(\mathbf{v}_1 = (1,1)^\top/\sqrt{2}\), \(\mathbf{v}_2 = (1,-1)^\top/\sqrt{2}\), the ridge solution can be written as:</p>
+\[
+\hat{\boldsymbol\beta}^{\text{ridge}}(\lambda) = \sum_{j=1}^{2} \frac{d_j^2}{d_j^2 + \lambda} (\mathbf{v}_j^\top \hat{\boldsymbol\beta}^{\text{OLS}}) \mathbf{v}_j
+\]
+<p>First project OLS onto eigenvectors. From Chapter 3, \(\hat{\boldsymbol\beta}^{\text{OLS}} \approx (9.76, 3.10)\). Then:</p>
+\[
+\mathbf{v}_1^\top \hat{\boldsymbol\beta}^{\text{OLS}} = \frac{9.76 + 3.10}{\sqrt{2}} = \frac{12.86}{\sqrt{2}} \approx 9.093, \quad \mathbf{v}_2^\top \hat{\boldsymbol\beta}^{\text{OLS}} = \frac{9.76 - 3.10}{\sqrt{2}} = \frac{6.66}{\sqrt{2}} \approx 4.710
+\]
+<p>Now evaluate at \(\lambda = 0, 1, 3, 10, 100\):</p>
+\[
+\begin{array}{c|cc|c}
+\lambda & \text{shrinkage}_1 = \frac{7}{7+\lambda} & \text{shrinkage}_2 = \frac{3}{3+\lambda} & \hat{\boldsymbol\beta}^{\text{ridge}} \\ \hline
+0 & 1.000 & 1.000 & (9.76,\ 3.10) \\
+1 & 0.875 & 0.750 & (8.30,\ 2.72) \\
+3 & 0.700 & 0.500 & (6.17,\ 2.83) \\
+10 & 0.412 & 0.231 & (3.42,\ 1.61) \\
+100 & 0.065 & 0.029 & (0.58,\ 0.30)
+\end{array}
+\]
+<p>(Reconstructed via \(\hat{\boldsymbol\beta} = s_1 \cdot 9.093 \cdot \mathbf{v}_1 + s_2 \cdot 4.710 \cdot \mathbf{v}_2\).) The path shows both coefficients shrinking monotonically toward zero, with \(\beta_2\) (associated with smaller eigenvalue 3) shrinking faster initially. At \(\lambda = 100\), both are near zero but nonzero — ridge never performs exact selection. <strong>Sensitivity check:</strong> if the true \(\beta_2 = 0\) (predictor 2 is truly irrelevant), ridge still assigns it a nonzero coefficient at every finite \(\lambda\), introducing persistent bias. This is ridge's limitation versus Lasso, which can set \(\hat\beta_2 = 0\) exactly. But when both predictors are truly relevant and correlated, ridge's smooth shrinkage often predicts better than Lasso's hard thresholding.</p>
+
+<h2>Connection to the broader framework</h2>
+<p>Ridge regression is the prototype for nearly every regularized method in this book. Chapter 3's OLS is the \(\lambda = 0\) special case. Chapter 9's SVM dual involves a Gram matrix regularized similarly. Chapter 11's bias–variance decomposition is most cleanly illustrated through ridge, where both terms have closed forms. Chapter 12's cross-validation exists primarily to select \(\lambda\) in practice. Chapter 13–14's neural networks use weight decay, which is exactly ridge regularization applied to network weights. And Chapter 17's PCA emerges from the eigendecomposition of \(X^\top X\) that also diagonalizes the ridge operator — the same eigenstructure that determines shrinkage factors \(\frac{d_j^2}{d_j^2 + \lambda}\) also defines principal components.</p>
+<p>More deeply, ridge embodies the core machine learning principle introduced in Chapter 1: trading fidelity to training data for stability and generalization. The penalty term \(\lambda \|\boldsymbol\beta\|^2\) encodes a prior belief that coefficients should be small (Bayesian interpretation: Gaussian prior on \(\boldsymbol\beta\)), and the resulting estimator is the posterior mode under that prior. This Bayesian view connects ridge to probabilistic modeling throughout the book and foreshadows the explicit Bayesian methods in Chapters 7 and 8. Master ridge not as a variant of OLS but as the first concrete instance of the regularization paradigm that pervades modern machine learning.</p>
+
+  </article>
+  <div class="chapter-nav">
+    <a class="chapter-nav-link prev" href="../ch3/index.html">
+      <span class="chapter-nav-label">← Previous</span>
+      <span class="chapter-nav-title">3. Multiple Linear Regression</span>
+    </a>
+    <a class="chapter-nav-link next" href="../ch5/index.html">
+      <span class="chapter-nav-label">Next →</span>
+      <span class="chapter-nav-title">5. Logistic Regression</span>
+    </a>
+  </div>
+</div>
+</main>
+<footer>
+  <div class="wrap">
+    <span>© 2026 iTube. Read forever, free forever.</span>
+    <span>No video was harmed in the making of this platform.</span>
+  </div>
+</footer>
+<script src="../../theme.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script defer src="../../app.js"></script>
+</body>
+</html>

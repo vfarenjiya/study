@@ -1,0 +1,172 @@
+<!-- File: /<slug>/ch10/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>10. Decision Trees — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
+<meta name="description" content="Recursive partitioning, Gini impurity and entropy splitting criteria, pruning strategies, overfitting diagnosis, and a hand-built tree on mixed data with sensitivity analysis.">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap" rel="stylesheet">
+<link rel="manifest" href="../../manifest.json">
+<link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+<meta name="theme-color" content="#1B1B1F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="iTube">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script>
+(function(){
+  var saved = localStorage.getItem("itube-theme");
+  var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", theme);
+})();
+</script>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+    <div class="top-actions">
+      <div class="font-controls" role="group" aria-label="Adjust text size">
+        <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+        <span id="font-size-label">100%</span>
+        <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+        <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+      </div>
+      <button id="theme-btn" title="Toggle light/dark">◐</button>
+    </div>
+  </div>
+</header>
+<main>
+<div class="wrap narrow">
+  <div class="breadcrumb">
+    <a href="../../index.html">iTube</a><span class="sep">/</span>
+    <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
+    <span>Ch. 10</span>
+  </div>
+  <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
+  <h1>10. Decision Trees</h1>
+  <div class="chapter-meta">
+    <span>Chapter 10 of 17</span>
+    <span class="read-badge">24 min read</span>
+  </div>
+  <article>
+
+<h2>Recursive partitioning and axis-aligned boundaries</h2>
+<p><strong>Decision trees</strong> learn a hierarchy of simple decision rules that recursively partition the feature space into rectangular regions, each assigned a single prediction. For classification, each leaf stores a class label (typically the majority class of training points reaching it); for regression, each leaf stores a value (typically the mean response). The resulting decision boundary is <strong>axis-aligned</strong>: each split tests a single feature against a threshold (\(x_j \leq t\)), producing boundaries parallel to coordinate axes. This contrasts sharply with the oblique boundaries of logistic regression (Chapter 5), LDA (Chapter 8), and SVMs (Chapter 9).</p>
+<p>The tree is built greedily via <strong>recursive binary splitting</strong>. At each node, the algorithm evaluates all possible splits across all features, selects the one that maximizes a chosen <strong>splitting criterion</strong> (measuring improvement in purity or reduction in error), partitions the data accordingly, and recurses on each child. Growth stops when a stopping condition is met: minimum node size, maximum depth, no improvement from any split, or pure node. This top-down induction is fast (\(O(np \log n)\) per level typically) and requires no feature scaling or distributional assumptions.</p>
+<p><strong>Common mistake:</strong> assuming decision trees are inherently interpretable because they produce human-readable rules. While shallow trees are interpretable, deep trees grown to minimize training error can have hundreds of nodes with complex interactions that defy comprehension. Interpretability is a property of <em>regularized</em> trees (via pruning or depth limits), not of the algorithm itself. Always report tree depth and number of leaves alongside accuracy; a 50-node tree achieving 85% accuracy may be less useful than a 5-node tree achieving 83%, depending on the application’s need for transparency versus performance.</p>
+
+<h2>Splitting criteria: Gini impurity and entropy</h2>
+<p>The splitting criterion quantifies how much a candidate split improves the homogeneity of class labels within child nodes relative to the parent. Two criteria dominate practice for classification:</p>
+<h3>Gini impurity</h3>
+<p>For a node containing samples with class proportions \(p_1, \dots, p_K\), Gini impurity is:</p>
+\[
+G = \sum_{k=1}^{K} p_k (1 - p_k) = 1 - \sum_{k=1}^{K} p_k^2
+\]
+<p>This equals the probability that two randomly drawn samples from the node have different classes. \(G = 0\) when the node is pure (all one class); \(G\) is maximized at \(1 - 1/K\) under uniform class distribution. The Gini gain of a split is the weighted decrease in impurity:</p>
+\[
+\Delta G = G_{\text{parent}} - \left( \frac{n_L}{n} G_L + \frac{n_R}{n} G_R \right)
+\]
+<p>where \(n_L, n_R\) are child sample sizes and \(G_L, G_R\) their impurities. CART (the most common tree algorithm) uses Gini by default due to computational efficiency (no logarithms).</p>
+<h3>Entropy and information gain</h3>
+<p>Entropy measures uncertainty in bits (or nats):</p>
+\[
+H = -\sum_{k=1}^{K} p_k \log_2 p_k
+\]
+<p>\(H = 0\) for pure nodes; \(H = \log_2 K\) for uniform distributions. Information gain is the entropy reduction:</p>
+\[
+\Delta H = H_{\text{parent}} - \left( \frac{n_L}{n} H_L + \frac{n_R}{n} H_R \right)
+\]
+<p>ID3 and C4.5 use entropy/information gain. In practice, Gini and entropy yield nearly identical trees; differences arise mainly when class distributions are highly skewed or when splits produce very unbalanced children. Entropy penalizes unbalanced splits slightly more, which can be preferable when balanced subtrees aid interpretability.</p>
+<p><strong>Edge case:</strong> both criteria are biased toward features with many distinct values (especially continuous features with many candidate thresholds). A feature with unique values per sample can always achieve perfect purity by isolating each point, regardless of predictive relevance. C4.5 addresses this via <strong>gain ratio</strong>, normalizing information gain by the intrinsic information of the split itself. Modern implementations (e.g., scikit-learn) mitigate bias via minimum samples per leaf constraints rather than gain ratio. Always validate feature importance rankings against domain knowledge or permutation tests rather than trusting raw split frequencies.</p>
+
+<h3>Worked example: computing Gini and entropy gains</h3>
+<p>Parent node: 10 samples, 6 class A, 4 class B. \(p_A = 0.6, p_B = 0.4\).</p>
+\[
+G_{\text{parent}} = 1 - (0.6^2 + 0.4^2) = 1 - (0.36 + 0.16) = 0.48
+\]
+\[
+H_{\text{parent}} = -(0.6 \log_2 0.6 + 0.4 \log_2 0.4) = -(0.6 \cdot (-0.737) + 0.4 \cdot (-1.322)) = 0.442 + 0.529 = 0.971 \text{ bits}
+\]
+<p>Candidate split produces left child (4A, 1B) and right child (2A, 3B). Left: \(p_A = 0.8, p_B = 0.2\); \(G_L = 1 - (0.64 + 0.04) = 0.32\); \(H_L = -(0.8 \log_2 0.8 + 0.2 \log_2 0.2) = 0.722\). Right: \(p_A = 0.4, p_B = 0.6\); \(G_R = 0.48\); \(H_R = 0.971\). Weighted averages:</p>
+\[
+G_{\text{children}} = \frac{5}{10}(0.32) + \frac{5}{10}(0.48) = 0.16 + 0.24 = 0.40 \quad \Rightarrow \quad \Delta G = 0.48 - 0.40 = 0.08
+\]
+\[
+H_{\text{children}} = \frac{5}{10}(0.722) + \frac{5}{10}(0.971) = 0.361 + 0.486 = 0.847 \quad \Rightarrow \quad \Delta H = 0.971 - 0.847 = 0.124 \text{ bits}
+\]
+<p>Both criteria favor this split over alternatives with lower gains. <strong>Sensitivity check:</strong> if the split instead produced (5A,0B) and (1A,4B), left would be pure (\(G_L=0, H_L=0\)), right \(G_R=0.32, H_R=0.722\). Then \(\Delta G = 0.48 - [0.5(0)+0.5(0.32)] = 0.32\); \(\Delta H = 0.971 - [0+0.361] = 0.610\). Much larger gains reflect the near-perfect separation. Note that Gini and entropy rank splits identically here, but with three+ classes or extreme imbalance, rankings can diverge slightly.</p>
+
+<h2>Regression trees and variance reduction</h2>
+<p>For regression, splitting criteria measure reduction in response variability rather than class impurity. The standard criterion is <strong>mean squared error reduction</strong>:</p>
+\[
+\Delta \text{MSE} = \text{MSE}_{\text{parent}} - \left( \frac{n_L}{n} \text{MSE}_L + \frac{n_R}{n} \text{MSE}_R \right)
+\]
+<p>where \(\text{MSE} = \frac{1}{n}\sum (y_i - \bar y)^2\) within each node. Equivalently, this maximizes the between-group sum of squares. Leaf predictions are the local mean \(\bar y\), making regression trees piecewise constant approximators. Unlike linear models (Chapters 2–4), trees capture nonlinearities and interactions automatically without explicit specification, but produce discontinuous predictions at split boundaries.</p>
+<p><strong>Edge case:</strong> MSE-based splits are sensitive to outliers, just like OLS. A single extreme \(y\)-value can dominate the variance reduction calculation and induce splits that isolate it, harming generalization. Robust alternatives include mean absolute error reduction or Huber loss, though these are less commonly implemented. Also note that regression trees cannot extrapolate beyond the range of training responses; predictions at test points outside the training feature bounds default to the nearest leaf’s mean, which may be wildly inaccurate. Always check feature ranges at prediction time.</p>
+
+<h2>Overfitting and pruning strategies</h2>
+<p>Unpruned trees grown until purity or minimum node size tend to <strong>overfit</strong> severely: they memorize noise and idiosyncrasies of the training set, producing deep, bushy structures with poor generalization. Training error decreases monotonically with tree size, but test error follows a U-shape — the classic bias-variance trade-off (Chapter 11). Three main strategies control complexity:</p>
+<h3>Pre-pruning (early stopping)</h3>
+<p>Halt growth based on heuristics: maximum depth, minimum samples per node/leaf, minimum impurity decrease per split. Simple and computationally cheap, but myopic: a split with negligible immediate gain might enable highly informative subsequent splits. Optimal thresholds require cross-validation (Chapter 12).</p>
+<h3>Post-pruning (cost-complexity pruning)</h3>
+<p>Grow a full tree, then prune back using cost-complexity:</p>
+\[
+R_\alpha(T) = R(T) + \alpha |T|
+\]
+<p>where \(R(T)\) is training error (misclassification rate or MSE), \(|T|\) is number of leaves, and \(\alpha \geq 0\) penalizes complexity. For each \(\alpha\), find the subtree minimizing \(R_\alpha\) via weakest-link pruning (iteratively collapsing the internal node whose removal increases \(R\) least per leaf removed). Select \(\alpha\) by cross-validation. This is CART’s standard approach and generally outperforms pre-pruning because it considers global structure before simplifying.</p>
+<h3>Minimum description length and Bayesian approaches</h3>
+<p>MDL/Bayesian methods penalize tree complexity via encoding length or prior probabilities, offering principled alternatives to CV-tuned \(\alpha\). Less common in practice but theoretically elegant.</p>
+<p><strong>Common mistake:</strong> relying solely on training error or in-sample metrics to select tree size. Always use held-out validation or cross-validation. Also beware that pruned trees can still overfit if the validation set is small or non-representative; nested cross-validation provides more reliable estimates when data are limited.</p>
+
+<h3>Worked example: cost-complexity pruning path</h3>
+<p>Suppose a fully grown tree has 7 leaves with training misclassification rates summing to \(R(T) = 0.05\) (5 errors out of 100). Weakest-link pruning identifies collapse candidates with associated \(\alpha\) values where collapsing becomes optimal:</p>
+\[
+\begin{array}{c|c|c}
+\text{Subtree} & |T| & R(T) \\ \hline
+T_0 \text{ (full)} & 7 & 0.05 \\
+T_1 & 5 & 0.07 \\
+T_2 & 3 & 0.10 \\
+T_3 \text{ (root only)} & 1 & 0.20
+\end{array}
+\]
+<p>Effective \(\alpha\) for each transition: \(\alpha_1 = (0.07 - 0.05)/(7 - 5) = 0.01\); \(\alpha_2 = (0.10 - 0.07)/(5 - 3) = 0.015\); \(\alpha_3 = (0.20 - 0.10)/(3 - 1) = 0.05\). For \(\alpha < 0.01\), keep full tree. For \(0.01 \leq \alpha < 0.015\), use \(T_1\). For \(0.015 \leq \alpha < 0.05\), use \(T_2\). For \(\alpha \geq 0.05\), use root-only. Cross-validation selects the \(\alpha\) (and corresponding subtree) with lowest validation error. <strong>Sensitivity check:</strong> if validation errors were [0.12, 0.09, 0.08, 0.18] for \(T_0,T_1,T_2,T_3\), then \(T_2\) wins despite higher training error than \(T_0\) — illustrating how pruning trades fit for generalization. If validation set were tiny and gave [0.06, 0.09, 0.11, 0.15], \(T_0\) would win spuriously; larger validation sets stabilize selection.</p>
+
+<h2>Feature importance and interaction detection</h2>
+<p>Decision trees naturally capture <strong>feature interactions</strong>: a split on \(x_j\) followed by a split on \(x_k\) in one branch but not another encodes a conditional dependency. This is impossible in additive models without explicit interaction terms. Feature importance is typically measured by total impurity decrease attributable to each feature across all splits where it was used, weighted by node sample sizes. Alternatively, permutation importance (shuffle feature values, measure accuracy drop) avoids biases toward high-cardinality features.</p>
+<p><strong>Edge case:</strong> correlated features share importance arbitrarily; if \(x_1\) and \(x_2\) are perfectly correlated, the tree picks one at random for each split, splitting importance roughly equally even if only one is causally relevant. Permutation importance also suffers: shuffling \(x_1\) leaves \(x_2\) intact, so accuracy drops little, understating true importance. Grouped permutation or conditional permutation addresses this. Also note that importance reflects predictive utility within the fitted tree, not causal effect; confounded features can appear important without being causally relevant.</p>
+
+<h2>Connection to the broader framework</h2>
+<p>Decision trees complement the linear and kernel-based methods of earlier chapters. Where logistic regression (Chapter 5) and SVMs (Chapter 9) produce smooth or margin-maximizing boundaries, trees produce piecewise-constant partitions adaptive to local structure. Where LDA (Chapter 8) assumes Gaussian class densities, trees are fully nonparametric. Where kNN (Chapter 6) stores all data, trees compress data into hierarchical rules. Chapter 11’s bias-variance decomposition explains why unpruned trees have low bias but high variance, and why pruning shifts this balance. Chapter 12’s cross-validation is essential for selecting pruning parameters and comparing trees to other models. And ensemble methods (not covered here but foreshadowed) — bagging, random forests, boosting — combine many weak trees to overcome individual instability while retaining flexibility, dominating tabular data competitions and practical applications.</p>
+<p>Master decision trees not as standalone predictors (they rarely win alone) but as the building blocks of modern ensembles and as the clearest illustration of greedy hierarchical learning. If you can compute Gini/entropy gains by hand, trace a pruning path, diagnose overfitting from tree structure, and explain when axis-aligned boundaries help or hurt relative to linear separators, you have internalized the nonparametric, partition-based paradigm that complements the geometric and probabilistic views of earlier chapters.</p>
+
+  </article>
+  <div class="chapter-nav">
+    <a class="chapter-nav-link prev" href="../ch9/index.html">
+      <span class="chapter-nav-label">← Previous</span>
+      <span class="chapter-nav-title">9. Support Vector Machine</span>
+    </a>
+    <a class="chapter-nav-link next" href="../ch11/index.html">
+      <span class="chapter-nav-label">Next →</span>
+      <span class="chapter-nav-title">11. Bias-Variance Trade-off</span>
+    </a>
+  </div>
+</div>
+</main>
+<footer>
+  <div class="wrap">
+    <span>© 2026 iTube. Read forever, free forever.</span>
+    <span>No video was harmed in the making of this platform.</span>
+  </div>
+</footer>
+<script src="../../theme.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script defer src="../../app.js"></script>
+</body>
+</html>

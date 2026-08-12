@@ -1,0 +1,187 @@
+<!-- File: /<slug>/ch8/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>8. Linear Discriminant Analysis — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
+<meta name="description" content="LDA derived from Gaussian class densities, pooled covariance estimation, Fisher's criterion, connection to logistic regression, and a hand-computed two-class example with eigenanalysis.">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap" rel="stylesheet">
+<link rel="manifest" href="../../manifest.json">
+<link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+<meta name="theme-color" content="#1B1B1F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="iTube">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script>
+(function(){
+  var saved = localStorage.getItem("itube-theme");
+  var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", theme);
+})();
+</script>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+    <div class="top-actions">
+      <div class="font-controls" role="group" aria-label="Adjust text size">
+        <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+        <span id="font-size-label">100%</span>
+        <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+        <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+      </div>
+      <button id="theme-btn" title="Toggle light/dark">◐</button>
+    </div>
+  </div>
+</header>
+<main>
+<div class="wrap narrow">
+  <div class="breadcrumb">
+    <a href="../../index.html">iTube</a><span class="sep">/</span>
+    <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
+    <span>Ch. 8</span>
+  </div>
+  <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
+  <h1>8. Linear Discriminant Analysis</h1>
+  <div class="chapter-meta">
+    <span>Chapter 8 of 17</span>
+    <span class="read-badge">25 min read</span>
+  </div>
+  <article>
+
+<h2>The generative Gaussian model</h2>
+<p><strong>Linear Discriminant Analysis</strong> (LDA) is a generative classifier that models each class as a multivariate Gaussian distribution with a <em>shared</em> covariance matrix. For \(K\) classes in \(\mathbb{R}^p\), LDA assumes:</p>
+\[
+X \mid Y = k \sim \mathcal{N}(\boldsymbol\mu_k, \Sigma), \quad k = 1, \dots, K
+\]
+<p>where \(\boldsymbol\mu_k \in \mathbb{R}^p\) is the class-specific mean vector and \(\Sigma \in \mathbb{R}^{p \times p}\) is the common covariance matrix. Combined with class priors \(\pi_k = P(Y = k)\), this fully specifies the joint distribution \(P(X, Y)\). Classification proceeds via Bayes' rule exactly as in Chapter 7's naive Bayes, but now using the full multivariate Gaussian density rather than factored univariate densities:</p>
+\[
+P(Y = k \mid X = \mathbf{x}) \propto \pi_k \cdot \frac{1}{(2\pi)^{p/2} |\Sigma|^{1/2}} \exp\left(-\frac{1}{2}(\mathbf{x} - \boldsymbol\mu_k)^\top \Sigma^{-1} (\mathbf{x} - \boldsymbol\mu_k)\right)
+\]
+<p>Taking logs and dropping terms constant across \(k\) (the normalizing constant and \(|\Sigma|\)), the discriminant function for class \(k\) simplifies to:</p>
+\[
+\delta_k(\mathbf{x}) = -\frac{1}{2}(\mathbf{x} - \boldsymbol\mu_k)^\top \Sigma^{-1} (\mathbf{x} - \boldsymbol\mu_k) + \log \pi_k
+\]
+<p>Expanding the quadratic form: \((\mathbf{x} - \boldsymbol\mu_k)^\top \Sigma^{-1} (\mathbf{x} - \boldsymbol\mu_k) = \mathbf{x}^\top \Sigma^{-1} \mathbf{x} - 2\boldsymbol\mu_k^\top \Sigma^{-1} \mathbf{x} + \boldsymbol\mu_k^\top \Sigma^{-1} \boldsymbol\mu_k\). The term \(\mathbf{x}^\top \Sigma^{-1} \mathbf{x}\) does not depend on \(k\) and cancels in argmax comparison. What remains is <em>linear</em> in \(\mathbf{x}\):</p>
+\[
+\delta_k(\mathbf{x}) = \underbrace{\boldsymbol\mu_k^\top \Sigma^{-1}}_{\mathbf{w}_k^\top} \mathbf{x} - \underbrace{\frac{1}{2}\boldsymbol\mu_k^\top \Sigma^{-1} \boldsymbol\mu_k + \log \pi_k}_{b_k}
+\]
+<p>This linearity in \(\mathbf{x}\) is why it is called <em>linear</em> discriminant analysis. The decision boundary between any two classes \(k\) and \(\ell\) is the hyperplane \(\delta_k(\mathbf{x}) = \delta_\ell(\mathbf{x})\), which is affine in \(\mathbf{x}\).</p>
+<p><strong>Common mistake:</strong> confusing LDA with PCA (Chapter 17). Both involve eigendecompositions and produce linear projections, but their objectives are fundamentally different. PCA maximizes total variance unsupervised; LDA maximizes separation between class means relative to within-class scatter in a supervised manner. PCA directions may align poorly with class boundaries if most variance lies within classes rather than between them. Always use LDA when labels are available and classification is the goal.</p>
+
+<h2>Parameter estimation and pooled covariance</h2>
+<p>LDA parameters are estimated by maximum likelihood from labeled training data. Class means and priors are straightforward:</p>
+\[
+\hat{\boldsymbol\mu}_k = \frac{1}{n_k} \sum_{i: y_i = k} \mathbf{x}_i, \qquad \hat\pi_k = \frac{n_k}{n}
+\]
+<p>where \(n_k\) is the number of observations in class \(k\). The shared covariance matrix is estimated by the <strong>pooled sample covariance</strong>:</p>
+\[
+\hat\Sigma = \frac{1}{n - K} \sum_{k=1}^{K} \sum_{i: y_i = k} (\mathbf{x}_i - \hat{\boldsymbol\mu}_k)(\mathbf{x}_i - \hat{\boldsymbol\mu}_k)^\top
+\]
+<p>This pools the within-class scatter matrices across all classes, weighted by degrees of freedom. The denominator \(n - K\) (rather than \(n\)) provides an unbiased estimate under the Gaussian assumption. Pooling is what enforces the shared-covariance constraint; without it, each class would have its own \(\Sigma_k\), yielding Quadratic Discriminant Analysis (QDA) with curved decision boundaries.</p>
+<p><strong>Edge case:</strong> when \(p > n - K\), \(\hat\Sigma\) is singular (rank at most \(n - K < p\)) and non-invertible. This is the high-dimensional regime where classical LDA breaks down. Remedies include: (1) regularized LDA, replacing \(\hat\Sigma\) with \((1-\alpha)\hat\Sigma + \alpha I\) for \(\alpha \in [0,1]\) (analogous to ridge regularization in Chapter 4); (2) diagonal LDA, assuming \(\Sigma\) is diagonal (equivalent to Gaussian naive Bayes from Chapter 7); (3) dimensionality reduction via PCA before LDA; or (4) penalized LDA with shrinkage estimators. Regularized LDA with \(\alpha\) tuned by cross-validation (Chapter 12) is the most widely used approach in practice.</p>
+
+<h3>Worked example: hand-computed two-class LDA</h3>
+<p>Consider \(p = 2\) features, \(K = 2\) classes, with \(n_1 = n_2 = 3\) observations each:</p>
+\[
+\text{Class 1: } \{(1,2), (2,3), (3,2)\}, \qquad \text{Class 2: } \{(4,5), (5,6), (6,5)\}
+\]
+<p><strong>Step 1: Compute class means.</strong></p>
+\[
+\hat{\boldsymbol\mu}_1 = \left(\frac{1+2+3}{3}, \frac{2+3+2}{3}\right) = (2, 7/3), \qquad \hat{\boldsymbol\mu}_2 = \left(\frac{4+5+6}{3}, \frac{5+6+5}{3}\right) = (5, 16/3)
+\]
+<p><strong>Step 2: Compute within-class scatter matrices.</strong> For class 1, deviations from \(\hat{\boldsymbol\mu}_1\): \((-1, -1/3), (0, 2/3), (1, -1/3)\). Scatter:</p>
+\[
+S_1 = \begin{pmatrix} (-1)^2+0^2+1^2 & (-1)(-1/3)+0(2/3)+1(-1/3) \\ \cdot & (-1/3)^2+(2/3)^2+(-1/3)^2 \end{pmatrix} = \begin{pmatrix} 2 & 0 \\ 0 & 6/9 \end{pmatrix} = \begin{pmatrix} 2 & 0 \\ 0 & 2/3 \end{pmatrix}
+\]
+<p>For class 2, deviations from \(\hat{\boldsymbol\mu}_2\): \((-1, -1/3), (0, 2/3), (1, -1/3)\) — identical structure! So \(S_2 = S_1\). Pooled covariance:</p>
+\[
+\hat\Sigma = \frac{S_1 + S_2}{n - K} = \frac{2 \begin{pmatrix} 2 & 0 \\ 0 & 2/3 \end{pmatrix}}{6 - 2} = \frac{1}{4} \begin{pmatrix} 4 & 0 \\ 0 & 4/3 \end{pmatrix} = \begin{pmatrix} 1 & 0 \\ 0 & 1/3 \end{pmatrix}
+\]
+<p><strong>Step 3: Compute \(\hat\Sigma^{-1}\) and discriminant coefficients.</strong> \(\hat\Sigma^{-1} = \operatorname{diag}(1, 3)\). With equal priors \(\hat\pi_1 = \hat\pi_2 = 0.5\), \(\log \pi_k\) terms cancel. Discriminant direction:</p>
+\[
+\mathbf{w} = \hat\Sigma^{-1}(\hat{\boldsymbol\mu}_2 - \hat{\boldsymbol\mu}_1) = \begin{pmatrix} 1 & 0 \\ 0 & 3 \end{pmatrix} \begin{pmatrix} 3 \\ 3 \end{pmatrix} = \begin{pmatrix} 3 \\ 9 \end{pmatrix}
+\]
+<p>The decision boundary satisfies \(\mathbf{w}^\top \mathbf{x} = c\) where \(c = \frac{1}{2}(\hat{\boldsymbol\mu}_1 + \hat{\boldsymbol\mu}_2)^\top \hat\Sigma^{-1}(\hat{\boldsymbol\mu}_2 - \hat{\boldsymbol\mu}_1)\) (midpoint in Mahalanobis space). Computing: midpoint = \((3.5, 23/6)\), so \(c = 3(3.5) + 9(23/6) = 10.5 + 34.5 = 45\). Boundary: \(3x_1 + 9x_2 = 45\), or \(x_1 + 3x_2 = 15\). <strong>Sensitivity check:</strong> if class 2 were shifted to \(\{(4,4),(5,5),(6,4)\}\), then \(\hat{\boldsymbol\mu}_2 = (5, 13/3)\), difference = \((3, 2)\), \(\mathbf{w} = (3, 6)\), boundary slope changes from \(-1/3\) to \(-1/2\). The second feature's reduced separation decreases its weight in the discriminant, illustrating how LDA automatically adapts to feature informativeness through \(\hat\Sigma^{-1}\).</p>
+
+<h2>Fisher’s criterion and the geometric view</h2>
+<p>An alternative derivation of LDA, due to R.A. Fisher, frames the problem as finding a projection direction \(\mathbf{w} \in \mathbb{R}^p\) that maximizes the ratio of between-class variance to within-class variance in the projected space. Define the <strong>between-class scatter matrix</strong> and <strong>within-class scatter matrix</strong>:</p>
+\[
+S_B = \sum_{k=1}^{K} n_k (\hat{\boldsymbol\mu}_k - \hat{\boldsymbol\mu})(\hat{\boldsymbol\mu}_k - \hat{\boldsymbol\mu})^\top, \qquad S_W = \sum_{k=1}^{K} \sum_{i: y_i=k} (\mathbf{x}_i - \hat{\boldsymbol\mu}_k)(\mathbf{x}_i - \hat{\boldsymbol\mu}_k)^\top
+\]
+<p>where \(\hat{\boldsymbol\mu}\) is the overall mean. Note that \(S_W = (n-K)\hat\Sigma\). Fisher’s criterion seeks \(\mathbf{w}\) maximizing:</p>
+\[
+J(\mathbf{w}) = \frac{\mathbf{w}^\top S_B \mathbf{w}}{\mathbf{w}^\top S_W \mathbf{w}}
+\]
+<p>This is a generalized Rayleigh quotient. Setting the gradient to zero yields the generalized eigenvalue problem:</p>
+\[
+S_B \mathbf{w} = \lambda S_W \mathbf{w} \quad \Longleftrightarrow \quad S_W^{-1} S_B \mathbf{w} = \lambda \mathbf{w}
+\]
+<p>For \(K = 2\), \(S_B\) has rank 1 (it is proportional to \((\hat{\boldsymbol\mu}_2 - \hat{\boldsymbol\mu}_1)(\hat{\boldsymbol\mu}_2 - \hat{\boldsymbol\mu}_1)^\top\)), so there is only one nonzero eigenvalue, and the corresponding eigenvector is proportional to \(S_W^{-1}(\hat{\boldsymbol\mu}_2 - \hat{\boldsymbol\mu}_1)\) — exactly the LDA direction derived via Bayes' rule above. For \(K > 2\), there are up to \(K-1\) useful discriminant directions, enabling visualization in low-dimensional subspaces.</p>
+<p><strong>Edge case:</strong> when \(S_W\) is singular (\(p > n - K\)), the generalized eigenvalue problem is ill-posed. Regularization replaces \(S_W\) with \(S_W + \epsilon I\), equivalent to regularized LDA discussed earlier. Also note that Fisher's formulation reveals LDA's limitation: it captures at most \(K-1\) dimensions of class separation. When \(K = 2\), all discriminatory information lies along a single line; higher-dimensional structure within classes is discarded. This motivates nonlinear extensions (kernel LDA) or alternative methods when class boundaries are complex.</p>
+
+<h3>Worked example: Fisher’s criterion computation</h3>
+<p>Using the same two-class dataset from the previous example. Overall mean: \(\hat{\boldsymbol\mu} = (3.5, 23/6)\). Between-class scatter:</p>
+\[
+S_B = 3(\hat{\boldsymbol\mu}_1 - \hat{\boldsymbol\mu})(\hat{\boldsymbol\mu}_1 - \hat{\boldsymbol\mu})^\top + 3(\hat{\boldsymbol\mu}_2 - \hat{\boldsymbol\mu})(\hat{\boldsymbol\mu}_2 - \hat{\boldsymbol\mu})^\top
+\]
+<p>Since \(\hat{\boldsymbol\mu}_1 - \hat{\boldsymbol\mu} = -(3/2, -3/2)\) and \(\hat{\boldsymbol\mu}_2 - \hat{\boldsymbol\mu} = (3/2, 3/2)\) (wait, recalculate: \(\hat{\boldsymbol\mu}_1 = (2, 7/3)\), \(\hat{\boldsymbol\mu} = (3.5, 23/6) = (7/2, 23/6)\). Difference: \((2-7/2, 7/3-23/6) = (-3/2, 14/6-23/6) = (-3/2, -9/6) = (-3/2, -3/2)\). Similarly \(\hat{\boldsymbol\mu}_2 - \hat{\boldsymbol\mu} = (3/2, 3/2)\). Good.) Then:</p>
+\[
+S_B = 3 \begin{pmatrix} 9/4 & 9/4 \\ 9/4 & 9/4 \end{pmatrix} + 3 \begin{pmatrix} 9/4 & 9/4 \\ 9/4 & 9/4 \end{pmatrix} = 6 \begin{pmatrix} 9/4 & 9/4 \\ 9/4 & 9/4 \end{pmatrix} = \begin{pmatrix} 27/2 & 27/2 \\ 27/2 & 27/2 \end{pmatrix}
+\]
+<p>Within-class scatter: \(S_W = 4\hat\Sigma = \operatorname{diag}(4, 4/3)\). Solve \(S_W^{-1} S_B \mathbf{w} = \lambda \mathbf{w}\):</p>
+\[
+S_W^{-1} S_B = \begin{pmatrix} 1/4 & 0 \\ 0 & 3/4 \end{pmatrix} \begin{pmatrix} 27/2 & 27/2 \\ 27/2 & 27/2 \end{pmatrix} = \begin{pmatrix} 27/8 & 27/8 \\ 81/8 & 81/8 \end{pmatrix}
+\]
+<p>Eigenvalues: trace = \(27/8 + 81/8 = 108/8 = 13.5\); determinant = 0 (rank 1). So \(\lambda_1 = 13.5\), \(\lambda_2 = 0\). Eigenvector for \(\lambda_1\): solve \((27/8)w_1 + (27/8)w_2 = 13.5 w_1 \Rightarrow 27w_1 + 27w_2 = 108w_1 \Rightarrow 27w_2 = 81w_1 \Rightarrow w_2 = 3w_1\). Direction: \((1, 3)^\top\), matching the Bayes-derived \(\mathbf{w} = (3, 9)^\top\) up to scaling. Fisher’s criterion value: \(J = \lambda_1 = 13.5\), quantifying the separation achieved. <strong>Sensitivity check:</strong> if within-class variance doubled (\(S_W \to 2S_W\)), then \(\lambda_1 \to 6.75\) — halved separation score, reflecting degraded signal-to-noise ratio despite unchanged class means.</p>
+
+<h2>Connection to logistic regression</h2>
+<p>A remarkable theoretical result connects LDA to logistic regression (Chapter 5). Under the LDA assumptions (Gaussian classes with shared covariance), the posterior probability takes the form:</p>
+\[
+P(Y = 1 \mid X = \mathbf{x}) = \frac{1}{1 + \exp(-(\beta_0 + \boldsymbol\beta^\top \mathbf{x}))}
+\]
+<p>for specific \(\beta_0, \boldsymbol\beta\) determined by \(\boldsymbol\mu_1, \boldsymbol\mu_2, \Sigma, \pi_1, \pi_2\). That is, <em>LDA implies a logistic regression model</em>. The converse is not true: logistic regression makes no distributional assumptions about \(X\) and can fit data where LDA's Gaussian assumption fails badly.</p>
+<p>This connection explains empirical observations: when LDA's assumptions hold approximately, it is more statistically efficient than logistic regression (fewer parameters, faster convergence, better small-sample performance). When assumptions fail (heavy tails, multimodal classes, unequal covariances), logistic regression typically wins because it estimates the decision boundary directly without modeling the marginal distribution of \(X\). In practice, try both and select by cross-validation (Chapter 12).</p>
+<p><strong>Common mistake:</strong> interpreting LDA's Gaussian assumption as requiring features to be marginally normal. What matters is that the <em>class-conditional</em> distributions are approximately Gaussian with similar covariance. Marginal distributions can be highly non-normal (e.g., mixtures of Gaussians from different classes) while LDA still performs well. Conversely, marginally normal features can violate the shared-covariance assumption severely. Always diagnose via residual plots and Q-Q plots within each class, not marginal histograms.</p>
+
+<h2>Multiclass LDA and dimensionality reduction</h2>
+<p>For \(K > 2\) classes, \(S_W^{-1} S_B\) has rank at most \(K - 1\), yielding up to \(K - 1\) nonzero eigenvalues and corresponding discriminant directions. These directions span the subspace that maximally separates class means relative to within-class scatter. Projecting data onto the top \(d \leq K-1\) eigenvectors provides a supervised dimensionality reduction that preserves class structure — unlike PCA (Chapter 17), which ignores labels entirely.</p>
+<p>This dual role (classifier + dimensionality reducer) makes LDA valuable for visualization: projecting high-dimensional data onto the first two discriminant axes often reveals class clusters that PCA misses. However, the \(K-1\) limit means LDA cannot reduce to more than \(K-1\) dimensions; for \(K = 2\), only one discriminant axis exists. When more dimensions are needed (e.g., for downstream modeling), combine LDA with PCA: apply PCA first to reduce ambient dimensionality below \(n-K\), then apply LDA for supervised separation.</p>
+<p><strong>Edge case:</strong> when classes are nested or concentric (same mean, different covariances), \(S_B \approx 0\) and LDA finds no useful direction — the shared-covariance assumption is fundamentally wrong. QDA or kernel methods are required. Also beware that LDA's dimensionality reduction optimizes for linear separation; if class boundaries are nonlinear, the projected representation may still be inadequate for simple classifiers, necessitating nonlinear methods post-projection.</p>
+
+<h2>Connection to the broader framework</h2>
+<p>LDA sits at the intersection of several key themes in this book. Chapter 7's naive Bayes is the diagonal-covariance special case of LDA; relaxing diagonality captures feature correlations at the cost of more parameters. Chapter 5's logistic regression shares LDA's linear decision boundary but derives it discriminatively; the generative-discriminative trade-off is crystallized in their comparison. Chapter 4's ridge regularization resolves LDA's singularity in high dimensions via the same \(\lambda I\) addition. Chapter 11's bias-variance decomposition explains why LDA (high bias from Gaussian assumption, low variance from pooling) beats logistic regression when assumptions hold but loses when they don't. Chapter 12's cross-validation selects the regularization parameter in regularized LDA. And Chapter 17's PCA contrasts sharply: unsupervised variance maximization versus supervised separation maximization, with complementary strengths depending on whether labels carry information about relevant structure.</p>
+<p>Master LDA not merely as a classifier but as the canonical example of how probabilistic modeling, geometric intuition, and linear algebra converge in supervised learning. The equivalence between Bayes-optimal classification under Gaussian assumptions and Fisher's variance-ratio maximization is one of the most elegant results in statistical pattern recognition. If you can derive the linear discriminant function from both perspectives, compute pooled covariance by hand, and explain when LDA beats logistic regression (and vice versa), you have internalized the generative modeling paradigm that underpins much of classical machine learning.</p>
+
+  </article>
+  <div class="chapter-nav">
+    <a class="chapter-nav-link prev" href="../ch7/index.html">
+      <span class="chapter-nav-label">← Previous</span>
+      <span class="chapter-nav-title">7. Naive Bayes Classifier</span>
+    </a>
+    <a class="chapter-nav-link next" href="../ch9/index.html">
+      <span class="chapter-nav-label">Next →</span>
+      <span class="chapter-nav-title">9. Support Vector Machine</span>
+    </a>
+  </div>
+</div>
+</main>
+<footer>
+  <div class="wrap">
+    <span>© 2026 iTube. Read forever, free forever.</span>
+    <span>No video was harmed in the making of this platform.</span>
+  </div>
+</footer>
+<script src="../../theme.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script defer src="../../app.js"></script>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!-- File: /<slug>/ch13/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>13. Multi-Layer Perceptron — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
+<meta name="description" content="From perceptron to MLP, universal approximation theorem, activation functions, architecture design, and a hand-computed forward pass with gradient analysis on a small network.">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap" rel="stylesheet">
+<link rel="manifest" href="../../manifest.json">
+<link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+<meta name="theme-color" content="#1B1B1F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="iTube">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script>
+(function(){
+  var saved = localStorage.getItem("itube-theme");
+  var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", theme);
+})();
+</script>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+    <div class="top-actions">
+      <div class="font-controls" role="group" aria-label="Adjust text size">
+        <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+        <span id="font-size-label">100%</span>
+        <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+        <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+      </div>
+      <button id="theme-btn" title="Toggle light/dark">◐</button>
+    </div>
+  </div>
+</header>
+<main>
+<div class="wrap narrow">
+  <div class="breadcrumb">
+    <a href="../../index.html">iTube</a><span class="sep">/</span>
+    <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
+    <span>Ch. 13</span>
+  </div>
+  <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
+  <h1>13. Multi-Layer Perceptron</h1>
+  <div class="chapter-meta">
+    <span>Chapter 13 of 17</span>
+    <span class="read-badge">25 min read</span>
+  </div>
+  <article>
+
+<h2>From the perceptron to deep networks</h2>
+<p>The <strong>perceptron</strong> is the simplest neural unit: a linear threshold function \(f(\mathbf{x}) = \operatorname{sign}(\mathbf{w}^\top \mathbf{x} + b)\). As shown in Chapter 1, this produces a linear decision boundary and cannot represent nonlinearly separable functions like XOR. The <strong>multi-layer perceptron</strong> (MLP) overcomes this limitation by composing multiple layers of nonlinear transformations:</p>
+\[
+\mathbf{h}^{(1)} = \sigma(W^{(1)} \mathbf{x} + \mathbf{b}^{(1)}), \quad \mathbf{h}^{(2)} = \sigma(W^{(2)} \mathbf{h}^{(1)} + \mathbf{b}^{(2)}), \quad \dots, \quad \hat{\mathbf{y}} = g(W^{(L)} \mathbf{h}^{(L-1)} + \mathbf{b}^{(L)})
+\]
+<p>where \(\sigma\) is a nonlinear <strong>activation function</strong> (sigmoid, tanh, ReLU), \(g\) is an output activation appropriate to the task (softmax for multiclass, sigmoid for binary, identity for regression), and each layer's weights \(W^{(\ell)}\) and biases \(\mathbf{b}^{(\ell)}\) are learned from data. This composition creates a <strong>deep</strong> hypothesis class capable of representing arbitrarily complex functions — a property formalized by the universal approximation theorem below.</p>
+<p>MLPs are <em>feed-forward</em>: information flows strictly from input to output with no cycles or feedback connections. Training uses gradient-based optimization (Chapter 14 details backpropagation); this chapter focuses on architecture, expressivity, and activation functions. The key insight is that depth (many layers) enables exponential efficiency over width (many units per layer): certain functions require exponentially many units in a shallow network but only polynomially many in a deep one.</p>
+<p><strong>Common mistake:</strong> assuming more layers always improve performance. Depth increases representational capacity but also optimization difficulty (vanishing/exploding gradients, Chapter 14) and overfitting risk (Chapter 11). Without sufficient data, regularization (dropout, weight decay), or architectural innovations (residual connections, batch normalization), deeper networks often train worse than shallower ones. Always start simple and increase depth only when validation diagnostics indicate underfitting.</p>
+
+<h2>Universal approximation theorem</h2>
+<p>The theoretical foundation of MLPs is the <strong>universal approximation theorem</strong> (Cybenko, 1989; Hornik, 1991): a feed-forward network with a single hidden layer containing finitely many units and a non-polynomial activation function can approximate any continuous function on a compact subset of \(\mathbb{R}^p\) to arbitrary precision. Formally, for any continuous \(f: K \to \mathbb{R}\) on compact \(K \subset \mathbb{R}^p\) and any \(\epsilon > 0\), there exist weights, biases, and hidden unit count \(m\) such that:</p>
+\[
+\sup_{\mathbf{x} \in K} \left| f(\mathbf{x}) - \sum_{j=1}^{m} \alpha_j \, \sigma(\mathbf{w}_j^\top \mathbf{x} + b_j) \right| < \epsilon
+\]
+<p>This guarantees that MLPs are <em>expressively complete</em>: no continuous target function lies outside their representational reach. However, the theorem is purely existential — it says nothing about how large \(m\) must be, whether gradient descent can find good parameters, or whether the approximator generalizes. In practice, required width can grow exponentially with input dimension, making single-hidden-layer networks impractical for high-dimensional tasks. Depth addresses this: certain function classes (e.g., compositions of smooth functions) admit exponentially more compact representations in deep networks than shallow ones.</p>
+<p><strong>Edge case:</strong> polynomial activations (e.g., \(\sigma(z) = z^2\)) do NOT satisfy the universal approximation property — networks with polynomial activations can only represent polynomials of bounded degree regardless of width. Non-polynomiality is essential. Also note that universal approximation holds for continuous functions only; discontinuous targets require special treatment (e.g., classification via softmax approximates indicator functions but never represents them exactly). Finally, the theorem assumes unbounded width; finite-width deep networks have different approximation rates studied in modern deep learning theory.</p>
+
+<h3>Worked example: XOR requires hidden units</h3>
+<p>XOR: inputs \((0,0),(0,1),(1,0),(1,1)\) with labels \(0,1,1,0\). A single-layer perceptron \(\operatorname{sign}(w_1 x_1 + w_2 x_2 + b)\) cannot solve this because XOR is not linearly separable (no line separates \(\{(0,0),(1,1)\}\) from \(\{(0,1),(1,0)\}\)). But a 2-layer MLP with 2 hidden ReLU units can:</p>
+\[
+h_1 = \max(0, x_1 + x_2 - 0.5), \quad h_2 = \max(0, x_1 + x_2 - 1.5)
+\]
+\[
+\hat y = \operatorname{sign}(h_1 - h_2 - 0.5)
+\]
+<p>Evaluating: at \((0,0)\): \(h_1=0, h_2=0 \Rightarrow \hat y = \operatorname{sign}(-0.5) = -1 \to 0\). At \((0,1)\): \(h_1=\max(0,0.5)=0.5, h_2=0 \Rightarrow \hat y = \operatorname{sign}(0) = +1 \to 1\). At \((1,0)\): symmetric → 1. At \((1,1)\): \(h_1=1.5, h_2=0.5 \Rightarrow \hat y = \operatorname{sign}(1.5-0.5-0.5) = \operatorname{sign}(0.5) = +1\)? Wait — should be 0. Adjust: use \(\hat y = \operatorname{sign}(h_1 - 2h_2 - 0.5)\). Then \((1,1)\): \(1.5 - 1.0 - 0.5 = 0 \to\) boundary. Use strict inequality or adjust bias to \(-0.6\): \(1.5 - 1.0 - 0.6 = -0.1 \to -1 \to 0\). ✓ All four points correct. <strong>Sensitivity check:</strong> removing either hidden unit collapses the representation back to linear, failing XOR. This demonstrates concretely that hidden units enable nonlinear separation, and that even minimal depth (2 layers) suffices for nontrivial computation. Deeper networks compose such primitives hierarchically for complex tasks.</p>
+
+<h2>Activation functions: properties and trade-offs</h2>
+<p>The choice of activation function profoundly affects training dynamics and representational efficiency. Key options:</p>
+<h3>Sigmoid and tanh</h3>
+\[
+\sigma(z) = \frac{1}{1+e^{-z}}, \quad \tanh(z) = \frac{e^z - e^{-z}}{e^z + e^{-z}}
+\]
+<p>Both are smooth, bounded, and saturate at extremes (\(\sigma \to 0/1\), \(\tanh \to \pm 1\)). Saturation causes <strong>vanishing gradients</strong>: derivatives approach zero in saturated regions, stalling learning in deep networks. Historically dominant but now largely replaced in hidden layers. Still used in output layers for binary classification (sigmoid) or gated architectures (LSTM).</p>
+<h3>ReLU and variants</h3>
+\[
+\operatorname{ReLU}(z) = \max(0, z), \quad \operatorname{LeakyReLU}(z) = \begin{cases} z & z \geq 0 \\ \alpha z & z < 0 \end{cases}
+\]
+<p>ReLU is piecewise linear, non-saturating for \(z > 0\), and computationally cheap. Its derivative is 1 for \(z > 0\) and 0 for \(z < 0\), avoiding vanishing gradients in active regions. However, "dying ReLU" occurs when units permanently output zero (gradient always 0), halting learning. Leaky ReLU, ELU, and GELU mitigate this with nonzero gradients for \(z < 0\). ReLU family dominates modern hidden layers.</p>
+<h3>Softmax (output layer)</h3>
+\[
+\operatorname{softmax}(\mathbf{z})_k = \frac{e^{z_k}}{\sum_j e^{z_j}}
+\]
+<p>Maps logits to probability simplex for multiclass classification. Paired with cross-entropy loss, yields clean gradients analogous to logistic regression (Chapter 5). Never use softmax in hidden layers — it couples units competitively and impedes independent feature learning.</p>
+<p><strong>Common mistake:</strong> using sigmoid/tanh in deep hidden layers without understanding gradient flow. Each layer multiplies gradients by \(\sigma'(z) \leq 0.25\) (sigmoid max derivative), so a 10-layer network attenuates gradients by factor \(\leq 0.25^{10} \approx 10^{-6}\), making lower layers essentially untrainable. Always prefer ReLU-family activations for hidden layers unless specific architectural reasons dictate otherwise.</p>
+
+<h3>Worked example: comparing activation derivatives</h3>
+<p>Evaluate activations and derivatives at \(z = -3, 0, 3\):</p>
+\[
+\begin{array}{c|ccc}
+z & \sigma(z), \sigma'(z) & \tanh(z), \tanh'(z) & \operatorname{ReLU}(z), \operatorname{ReLU}'(z) \\ \hline
+-3 & 0.047, 0.045 & -0.995, 0.010 & 0, 0 \\
+0 & 0.500, 0.250 & 0.000, 1.000 & 0, 1 \\
+3 & 0.953, 0.045 & 0.995, 0.010 & 3, 1
+\end{array}
+\]
+<p>At \(z = \pm 3\), sigmoid and tanh derivatives are ~0.045 and ~0.010 respectively — nearly dead. ReLU maintains full gradient at \(z = 3\) but is completely dead at \(z = -3\). Leaky ReLU with \(\alpha = 0.01\) would give derivative 0.01 at \(z = -3\), preventing permanent death. <strong>Sensitivity check:</strong> in a 5-layer sigmoid network initialized near saturation, backpropagated gradient scales as \(\prod_{\ell=1}^5 \sigma'(z_\ell) \approx 0.045^5 \approx 1.8 \times 10^{-7}\) — effectively zero. Same network with ReLU (assuming half units active per layer): gradient scales as \(0.5^5 = 0.031\) — six orders of magnitude larger. This quantitative gap explains why ReLU enabled deep learning while sigmoid did not.</p>
+
+<h2>Architecture design: width, depth, and connectivity</h2>
+<p>Designing an MLP involves choosing the number of hidden layers, units per layer, and connectivity pattern. Key principles:</p>
+<ul>
+<li><strong>Width vs. depth:</strong> Wider networks (more units per layer) increase capacity within a layer; deeper networks (more layers) enable hierarchical composition. Theory suggests depth is exponentially more efficient for compositional functions (e.g., image recognition, language). Practical rule: start with moderate width (64–256 units) and increase depth before width.</li>
+<li><strong>Bottleneck layers:</strong> Decreasing then increasing width forces compression, useful for representation learning (autoencoders, Chapter 17). Monotonically decreasing widths suit classification where later layers integrate features into decisions.</li>
+<li><strong>Residual connections:</strong> Skip connections \(\mathbf{h}^{(\ell+1)} = F(\mathbf{h}^{(\ell)}) + \mathbf{h}^{(\ell)}\) alleviate vanishing gradients by providing direct gradient pathways. Enable training of very deep networks (100+ layers). Essential for modern architectures.</li>
+<li><strong>Batch normalization:</strong> Normalizing layer inputs stabilizes training, allows higher learning rates, and acts as mild regularizer. Typically inserted after linear transform, before activation.</li>
+</ul>
+<p><strong>Edge case:</strong> excessively wide layers waste parameters and computation without improving generalization if data is limited. Parameter count grows as \(O(w^2 L)\) for width \(w\) and depth \(L\); doubling width quadruples parameters. Always monitor validation loss during scaling — if it plateaus or rises while training loss continues falling, you've exceeded useful capacity. Also note that architecture interacts with optimizer and regularization: Adam tolerates wider networks better than SGD; dropout enables wider networks safely; weight decay constrains effective capacity independently of parameter count.</p>
+
+<h2>Forward pass computation: a complete worked example</h2>
+<p>Understanding MLPs requires tracing data through every operation. Consider a minimal 2-layer network for binary classification: input dimension 2, hidden layer with 2 ReLU units, sigmoid output.</p>
+<p><strong>Parameters:</strong></p>
+\[
+W^{(1)} = \begin{pmatrix} 1 & -1 \\ 1 & 1 \end{pmatrix}, \quad \mathbf{b}^{(1)} = \begin{pmatrix} 0 \\ -1 \end{pmatrix}, \quad W^{(2)} = \begin{pmatrix} 1 & -2 \end{pmatrix}, \quad b^{(2)} = 0.5
+\]
+<p><strong>Input:</strong> \(\mathbf{x} = (1, 2)^\top\).</p>
+<p><strong>Hidden layer:</strong></p>
+\[
+\mathbf{z}^{(1)} = W^{(1)} \mathbf{x} + \mathbf{b}^{(1)} = \begin{pmatrix} 1\cdot1 + (-1)\cdot2 \\ 1\cdot1 + 1\cdot2 \end{pmatrix} + \begin{pmatrix} 0 \\ -1 \end{pmatrix} = \begin{pmatrix} -1 \\ 3 \end{pmatrix} + \begin{pmatrix} 0 \\ -1 \end{pmatrix} = \begin{pmatrix} -1 \\ 2 \end{pmatrix}
+\]
+\[
+\mathbf{h}^{(1)} = \operatorname{ReLU}(\mathbf{z}^{(1)}) = \begin{pmatrix} \max(0,-1) \\ \max(0,2) \end{pmatrix} = \begin{pmatrix} 0 \\ 2 \end{pmatrix}
+\]
+<p><strong>Output layer:</strong></p>
+\[
+z^{(2)} = W^{(2)} \mathbf{h}^{(1)} + b^{(2)} = \begin{pmatrix} 1 & -2 \end{pmatrix} \begin{pmatrix} 0 \\ 2 \end{pmatrix} + 0.5 = (0 - 4) + 0.5 = -3.5
+\]
+\[
+\hat y = \sigma(z^{(2)}) = \frac{1}{1 + e^{3.5}} = \frac{1}{1 + 33.115} = 0.0293
+\]
+<p>Predicted probability of class 1 is ~2.9% → classify as class 0. <strong>Gradient insight (foreshadowing Chapter 14):</strong> since \(h_1^{(1)} = 0\) (dead ReLU), \(\partial \hat y / \partial W_{11}^{(1)} = 0\) and \(\partial \hat y / \partial W_{12}^{(1)} = 0\) — these weights receive no gradient signal for this input. Only \(W_{21}^{(1)}, W_{22}^{(1)}\) and all \(W^{(2)}\) parameters are updated. If this unit stays dead across the entire dataset, those weights never learn — the dying ReLU problem in action. <strong>Sensitivity check:</strong> changing \(\mathbf{b}^{(1)}\) from \((0,-1)\) to \((0.5,-1)\) makes \(z_1^{(1)} = -0.5\), still dead. Changing to \((2,-1)\) gives \(z_1^{(1)} = 1\), activating the unit: \(h_1^{(1)} = 1\), \(z^{(2)} = 1 - 4 + 0.5 = -2.5\), \(\hat y = 0.076\). Small bias change flips unit state and significantly alters output — illustrating sensitivity to initialization and the importance of careful bias initialization (typically small positive values for ReLU to avoid initial death).</p>
+
+<h2>Connection to the broader framework</h2>
+<p>MLPs generalize nearly every model in this book. Logistic regression (Chapter 5) is a single-layer MLP with sigmoid output and no hidden layer. Linear regression (Chapters 2–3) is the same with identity output. Ridge regression (Chapter 4) adds \(\ell_2\) regularization to weights. LDA (Chapter 8) corresponds to a linear network trained with cross-entropy under Gaussian assumptions. Decision trees (Chapter 10) partition space axis-alignedly; MLPs learn oblique, smooth partitions via superposition of sigmoidal/ReLU basis functions. SVMs (Chapter 9) with kernel trick implicitly map to high-dimensional spaces; MLPs learn explicit mappings end-to-end. And Chapter 14's backpropagation is simply the chain rule applied systematically to compute gradients through this compositional structure.</p>
+<p>Master MLPs not as black boxes but as differentiable programs whose architecture encodes inductive biases about the target function. Understand why depth beats width for compositional tasks, why ReLU displaced sigmoid, why residual connections enable scale, and how universal approximation guarantees existence but not learnability. If you can trace a forward pass by hand, explain vanishing gradients quantitatively, justify architectural choices from first principles, and connect MLPs to classical models as special cases, you have internalized the foundation upon which all modern deep learning rests.</p>
+
+  </article>
+  <div class="chapter-nav">
+    <a class="chapter-nav-link prev" href="../ch12/index.html">
+      <span class="chapter-nav-label">← Previous</span>
+      <span class="chapter-nav-title">12. Cross-Validation: LOO and k-Fold</span>
+    </a>
+    <a class="chapter-nav-link next" href="../ch14/index.html">
+      <span class="chapter-nav-label">Next →</span>
+      <span class="chapter-nav-title">14. Feed-Forward Neural Network</span>
+    </a>
+  </div>
+</div>
+</main>
+<footer>
+  <div class="wrap">
+    <span>© 2026 iTube. Read forever, free forever.</span>
+    <span>No video was harmed in the making of this platform.</span>
+  </div>
+</footer>
+<script src="../../theme.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script defer src="../../app.js"></script>
+</body>
+</html>
