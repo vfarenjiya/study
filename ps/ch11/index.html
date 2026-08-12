@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>11. Central Limit Theorem and Confidence Intervals — Probability &amp; Statistics — iTube</title>
+  <meta name="description" content="Why do sample means look Normal even when data doesn't? We derive the Central Limit Theorem via moment generating functions, show exactly what 'convergence in distribution' means via CDFs, and build confidence intervals by inverting probability statements step by step.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Probability &amp; Statistics</a><span class="sep">/</span>
+        <span>Ch. 11</span>
+      </div>
+      <div class="eyebrow">Probability &amp; Statistics</div>
+      <h1>11. Central Limit Theorem and Confidence Intervals</h1>
+      <div class="chapter-meta">
+        <span>Chapter 11 of 12</span>
+        <span class="read-badge">20 min read</span>
+      </div>
+      <article>
+
+        <h2>The most surprising fact in statistics</h2>
+        <p>Suppose you roll a fair die 100 times and compute the average. The individual rolls follow a discrete uniform distribution — flat, bounded, nothing like a bell curve. Yet the distribution of that average, across many repetitions of this experiment, looks almost perfectly Normal. Change the die to a biased coin, an exponential waiting time, or any other distribution with finite variance, and the same thing happens: the sample mean converges to Normality regardless of the underlying shape.</p>
+        <p>Why? What property of averaging makes it universally produce bell curves? And how fast does this convergence happen — is \(n=30\) really enough, as textbooks often claim? Answering these questions requires understanding not just the statement of the Central Limit Theorem (CLT), but its proof mechanism and its precise mode of convergence. Only then can we responsibly build confidence intervals on top of it.</p>
+
+        <h2>What "convergence in distribution" actually means</h2>
+        <p>Before stating the CLT, we need to be precise about what kind of convergence is involved. Random variables can converge in several senses (almost surely, in probability, in mean square), but the CLT uses the weakest and most appropriate one for distributional approximation.</p>
+        <p>A sequence of random variables \(X_n\) <strong>converges in distribution</strong> to \(X\), written \(X_n \xrightarrow{d} X\), if:</p>
+        \[
+        \lim_{n \to \infty} F_{X_n}(x) = F_X(x)
+        \]
+        <p>at every point \(x\) where \(F_X\) is continuous. This definition, introduced implicitly in Chapter 10's CDF discussion, says that the entire cumulative distribution function of \(X_n\) approaches that of \(X\) pointwise. Crucially, convergence in distribution does <em>not</em> require \(X_n\) and \(X\) to be defined on the same probability space, nor does it imply that individual realizations get close — only that their probabilistic behavior becomes indistinguishable in the limit.</p>
+        <p>Why define convergence via CDFs rather than PDFs? Because many important limiting distributions (like the Normal) have smooth CDFs even when the approximating sequence is discrete (where PDFs don't exist). CDF-based convergence handles discrete-to-continuous transitions seamlessly, which is exactly what the CLT requires when summing discrete variables to approximate a continuous limit.</p>
+
+        <h2>Stating the Central Limit Theorem precisely</h2>
+        <p>Let \(X_1, X_2, \ldots\) be independent and identically distributed (i.i.d.) random variables with mean \(\mu\) and finite variance \(\sigma^2 &gt; 0\). Define the sample mean \(\bar{X}_n = \frac{1}{n}\sum_{i=1}^n X_i\). Then:</p>
+        \[
+        \frac{\bar{X}_n - \mu}{\sigma / \sqrt{n}} \xrightarrow{d} \mathcal{N}(0, 1)
+        \]
+        <p>Equivalently, defining \(S_n = \sum_{i=1}^n X_i\):</p>
+        \[
+        \frac{S_n - n\mu}{\sigma\sqrt{n}} \xrightarrow{d} \mathcal{N}(0, 1)
+        \]
+        <p>Notice the standardization: we subtract the mean (\(n\mu\) for the sum, \(\mu\) for the average) and divide by the standard deviation (\(\sigma\sqrt{n}\) for the sum, \(\sigma/\sqrt{n}\) for the average). Without this centering and scaling, the distribution either drifts to infinity or collapses to a point — neither produces a non-degenerate limit. The \(\sqrt{n}\) scaling is not arbitrary; it's the unique rate that balances the growing spread of the sum against the shrinking scale needed for a stable limit.</p>
+
+        <h3>Why \(\sqrt{n}\)? A scaling argument</h3>
+        <p>Suppose we tried scaling by \(n\) instead: \((S_n - n\mu)/n = \bar{X}_n - \mu\). By the Law of Large Numbers (which states \(\bar{X}_n \to \mu\) in probability), this converges to zero — a degenerate limit. Suppose we tried scaling by \(\sqrt{n}^\alpha\) for some \(\alpha \neq 1\). If \(\alpha &lt; 1\), the denominator grows too slowly and the ratio diverges. If \(\alpha &gt; 1\), it grows too fast and the ratio collapses to zero. Only \(\alpha = 1\) (i.e., dividing by \(\sqrt{n}\)) produces a non-degenerate limit. This uniqueness explains why \(\sqrt{n}\) appears universally in statistical error rates: it's the only scaling compatible with stable fluctuation behavior.</p>
+
+        <h2>Sketching the proof via moment generating functions</h2>
+        <p>The cleanest proof of the CLT uses moment generating functions (MGFs). The MGF of a random variable \(X\) is \(M_X(t) = \mathbb{E}[e^{tX}]\), defined for \(t\) in a neighborhood of zero. Two facts make MGFs powerful for limit theorems:</p>
+        <ol>
+          <li>If \(X\) and \(Y\) are independent, \(M_{X+Y}(t) = M_X(t) M_Y(t)\).</li>
+          <li>If \(M_{X_n}(t) \to M_X(t)\) pointwise in a neighborhood of zero, then \(X_n \xrightarrow{d} X\) (the continuity theorem for MGFs).</li>
+        </ol>
+        <p>Let's apply this to the standardized sum \(Z_n = \frac{S_n - n\mu}{\sigma\sqrt{n}}\). First, center and scale the individual variables: define \(Y_i = (X_i - \mu)/\sigma\), so \(\mathbb{E}[Y_i] = 0\) and \(\operatorname{Var}(Y_i) = 1\). Then \(Z_n = \frac{1}{\sqrt{n}} \sum_{i=1}^n Y_i\).</p>
+        <p>The MGF of \(Z_n\) is:</p>
+        \[
+        M_{Z_n}(t) = \mathbb{E}\!\left[ \exp\!\left( t \cdot \frac{1}{\sqrt{n}} \sum_{i=1}^n Y_i \right) \right] = \left[ M_Y\!\left( \frac{t}{\sqrt{n}} \right) \right]^n
+        \]
+        <p>where the last equality uses independence (product of identical MGFs). Now expand \(M_Y(t/\sqrt{n})\) in a Taylor series around zero. Since \(\mathbb{E}[Y] = 0\) and \(\mathbb{E}[Y^2] = 1\):</p>
+        \[
+        M_Y\!\left( \frac{t}{\sqrt{n}} \right) = 1 + 0 \cdot \frac{t}{\sqrt{n}} + \frac{1}{2} \cdot 1 \cdot \left( \frac{t}{\sqrt{n}} \right)^2 + o\!\left( \frac{t^2}{n} \right) = 1 + \frac{t^2}{2n} + o\!\left( \frac{1}{n} \right)
+        \]
+        <p>Raise this to the \(n\)-th power:</p>
+        \[
+        M_{Z_n}(t) = \left[ 1 + \frac{t^2}{2n} + o\!\left( \frac{1}{n} \right) \right]^n
+        \]
+        <p>Recall the fundamental limit \(\lim_{n\to\infty} (1 + a/n)^n = e^a\). Applying this (with \(a = t^2/2\), and noting the \(o(1/n)\) term vanishes in the limit):</p>
+        \[
+        \lim_{n \to \infty} M_{Z_n}(t) = e^{t^2/2}
+        \]
+        <p>But \(e^{t^2/2}\) is exactly the MGF of the Standard Normal distribution (verifiable by direct integration of \(\int e^{tz} \phi(z)\, dz\)). By the continuity theorem for MGFs, \(Z_n \xrightarrow{d} \mathcal{N}(0,1)\). QED.</p>
+
+        <p><strong>Edge case:</strong> what if the variance is infinite? The CLT fails entirely. Heavy-tailed distributions like the Cauchy (where \(\mathbb{E}[X^2] = \infty\)) have sample means whose distribution is identical to the original Cauchy for all \(n\) — no amount of averaging produces Normality. Finite variance is not a technicality; it's the essential condition that makes the Taylor expansion above valid through second order.</p>
+
+        <h3>Worked example: verifying CLT convergence numerically</h3>
+        <p>Let \(X_i \sim \operatorname{Exponential}(1)\), so \(\mu = 1\) and \(\sigma^2 = 1\). For \(n = 25\), the standardized sum \(Z_{25} = (\sum X_i - 25)/5\) should be approximately \(\mathcal{N}(0,1)\). Let's check at the 95th percentile: the Standard Normal 95th percentile is \(z_{0.95} \approx 1.645\).</p>
+        <p>The exact distribution of \(\sum_{i=1}^{25} X_i\) is \(\operatorname{Gamma}(25, 1)\) (sum of i.i.d. Exponentials). The 95th percentile of \(\operatorname{Gamma}(25,1)\) can be computed via software or tables as approximately 34.81. Standardizing:</p>
+        \[
+        z_{\text{exact}} = \frac{34.81 - 25}{5} = \frac{9.81}{5} = 1.962
+        \]
+        <p>Compare to the Normal approximation \(1.645\). The discrepancy (1.962 vs. 1.645) shows that at \(n=25\), the Exponential sum's right tail is still heavier than Normal. At \(n=100\), the Gamma(100,1) 95th percentile ≈ 117.0, giving \(z = (117-100)/10 = 1.70\), much closer to 1.645. Convergence is happening, but slower in the tails than near the center — a pattern universal across CLT applications.</p>
+
+        <p><strong>Common mistake:</strong> assuming \(n=30\) is always sufficient. The rate of CLT convergence depends on the skewness and kurtosis of the underlying distribution. Symmetric, light-tailed distributions (Uniform, Normal itself) converge rapidly; skewed or heavy-tailed distributions (Exponential, Lognormal) may require \(n &gt; 100\) for accurate tail approximations. Always assess the parent distribution's shape before trusting Normal approximations at moderate \(n\).</p>
+
+        <h2>Confidence intervals: inverting probability statements</h2>
+        <p>The CLT tells us that \(\frac{\bar{X}_n - \mu}{\sigma/\sqrt{n}}\) is approximately Standard Normal for large \(n\). But how do we turn this into a statement about \(\mu\) given observed data? The key insight: a confidence interval is constructed by starting with a probability statement about the <em>random interval</em> before data is observed, then plugging in observed values after.</p>
+        <p>Start from the CLT approximation:</p>
+        \[
+        P\!\left( -z_{\alpha/2} \leq \frac{\bar{X}_n - \mu}{\sigma/\sqrt{n}} \leq z_{\alpha/2} \right) \approx 1 - \alpha
+        \]
+        <p>where \(z_{\alpha/2}\) is the \((1-\alpha/2)\)-quantile of the Standard Normal (e.g., \(z_{0.025} = 1.96\) for 95% confidence). Now rearrange the inequality algebraically to isolate \(\mu\) in the middle. Multiply through by \(\sigma/\sqrt{n}\):</p>
+        \[
+        P\!\left( -z_{\alpha/2} \frac{\sigma}{\sqrt{n}} \leq \bar{X}_n - \mu \leq z_{\alpha/2} \frac{\sigma}{\sqrt{n}} \right) \approx 1 - \alpha
+        \]
+        <p>Subtract \(\bar{X}_n\) from all parts:</p>
+        \[
+        P\!\left( -\bar{X}_n - z_{\alpha/2} \frac{\sigma}{\sqrt{n}} \leq -\mu \leq -\bar{X}_n + z_{\alpha/2} \frac{\sigma}{\sqrt{n}} \right) \approx 1 - \alpha
+        \]
+        <p>Multiply by \(-1\) (reversing inequalities):</p>
+        \[
+        P\!\left( \bar{X}_n - z_{\alpha/2} \frac{\sigma}{\sqrt{n}} \leq \mu \leq \bar{X}_n + z_{\alpha/2} \frac{\sigma}{\sqrt{n}} \right) \approx 1 - \alpha
+        \]
+        <p>This says: before observing data, the random interval \([\bar{X}_n \pm z_{\alpha/2} \sigma/\sqrt{n}]\) covers the true \(\mu\) with probability approximately \(1-\alpha\). After observing \(\bar{x}_n\), we report the realized interval \([\bar{x}_n \pm z_{\alpha/2} \sigma/\sqrt{n}]\) as our \(100(1-\alpha)\%\) confidence interval for \(\mu\).</p>
+
+        <h3>What "95% confidence" actually means</h3>
+        <p>A 95% confidence interval does <em>not</em> mean "there is a 95% probability that \(\mu\) lies in this specific interval." Once data is observed, the interval is fixed and \(\mu\) is fixed (albeit unknown) — the coverage event has already occurred or not, with probability 0 or 1. The 95% refers to the long-run frequency: if we repeated the experiment infinitely many times and constructed a CI each time, approximately 95% of those intervals would contain \(\mu\). This frequentist interpretation is fundamentally about the procedure, not the particular realization.</p>
+
+        <h3>When \(\sigma\) is unknown: the t-interval</h3>
+        <p>In practice, \(\sigma\) is almost never known. Replacing \(\sigma\) with the sample standard deviation \(S\) changes the sampling distribution from Normal to t (derived in Chapter 9). The exact \(100(1-\alpha)\%\) confidence interval becomes:</p>
+        \[
+        \bar{x}_n \pm t_{n-1, \alpha/2} \cdot \frac{s}{\sqrt{n}}
+        \]
+        <p>where \(t_{n-1, \alpha/2}\) is the \((1-\alpha/2)\)-quantile of the \(t_{n-1}\) distribution. For large \(n\), \(t_{n-1, \alpha/2} \approx z_{\alpha/2}\) and \(s \approx \sigma\), so the t-interval converges to the z-interval. For small \(n\), the t-critical value exceeds \(z_{\alpha/2}\), widening the interval to account for additional uncertainty in estimating \(\sigma\). This adjustment is exact under Normality and approximately valid under CLT conditions.</p>
+
+        <h3>Worked example: constructing a 95% t-interval</h3>
+        <p>A sample of \(n = 16\) measurements yields \(\bar{x} = 42.3\) and \(s = 5.8\). Construct a 95% confidence interval for the population mean \(\mu\).</p>
+        <p>Since \(\sigma\) is unknown and \(n\) is small, use the t-interval. Degrees of freedom: \(n-1 = 15\). The critical value \(t_{15, 0.025}\) (from tables or software) is approximately 2.131. Compute the margin of error:</p>
+        \[
+        \text{ME} = t_{15, 0.025} \cdot \frac{s}{\sqrt{n}} = 2.131 \cdot \frac{5.8}{\sqrt{16}}
+        \]
+        <p>Compute the standard error first: \(5.8 / \sqrt{16} = 5.8 / 4 = 1.45\). Then multiply:</p>
+        \[
+        \text{ME} = 2.131 \times 1.45 = 3.090
+        \]
+        <p>(Computing step by step: \(2.131 \times 1 = 2.131\); \(2.131 \times 0.4 = 0.8524\); \(2.131 \times 0.05 = 0.10655\); sum: \(2.131 + 0.8524 + 0.10655 = 3.08995 \approx 3.090\).)</p>
+        <p>Construct the interval:</p>
+        \[
+        [42.3 - 3.090,\; 42.3 + 3.090] = [39.21,\; 45.39]
+        \]
+        <p>We are 95% confident that the true population mean lies between 39.21 and 45.39. Had we incorrectly used \(z_{0.025} = 1.96\) instead of \(t_{15, 0.025} = 2.131\), the margin of error would have been \(1.96 \times 1.45 = 2.842\), producing the narrower interval \([39.46, 45.14]\). This understates uncertainty by about 8% — a meaningful error in small samples that the t-correction prevents.</p>
+
+        <p><strong>Common mistake:</strong> interpreting a specific CI as having 95% probability of containing \(\mu\). The probability statement applies to the random interval before observation, not the fixed interval after. Saying "there's a 95% chance \(\mu\) is in [39.21, 45.39]" is technically incorrect in frequentist statistics (though Bayesian credible intervals do support this interpretation with appropriate priors). Always phrase conclusions as "we are 95% confident" or "the procedure has 95% coverage."</p>
+
+        <h2>Connecting forward</h2>
+        <p>The CLT and confidence intervals form the bridge from probability theory to statistical inference. Every hypothesis test in Chapter 12 relies on CLT-based Normal approximations (z-tests) or exact t-distributions derived from the same Normal-sampling framework. The distinction between z and t intervals foreshadows the choice between known-variance and estimated-variance tests. And the concept of coverage probability extends directly to power analysis, sample size determination, and multiple comparison corrections — all grounded in the convergence behavior established here.</p>
+
+      </article>
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch10/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">10. Cumulative Distribution Function and Conditional PDF</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch12/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">12. Hypothesis Testing: z-test, t-test, and Chi-Squared Test</span>
+        </a>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
+</body>
+</html>
