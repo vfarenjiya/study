@@ -1,234 +1,292 @@
-<!-- File: /<slug>/ch2/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>2. Simple Linear Regression — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
-<meta name="description" content="The OLS estimator derived from first principles, geometric interpretation, R-squared, residuals, and numerical worked examples with sensitivity checks.">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap" rel="stylesheet">
-<link rel="manifest" href="../../manifest.json">
-<link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="../../icons/icon-192.svg">
-<meta name="theme-color" content="#1B1B1F">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="iTube">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script>
-(function(){
-  var saved = localStorage.getItem("itube-theme");
-  var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-  document.documentElement.setAttribute("data-theme", theme);
-})();
-</script>
-<link rel="stylesheet" href="../../style.css">
+  <title>2. Multiple Linear Regression — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
+  <meta name="description" content="How do we fit a linear model when there are many input features? We derive the OLS estimator in matrix form, explore its geometric meaning as a projection, and work through a complete numeric example.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
 </head>
 <body data-depth="2">
-<header class="top">
-  <div class="wrap">
-    <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
-    <div class="top-actions">
-      <div class="font-controls" role="group" aria-label="Adjust text size">
-        <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
-        <span id="font-size-label">100%</span>
-        <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
-        <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
       </div>
-      <button id="theme-btn" title="Toggle light/dark">◐</button>
     </div>
-  </div>
-</header>
-<main>
-<div class="wrap narrow">
-  <div class="breadcrumb">
-    <a href="../../index.html">iTube</a><span class="sep">/</span>
-    <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
-    <span>Ch. 2</span>
-  </div>
-  <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
-  <h1>2. Simple Linear Regression</h1>
-  <div class="chapter-meta">
-    <span>Chapter 2 of 17</span>
-    <span class="read-badge">22 min read</span>
-  </div>
-  <article>
+  </header>
 
-<h2>The model and its assumptions</h2>
-<p><strong>Simple linear regression</strong> is the most fundamental supervised learning algorithm and the template against which every other method in this book is measured. It posits that the relationship between a single scalar input \(x\) and a continuous output \(y\) is approximately linear, corrupted by noise:</p>
-\[
-y_i = \beta_0 + \beta_1 x_i + \varepsilon_i, \quad i = 1, \dots, n
-\]
-<p>Here \(\beta_0\) is the <strong>intercept</strong>, \(\beta_1\) is the <strong>slope</strong>, and \(\varepsilon_i\) are unobserved random errors. The pair \((\beta_0, \beta_1)\) are the <strong>parameters</strong> we wish to estimate from data; they define the hypothesis class \(\mathcal{H} = \{ f(x) = \beta_0 + \beta_1 x : \beta_0, \beta_1 \in \mathbb{R} \}\). This is a <em>parametric</em> model: the functional form is fixed in advance, and learning reduces to estimating two real numbers regardless of how large \(n\) grows.</p>
-<p>The classical statistical assumptions on the errors are: \(\mathbb{E}[\varepsilon_i] = 0\) (unbiasedness), \(\operatorname{Var}(\varepsilon_i) = \sigma^2\) (homoscedasticity), and \(\operatorname{Cov}(\varepsilon_i, \varepsilon_j) = 0\) for \(i \neq j\) (independence). Under these assumptions plus normality (\(\varepsilon_i \sim \mathcal{N}(0, \sigma^2)\)), the ordinary least squares estimator derived below coincides with the maximum likelihood estimator and enjoys exact finite-sample inference properties. In the machine learning framing of Chapter 1, however, we care primarily about prediction: even when these assumptions fail, the OLS estimator still minimizes empirical squared risk, and its predictive performance can be evaluated empirically via cross-validation (Chapter 12).</p>
-<p><strong>Common mistake:</strong> confusing the <em>model assumption</em> (linearity in parameters) with <em>linearity in features</em>. Simple linear regression is linear in \(\beta_0, \beta_1\), but one can regress \(y\) on \(x^2\), \(\log x\), or \(\sin x\) and still be doing linear regression — the hypothesis remains a linear combination of basis functions. What makes it "simple" is that there is only <em>one</em> predictor variable, not that the relationship must be a straight line in the original feature space. Multiple linear regression (Chapter 3) generalizes to many predictors while retaining linearity in parameters.</p>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
+        <span>Ch. 2</span>
+      </div>
+      <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
+      <h1>2. Multiple Linear Regression</h1>
+      <div class="chapter-meta">
+        <span>Chapter 2 of 14</span>
+        <span class="read-badge">30 min read</span>
+      </div>
 
-<h2>Ordinary least squares: derivation from first principles</h2>
-<p>We choose \(\hat\beta_0, \hat\beta_1\) to minimize the <strong>residual sum of squares</strong> (RSS), which is exactly \(n\) times the empirical squared risk from Chapter 1:</p>
-\[
-\text{RSS}(\beta_0, \beta_1) = \sum_{i=1}^{n} (y_i - \beta_0 - \beta_1 x_i)^2
-\]
-<p>This is an unconstrained optimization problem in two variables. Since RSS is a sum of squares, it is convex and differentiable everywhere; the global minimum occurs where both partial derivatives vanish simultaneously.</p>
-<h3>Derivation of the closed-form estimators</h3>
-<p>Differentiate with respect to \(\beta_0\):</p>
-\[
-\frac{\partial \text{RSS}}{\partial \beta_0} = -2 \sum_{i=1}^{n} (y_i - \beta_0 - \beta_1 x_i) = 0
-\]
-<p>Dividing by \(-2\) and rearranging gives the first <strong>normal equation</strong>:</p>
-\[
-\sum_{i=1}^{n} y_i = n \beta_0 + \beta_1 \sum_{i=1}^{n} x_i \quad \Longrightarrow \quad \bar y = \beta_0 + \beta_1 \bar x
-\]
-<p>where \(\bar x = \frac{1}{n}\sum x_i\) and \(\bar y = \frac{1}{n}\sum y_i\). Solving for \(\beta_0\):</p>
-\[
-\hat\beta_0 = \bar y - \hat\beta_1 \bar x \tag{1}
-\]
-<p>This tells us something geometric immediately: <em>the fitted line always passes through the centroid</em> \((\bar x, \bar y)\) of the data, regardless of the slope. Now differentiate RSS with respect to \(\beta_1\):</p>
-\[
-\frac{\partial \text{RSS}}{\partial \beta_1} = -2 \sum_{i=1}^{n} x_i (y_i - \beta_0 - \beta_1 x_i) = 0
-\]
-<p>Substitute \(\hat\beta_0 = \bar y - \hat\beta_1 \bar x\) from equation (1) into this second normal equation:</p>
-\[
-\sum_{i=1}^{n} x_i \big(y_i - (\bar y - \hat\beta_1 \bar x) - \hat\beta_1 x_i\big) = 0
-\]
-<p>Expanding and regrouping terms:</p>
-\[
-\sum_{i=1}^{n} x_i (y_i - \bar y) - \hat\beta_1 \sum_{i=1}^{n} x_i (x_i - \bar x) = 0
-\]
-<p>Note that \(\sum x_i (y_i - \bar y) = \sum (x_i - \bar x)(y_i - \bar y)\) because \(\sum \bar x (y_i - \bar y) = \bar x \cdot 0 = 0\). Similarly, \(\sum x_i (x_i - \bar x) = \sum (x_i - \bar x)^2\). Therefore:</p>
-\[
-\hat\beta_1 = \frac{\sum_{i=1}^{n} (x_i - \bar x)(y_i - \bar y)}{\sum_{i=1}^{n} (x_i - \bar x)^2} \tag{2}
-\]
-<p>Equations (1) and (2) together give the complete <strong>ordinary least squares (OLS) estimator</strong>. The numerator is the sample covariance between \(x\) and \(y\) (up to a factor of \(n-1\)); the denominator is the sample variance of \(x\). The slope is therefore the ratio of how much \(x\) and \(y\) co-vary to how much \(x\) varies alone.</p>
-<p><strong>Edge case:</strong> if all \(x_i\) are identical, then \(\sum (x_i - \bar x)^2 = 0\) and \(\hat\beta_1\) is undefined — geometrically, infinitely many vertical lines pass through a column of points, and no unique best-fit line exists. In practice this means the feature carries no information; any implementation must check for zero variance before dividing. A related degenerate case is \(n = 1\): one point determines both \(\bar x\) and \(\bar y\), the denominator is zero, and again the fit is undefined. At least two distinct \(x\)-values are required for simple linear regression to be well-posed.</p>
+      <article>
 
-<h3>Worked example: hand-computed OLS fit</h3>
-<p>Consider five observations of study hours (\(x\)) and exam score (\(y\)):</p>
-\[
-(x_i, y_i) \in \{(1, 50),\ (2, 55),\ (3, 65),\ (4, 70),\ (5, 80)\}
-\]
-<p><strong>Step 1: Compute means.</strong></p>
-\[
-\bar x = \frac{1+2+3+4+5}{5} = \frac{15}{5} = 3, \qquad \bar y = \frac{50+55+65+70+80}{5} = \frac{320}{5} = 64
-\]
-<p><strong>Step 2: Compute deviations and products.</strong></p>
-\[
-\begin{array}{c|c|c|c}
-x_i - \bar x & y_i - \bar y & (x_i - \bar x)^2 & (x_i - \bar x)(y_i - \bar y) \\ \hline
--2 & -14 & 4 & 28 \\
--1 & -9 & 1 & 9 \\
-0 & 1 & 0 & 0 \\
-1 & 6 & 1 & 6 \\
-2 & 16 & 4 & 32
-\end{array}
-\]
-<p><strong>Step 3: Sum the last two columns.</strong></p>
-\[
-S_{xx} = \sum (x_i - \bar x)^2 = 4 + 1 + 0 + 1 + 4 = 10
-\]
-\[
-S_{xy} = \sum (x_i - \bar x)(y_i - \bar y) = 28 + 9 + 0 + 6 + 32 = 75
-\]
-<p><strong>Step 4: Apply equations (2) and (1).</strong></p>
-\[
-\hat\beta_1 = \frac{S_{xy}}{S_{xx}} = \frac{75}{10} = 7.5
-\]
-\[
-\hat\beta_0 = \bar y - \hat\beta_1 \bar x = 64 - 7.5 \times 3 = 64 - 22.5 = 41.5
-\]
-<p>The fitted line is \(\hat y = 41.5 + 7.5 x\). <strong>Interpretation:</strong> each additional hour of study is associated with a \(7.5\)-point increase in exam score, and a student who studies zero hours is predicted to score \(41.5\) (the intercept extrapolates beyond the observed range \(x \in [1,5]\), so treat it cautiously). <strong>Sensitivity check:</strong> if the last observation were \((5, 60)\) instead of \((5, 80)\), then \(\bar y\) would drop to \(60\), \(S_{xy}\) would become \(75 - 20 = 55\), and \(\hat\beta_1\) would fall to \(5.5\) — a single outlier in \(y\) shifts the slope substantially because squared loss penalizes large residuals quadratically. This is precisely the edge case flagged above and motivates robust alternatives discussed in Chapter 4.</p>
+        <h2>From one feature to many</h2>
 
-<h2>Geometric interpretation and orthogonality</h2>
-<p>The OLS solution has an elegant geometric structure that foreshadows the projection viewpoint of multiple regression (Chapter 3) and principal component analysis (Chapter 17). Define vectors \(\mathbf{y} = (y_1, \dots, y_n)^\top\), \(\mathbf{x} = (x_1, \dots, x_n)^\top\), and \(\mathbf{1} = (1, \dots, 1)^\top\). The fitted values \(\hat{\mathbf{y}} = \hat\beta_0 \mathbf{1} + \hat\beta_1 \mathbf{x}\) lie in the two-dimensional subspace spanned by \(\mathbf{1}\) and \(\mathbf{x}\). The residual vector \(\mathbf{e} = \mathbf{y} - \hat{\mathbf{y}}\) satisfies:</p>
-\[
-\mathbf{1}^\top \mathbf{e} = 0 \quad \text{and} \quad \mathbf{x}^\top \mathbf{e} = 0
-\]
-<p>These are exactly the two normal equations rewritten in vector form. Geometrically, <strong>the residual vector is orthogonal to the column space of the design matrix</strong>. This means \(\hat{\mathbf{y}}\) is the <em>orthogonal projection</em> of \(\mathbf{y}\) onto \(\operatorname{span}\{\mathbf{1}, \mathbf{x}\}\), and among all vectors in that subspace, it is the unique closest point to \(\mathbf{y}\) in Euclidean norm. Minimizing RSS is therefore equivalent to finding the nearest-point projection.</p>
-<p>An immediate consequence is the <strong>Pythagorean decomposition</strong> of total variation. Write \(y_i - \bar y = (\hat y_i - \bar y) + e_i\). Squaring and summing, the cross-term vanishes because \(\sum (\hat y_i - \bar y) e_i = 0\) (this follows from orthogonality and the fact that \(\hat y_i - \bar y\) lies in the column space):</p>
-\[
-\underbrace{\sum_{i=1}^{n} (y_i - \bar y)^2}_{\text{TSS}} = \underbrace{\sum_{i=1}^{n} (\hat y_i - \bar y)^2}_{\text{ESS}} + \underbrace{\sum_{i=1}^{n} e_i^2}_{\text{RSS}}
-\]
-<p>Total Sum of Squares = Explained Sum of Squares + Residual Sum of Squares. This identity holds <em>only</em> when the model includes an intercept; without one, the cross-term does not generally vanish and TSS ≠ ESS + RSS. This is why \(R^2\) as defined below can be negative for intercept-free models.</p>
-<p><strong>Common mistake:</strong> interpreting orthogonality of residuals to \(\mathbf{x}\) as evidence that the model is "correct." Orthogonality is a <em>property of the OLS estimator</em>, guaranteed algebraically for any dataset, not a diagnostic of model adequacy. Residuals can be perfectly orthogonal to \(\mathbf{x}\) while exhibiting clear nonlinear patterns when plotted against \(x\) or \(\hat y\) — always inspect residual plots, not just summary statistics.</p>
+        <p>In Chapter 1, we predicted an output \(y\) from a single input \(x\) using a straight line \(\hat{y} = \beta_0 + \beta_1 x\). But real prediction problems almost never have just one feature. A doctor predicting heart disease risk has age, blood pressure, cholesterol, BMI, smoking status, and dozens more. A real estate model has square footage, number of bedrooms, location, age of building, and school district ratings.</p>
 
-<h2>Coefficient of determination \(R^2\)</h2>
-<p>The Pythagorean decomposition motivates the most widely reported goodness-of-fit measure in regression:</p>
-\[
-R^2 = \frac{\text{ESS}}{\text{TSS}} = 1 - \frac{\text{RSS}}{\text{TSS}}
-\]
-<p>\(R^2\) is the fraction of total variance in \(y\) that the linear model explains. It ranges from \(0\) (the model predicts no better than the constant \(\bar y\)) to \(1\) (perfect fit, all residuals zero). In simple linear regression specifically, \(R^2\) equals the square of the Pearson correlation coefficient between \(x\) and \(y\):</p>
-\[
-R^2 = r_{xy}^2 = \left( \frac{S_{xy}}{\sqrt{S_{xx} S_{yy}}} \right)^2
-\]
-<p>This equivalence breaks down in multiple regression (Chapter 3), where \(R^2\) is still defined as \(1 - \text{RSS}/\text{TSS}\) but is no longer the square of any single bivariate correlation.</p>
-<p><strong>Edge case:</strong> \(R^2\) can be misleadingly high when \(n\) is small relative to the number of parameters, because adding any predictor (even pure noise) cannot decrease RSS and typically increases ESS slightly. With \(n = 3\) and one predictor, \(R^2\) is almost always large by chance. This is why adjusted \(R^2\) and cross-validated prediction error (Chapter 12) are preferred for model comparison. Also note that \(R^2\) says nothing about whether the linear <em>form</em> is appropriate: a perfect quadratic relationship sampled symmetrically around its vertex can yield \(R^2 \approx 0\) despite a deterministic relationship, while a weak but monotonic relationship with low noise can yield high \(R^2\) despite poor extrapolation behavior.</p>
+        <p>The natural question is: <strong>how do we generalize the least-squares idea from Chapter 1 to handle \(p\) input features simultaneously?</strong></p>
 
-<h3>Worked example: computing \(R^2\) and interpreting it</h3>
-<p>Continuing the study-hours example from above, we already have \(S_{xx} = 10\) and \(S_{xy} = 75\). Compute \(S_{yy}\):</p>
-\[
-S_{yy} = \sum (y_i - \bar y)^2 = (-14)^2 + (-9)^2 + 1^2 + 6^2 + 16^2 = 196 + 81 + 1 + 36 + 256 = 570
-\]
-<p>Therefore:</p>
-\[
-r_{xy} = \frac{75}{\sqrt{10 \times 570}} = \frac{75}{\sqrt{5700}} = \frac{75}{75.498} \approx 0.9934
-\]
-\[
-R^2 = r_{xy}^2 \approx 0.9869
-\]
-<p>The model explains approximately \(98.7\%\) of the variance in exam scores. Equivalently, \(\text{RSS} = S_{yy}(1 - R^2) = 570 \times 0.0131 \approx 7.47\), meaning the typical residual is roughly \(\sqrt{7.47/5} \approx 1.22\) points — very tight. <strong>Sensitivity check:</strong> if we replaced the fifth point with \((5, 60)\) as in the earlier sensitivity exercise, \(S_{yy}\) would drop to \(370\), \(S_{xy}\) to \(55\), giving \(r_{xy} = 55/\sqrt{3700} \approx 0.904\) and \(R^2 \approx 0.817\). A single outlying \(y\)-value reduced explained variance by \(17\) percentage points, illustrating again that \(R^2\) inherits squared loss's sensitivity to outliers.</p>
+        <p>A naive approach might be to fit a separate simple linear regression for each feature independently. But this ignores a crucial fact: features are often correlated with each other. Square footage and number of bedrooms move together. If we fit them separately, each model attributes all the shared predictive power to its own feature, leading to double-counting and misleading coefficients. We need a method that fits <em>all</em> features jointly, accounting for their correlations. That method is <strong>multiple linear regression</strong>.</p>
 
-<h2>Residuals and diagnostic reasoning</h2>
-<p>The <strong>residuals</strong> \(e_i = y_i - \hat y_i\) are the observable counterpart of the unobservable errors \(\varepsilon_i\). They serve three distinct purposes: assessing model fit, checking assumptions, and identifying influential observations. Key algebraic properties follow directly from the normal equations:</p>
-<ul>
-<li>\(\sum e_i = 0\) (residuals sum to zero when an intercept is included).</li>
-<li>\(\sum x_i e_i = 0\) (residuals are uncorrelated with the predictor in-sample).</li>
-<li>\(\sum \hat y_i e_i = 0\) (fitted values and residuals are orthogonal).</li>
-</ul>
-<p>These are <em>identities</em>, not assumptions — they hold for every dataset and every OLS fit with an intercept. Diagnostic reasoning uses residuals to check what the model <em>did not</em> force: whether the variance of \(e_i\) is constant across \(x\) (homoscedasticity), whether residuals are approximately normally distributed (for inference), and whether there is systematic structure left unexplained (nonlinearity). Plotting \(e_i\) versus \(\hat y_i\) or \(x_i\) is the primary tool; formal tests (Breusch-Pagan, Shapiro-Wilk) supplement but do not replace visual inspection.</p>
-<p><strong>Edge case:</strong> when \(n\) is very small, residuals are heavily constrained by the algebraic identities above and cannot reveal much. With \(n = 3\) and two parameters, there is only one degree of freedom for residuals; the three residuals must satisfy two linear constraints, leaving essentially no room for pattern detection. Diagnostics become meaningful only when \(n\) is substantially larger than the number of parameters. Also beware <strong>leverage points</strong>: observations with extreme \(x\)-values have disproportionately large influence on \(\hat\beta_1\) because the denominator \(S_{xx}\) weights them heavily. A high-leverage point with a moderate residual may still be distorting the fit; Cook's distance combines leverage and residual size to flag such cases.</p>
+        <h2>The model in matrix notation</h2>
 
-<h3>Worked example: residual analysis on the study-hours data</h3>
-<p>Using the fitted line \(\hat y = 41.5 + 7.5x\) from earlier, compute fitted values and residuals:</p>
-\[
-\begin{array}{c|c|c|c}
-x_i & y_i & \hat y_i = 41.5 + 7.5 x_i & e_i = y_i - \hat y_i \\ \hline
-1 & 50 & 49.0 & +1.0 \\
-2 & 55 & 56.5 & -1.5 \\
-3 & 65 & 64.0 & +1.0 \\
-4 & 70 & 71.5 & -1.5 \\
-5 & 80 & 79.0 & +1.0
-\end{array}
-\]
-<p>Verify the identities: \(\sum e_i = 1.0 - 1.5 + 1.0 - 1.5 + 1.0 = 0\) ✓. Check \(\sum x_i e_i = 1(1.0) + 2(-1.5) + 3(1.0) + 4(-1.5) + 5(1.0) = 1.0 - 3.0 + 3.0 - 6.0 + 5.0 = 0\) ✓. The residuals alternate in sign (+, −, +, −, +), which suggests the true relationship might be slightly curved rather than perfectly linear — a straight line systematically under-predicts at the extremes and over-predicts in the middle. With only five points this pattern is suggestive but not conclusive; with \(n = 50\) showing the same alternation, it would be strong evidence for adding a quadratic term. Note also that the largest absolute residual is \(1.5\), occurring at \(x = 2\) and \(x = 4\); neither is a high-leverage point (both are near \(\bar x = 3\)), so their influence on the slope is modest.</p>
+        <p>Suppose we have \(n\) observations and \(p\) features. For observation \(i\), the features are \(x_{i1}, x_{i2}, \ldots, x_{ip}\), and the target is \(y_i\). The multiple linear regression model predicts:</p>
 
-<h2>Connection to the broader framework</h2>
-<p>Simple linear regression instantiates every concept from Chapter 1 in its simplest possible setting. The hypothesis class is \(\mathcal{H} = \{\beta_0 + \beta_1 x\}\); the loss is squared error; ERM yields the closed-form OLS estimator; the Bayes-optimal predictor under squared loss is \(\mathbb{E}[Y \mid X = x]\), and OLS estimates it by restricting to linear functions. When the true conditional mean is indeed linear and errors are homoscedastic, OLS is not just ERM-optimal but statistically efficient (Gauss-Markov theorem). When these conditions fail, OLS remains the best <em>linear</em> predictor in the population sense, but nonlinear methods may dominate.</p>
-<p>This chapter's machinery extends directly forward: Chapter 3 generalizes to multiple predictors via matrix algebra, preserving the projection geometry and normal-equation structure derived here. Chapter 4 adds regularization (ridge regression) to handle collinearity and overfitting, modifying the denominator \(S_{xx}\) by a penalty term. Chapter 5 swaps squared loss for logistic loss to handle classification, replacing the closed-form solution with iterative optimization. Chapter 11 decomposes the expected squared error of \(\hat y\) into bias, variance, and irreducible noise — a decomposition whose intuition is built entirely on the residual/variance concepts introduced here. And Chapter 17's PCA can be understood as finding the direction that maximizes the \(R^2\) of a linear projection, closing the circle back to this chapter's core ideas.</p>
-<p>Master simple linear regression not as a toy but as the <em>canonical instance</em> of supervised learning. Every subtlety that arises later — overfitting, regularization, diagnostics, geometric interpretation, the gap between empirical and expected risk — is already present here in miniature, stripped of notational overhead. If you can derive, compute, diagnose, and critique the OLS fit by hand, you have the foundation for everything that follows.</p>
+        \[\hat{y}_i = \beta_0 + \beta_1 x_{i1} + \beta_2 x_{i2} + \cdots + \beta_p x_{ip}\]
 
-  </article>
-  <div class="chapter-nav">
-    <a class="chapter-nav-link prev" href="../ch1/index.html">
-      <span class="chapter-nav-label">← Previous</span>
-      <span class="chapter-nav-title">1. Supervised Learning: Regression and Classification Problems</span>
-    </a>
-    <a class="chapter-nav-link next" href="../ch3/index.html">
-      <span class="chapter-nav-label">Next →</span>
-      <span class="chapter-nav-title">3. Multiple Linear Regression</span>
-    </a>
-  </div>
-</div>
-</main>
-<footer>
-  <div class="wrap">
-    <span>© 2026 iTube. Read forever, free forever.</span>
-    <span>No video was harmed in the making of this platform.</span>
-  </div>
-</footer>
-<script src="../../theme.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-<script defer src="../../app.js"></script>
+        <p>This is a hyperplane in \(p\)-dimensional space rather than a line in 2D. Writing out sums like this for every equation quickly becomes unwieldy. Matrix notation compresses everything cleanly.</p>
+
+        <p>We collect all \(n\) targets into a column vector \(\mathbf{y} \in \mathbb{R}^n\):</p>
+
+        \[\mathbf{y} = \begin{pmatrix} y_1 \\ y_2 \\ \vdots \\ y_n \end{pmatrix}\]
+
+        <p>We collect all parameters (including the intercept) into a vector \(\boldsymbol{\beta} \in \mathbb{R}^{p+1}\):</p>
+
+        \[\boldsymbol{\beta} = \begin{pmatrix} \beta_0 \\ \beta_1 \\ \vdots \\ \beta_p \end{pmatrix}\]
+
+        <p>And we build the <strong>design matrix</strong> \(X \in \mathbb{R}^{n \times (p+1)}\), where each row is one observation's features preceded by a 1 (to absorb the intercept):</p>
+
+        \[X = \begin{pmatrix} 1 & x_{11} & x_{12} & \cdots & x_{1p} \\ 1 & x_{21} & x_{22} & \cdots & x_{2p} \\ \vdots & \vdots & \vdots & \ddots & \vdots \\ 1 & x_{n1} & x_{n2} & \cdots & x_{np} \end{pmatrix}\]
+
+        <p>The first column of all ones is what makes \(\beta_0\) act as the intercept. Without it, the hyperplane would be forced through the origin. With it, the model can shift up or down freely.</p>
+
+        <p>Now the entire set of predictions across all \(n\) observations is simply:</p>
+
+        \[\hat{\mathbf{y}} = X\boldsymbol{\beta}\]
+
+        <p>And the vector of residuals is:</p>
+
+        \[\mathbf{e} = \mathbf{y} - X\boldsymbol{\beta}\]
+
+        <p>This compact notation is not just aesthetic convenience — it reveals the geometric structure of the problem, which we will exploit in the derivation.</p>
+
+        <h2>The least-squares objective, revisited</h2>
+
+        <p>Just as in Chapter 1, we want to minimize the sum of squared residuals. In matrix notation, the RSS is:</p>
+
+        \[\text{RSS}(\boldsymbol{\beta}) = \|\mathbf{y} - X\boldsymbol{\beta}\|^2 = (\mathbf{y} - X\boldsymbol{\beta})^\top (\mathbf{y} - X\boldsymbol{\beta})\]
+
+        <p>where \(\|\cdot\|\) denotes the Euclidean norm. Expanding this quadratic form using the distributive property of matrix multiplication (and noting that \(\mathbf{a}^\top \mathbf{b} = \mathbf{b}^\top \mathbf{a}\) for vectors):</p>
+
+        \[\text{RSS}(\boldsymbol{\beta}) = \mathbf{y}^\top \mathbf{y} - 2\boldsymbol{\beta}^\top X^\top \mathbf{y} + \boldsymbol{\beta}^\top X^\top X \boldsymbol{\beta}\]
+
+        <p>This is a quadratic function of the vector \(\boldsymbol{\beta}\), analogous to the scalar quadratic we minimized in Chapter 1. Our goal: find the \(\boldsymbol{\beta}\) that minimizes it.</p>
+
+        <h2>Deriving the normal equations</h2>
+
+        <p>To minimize RSS, we take the gradient with respect to \(\boldsymbol{\beta}\) and set it to zero. This requires two standard results from matrix calculus:</p>
+
+        <ul>
+          <li><strong>Gradient of a linear form:</strong> \(\nabla_{\boldsymbol{\beta}} (\boldsymbol{\beta}^\top \mathbf{a}) = \mathbf{a}\) for any constant vector \(\mathbf{a}\).</li>
+          <li><strong>Gradient of a quadratic form:</strong> \(\nabla_{\boldsymbol{\beta}} (\boldsymbol{\beta}^\top A \boldsymbol{\beta}) = 2A\boldsymbol{\beta}\) when \(A\) is symmetric.</li>
+        </ul>
+
+        <p>Note that \(X^\top X\) is always symmetric (since \((X^\top X)^\top = X^\top (X^\top)^\top = X^\top X\)), so the second rule applies directly.</p>
+
+        <p>Applying these rules term by term to our expanded RSS:</p>
+
+        <ul>
+          <li>\(\nabla_{\boldsymbol{\beta}} (\mathbf{y}^\top \mathbf{y}) = \mathbf{0}\) (constant with respect to \(\boldsymbol{\beta}\))</li>
+          <li>\(\nabla_{\boldsymbol{\beta}} (-2\boldsymbol{\beta}^\top X^\top \mathbf{y}) = -2 X^\top \mathbf{y}\)</li>
+          <li>\(\nabla_{\boldsymbol{\beta}} (\boldsymbol{\beta}^\top X^\top X \boldsymbol{\beta}) = 2 X^\top X \boldsymbol{\beta}\)</li>
+        </ul>
+
+        <p>Combining:</p>
+
+        \[\nabla_{\boldsymbol{\beta}} \text{RSS} = -2 X^\top \mathbf{y} + 2 X^\top X \boldsymbol{\beta}\]
+
+        <p>Setting the gradient equal to zero and dividing by 2:</p>
+
+        \[X^\top X \boldsymbol{\beta} = X^\top \mathbf{y}\]
+
+        <p>This system of \(p+1\) linear equations in \(p+1\) unknowns is called the <strong>normal equations</strong>. They are the multivariate generalization of the two scalar equations we solved in Chapter 1.</p>
+
+        <h2>The closed-form OLS estimator</h2>
+
+        <p>If the matrix \(X^\top X\) is invertible, we can solve the normal equations directly:</p>
+
+        \[\boxed{\hat{\boldsymbol{\beta}} = (X^\top X)^{-1} X^\top \mathbf{y}}</\]
+
+        <p>This is one of the most important formulas in all of statistics and machine learning. Every time you call a linear regression function in any software library, this is (usually) what is being computed internally.</p>
+
+        <p>Let's verify that this reduces to the Chapter 1 formulas when \(p = 1\). With one feature, \(X\) has two columns (ones and \(x\)), so \(X^\top X\) is a \(2 \times 2\) matrix. Working through the inversion and multiplication recovers exactly \(\hat{\beta}_1 = \frac{\sum(x_i - \bar{x})(y_i - \bar{y})}{\sum(x_i - \bar{x})^2}\) and \(\hat{\beta}_0 = \bar{y} - \hat{\beta}_1 \bar{x}\). The matrix formula is a genuine generalization, not a different object.</p>
+
+        <h2>Geometric interpretation: projection</h2>
+
+        <p>The algebra gives us a formula, but geometry gives us understanding. What is \(X\hat{\boldsymbol{\beta}}\) geometrically?</p>
+
+        <p>The columns of \(X\) span a subspace of \(\mathbb{R}^n\) called the <strong>column space</strong> of \(X\), denoted \(\text{Col}(X)\). This subspace has dimension at most \(p+1\) (it could be less if columns are linearly dependent). Every possible prediction \(X\boldsymbol{\beta}\) lives in this subspace — it is a linear combination of the columns of \(X\).</p>
+
+        <p>The observed target vector \(\mathbf{y}\) generally does <em>not</em> lie in \(\text{Col}(X)\) (unless the data happens to be perfectly linear). So we cannot make the residual \(\mathbf{y} - X\boldsymbol{\beta}\) exactly zero. The best we can do is find the point in \(\text{Col}(X)\) that is <em>closest</em> to \(\mathbf{y}\) in Euclidean distance.</p>
+
+        <p>Minimizing \(\|\mathbf{y} - X\boldsymbol{\beta}\|^2\) is exactly finding this closest point. And the closest point in a subspace to an external vector is the <strong>orthogonal projection</strong> of that vector onto the subspace. Therefore:</p>
+
+        \[\hat{\mathbf{y}} = X\hat{\boldsymbol{\beta}} = \text{Proj}_{\text{Col}(X)}(\mathbf{y})\]
+
+        <p>The residual vector \(\mathbf{e} = \mathbf{y} - \hat{\mathbf{y}}\) is orthogonal to every column of \(X\), which is precisely what the normal equations express: \(X^\top \mathbf{e} = X^\top(\mathbf{y} - X\hat{\boldsymbol{\beta}}) = \mathbf{0}\). Each component of \(X^\top \mathbf{e} = \mathbf{0}\) says that the residual is orthogonal to one column of \(X\).</p>
+
+        <p>This geometric picture explains why OLS works, why the solution is unique (when \(X^\top X\) is invertible), and why the residuals sum to zero when an intercept is included (the residual is orthogonal to the all-ones column).</p>
+
+        <h3>Worked example</h3>
+
+        <h4>Fitting a plane to four points</h4>
+
+        <p>Let's compute \(\hat{\boldsymbol{\beta}} = (X^\top X)^{-1} X^\top \mathbf{y}\) by hand for a tiny dataset with \(n = 4\) observations and \(p = 2\) features:</p>
+
+        <ul>
+          <li>Observation 1: \(x_1 = 1, x_2 = 0, y = 2\)</li>
+          <li>Observation 2: \(x_1 = 0, x_2 = 1, y = 3\)</li>
+          <li>Observation 3: \(x_1 = 1, x_2 = 1, y = 5\)</li>
+          <li>Observation 4: \(x_1 = 2, x_2 = 1, y = 6\)</li>
+        </ul>
+
+        <p><strong>Step 1: Build \(X\) and \(\mathbf{y}\).</strong></p>
+
+        \[X = \begin{pmatrix} 1 & 1 & 0 \\ 1 & 0 & 1 \\ 1 & 1 & 1 \\ 1 & 2 & 1 \end{pmatrix}, \quad \mathbf{y} = \begin{pmatrix} 2 \\ 3 \\ 5 \\ 6 \end{pmatrix}\]
+
+        <p><strong>Step 2: Compute \(X^\top X\).</strong></p>
+
+        \[X^\top X = \begin{pmatrix} 1 & 1 & 1 & 1 \\ 1 & 0 & 1 & 2 \\ 0 & 1 & 1 & 1 \end{pmatrix} \begin{pmatrix} 1 & 1 & 0 \\ 1 & 0 & 1 \\ 1 & 1 & 1 \\ 1 & 2 & 1 \end{pmatrix}\]
+
+        <p>Computing each entry individually:</p>
+        <ul>
+          <li>\((1,1)\): \(1+1+1+1 = 4\)</li>
+          <li>\((1,2)\): \(1+0+1+2 = 4\)</li>
+          <li>\((1,3)\): \(0+1+1+1 = 3\)</li>
+          <li>\((2,1)\): \(4\) (symmetric)</li>
+          <li>\((2,2)\): \(1+0+1+4 = 6\)</li>
+          <li>\((2,3)\): \(0+0+1+2 = 3\)</li>
+          <li>\((3,1)\): \(3\) (symmetric)</li>
+          <li>\((3,2)\): \(3\) (symmetric)</li>
+          <li>\((3,3)\): \(0+1+1+1 = 3\)</li>
+        </ul>
+
+        \[X^\top X = \begin{pmatrix} 4 & 4 & 3 \\ 4 & 6 & 3 \\ 3 & 3 & 3 \end{pmatrix}\]
+
+        <p><strong>Step 3: Compute \(X^\top \mathbf{y}\).</strong></p>
+
+        \[X^\top \mathbf{y} = \begin{pmatrix} 1 & 1 & 1 & 1 \\ 1 & 0 & 1 & 2 \\ 0 & 1 & 1 & 1 \end{pmatrix} \begin{pmatrix} 2 \\ 3 \\ 5 \\ 6 \end{pmatrix} = \begin{pmatrix} 2+3+5+6 \\ 2+0+5+12 \\ 0+3+5+6 \end{pmatrix} = \begin{pmatrix} 16 \\ 19 \\ 14 \end{pmatrix}\]
+
+        <p><strong>Step 4: Invert \(X^\top X\).</strong></p>
+
+        <p>We compute the inverse of the \(3 \times 3\) matrix. First, the determinant:</p>
+
+        \[\det(X^\top X) = 4(6 \cdot 3 - 3 \cdot 3) - 4(4 \cdot 3 - 3 \cdot 3) + 3(4 \cdot 3 - 6 \cdot 3)\]
+        \[= 4(18 - 9) - 4(12 - 9) + 3(12 - 18)\]
+        \[= 4(9) - 4(3) + 3(-6) = 36 - 12 - 18 = 6\]
+
+        <p>The determinant is 6 (nonzero), so the inverse exists. Computing the adjugate matrix (cofactor transpose) and dividing by 6:</p>
+
+        \[(X^\top X)^{-1} = \frac{1}{6} \begin{pmatrix} 9 & -3 & -6 \\ -3 & 3 & 0 \\ -6 & 0 & 8 \end{pmatrix}\]
+
+        <p>(Verification: multiplying this by \(X^\top X\) should give the identity. Checking the \((1,1)\) entry: \(\frac{1}{6}(9 \cdot 4 + (-3) \cdot 4 + (-6) \cdot 3) = \frac{1}{6}(36 - 12 - 18) = \frac{6}{6} = 1\). ✓)</p>
+
+        <p><strong>Step 5: Compute \(\hat{\boldsymbol{\beta}} = (X^\top X)^{-1} X^\top \mathbf{y}\).</strong></p>
+
+        \[\hat{\boldsymbol{\beta}} = \frac{1}{6} \begin{pmatrix} 9 & -3 & -6 \\ -3 & 3 & 0 \\ -6 & 0 & 8 \end{pmatrix} \begin{pmatrix} 16 \\ 19 \\ 14 \end{pmatrix}\]
+
+        <p>Computing each component:</p>
+        <ul>
+          <li>\(\hat{\beta}_0 = \frac{1}{6}(9 \cdot 16 + (-3) \cdot 19 + (-6) \cdot 14) = \frac{1}{6}(144 - 57 - 84) = \frac{3}{6} = 0.5\)</li>
+          <li>\(\hat{\beta}_1 = \frac{1}{6}((-3) \cdot 16 + 3 \cdot 19 + 0 \cdot 14) = \frac{1}{6}(-48 + 57 + 0) = \frac{9}{6} = 1.5\)</li>
+          <li>\(\hat{\beta}_2 = \frac{1}{6}((-6) \cdot 16 + 0 \cdot 19 + 8 \cdot 14) = \frac{1}{6}(-96 + 0 + 112) = \frac{16}{6} \approx 2.667\)</li>
+        </ul>
+
+        <p><strong>Step 6: State the fitted model.</strong></p>
+
+        \[\hat{y} = 0.5 + 1.5 x_1 + 2.667 x_2\]
+
+        <p>This plane is the unique least-squares fit to our four data points. Holding \(x_2\) fixed, increasing \(x_1\) by one unit increases the prediction by 1.5. Holding \(x_1\) fixed, increasing \(x_2\) by one unit increases the prediction by approximately 2.667. The intercept 0.5 is the predicted value when both features are zero.</p>
+
+        <h2>When does the formula break? Singularity and multicollinearity</h2>
+
+        <p>The closed-form solution \(\hat{\boldsymbol{\beta}} = (X^\top X)^{-1} X^\top \mathbf{y}\) requires \(X^\top X\) to be invertible. When is it not?</p>
+
+        <p>\(X^\top X\) is singular if and only if the columns of \(X\) are linearly dependent. This happens when:</p>
+        <ul>
+          <li><strong>Perfect multicollinearity:</strong> One feature is an exact linear combination of others (e.g., including both temperature in Celsius and temperature in Fahrenheit).</li>
+          <li><strong>\(p + 1 > n\):</strong> More parameters than observations. The column space cannot have dimension greater than \(n\), so with \(p+1 > n\) columns, dependence is guaranteed.</li>
+          <li><strong>Dummy variable trap:</strong> Including indicator variables for all categories of a categorical variable along with an intercept (the indicators sum to the intercept column).</li>
+        </ul>
+
+        <p>When \(X^\top X\) is singular, there are infinitely many \(\boldsymbol{\beta}\) vectors that achieve the same minimum RSS. The OLS solution is not unique. Software typically handles this by dropping redundant columns or using a pseudoinverse, but the underlying issue is real: the data does not contain enough information to distinguish the effects of collinear features.</p>
+
+        <p>Near-singularity (high but not perfect correlation among features) is even more insidious. The inverse exists but has very large entries, making \(\hat{\boldsymbol{\beta}}\) extremely sensitive to small changes in \(\mathbf{y}\). Coefficients can have huge magnitudes and wrong signs. This is the motivation for <strong>ridge regression</strong>, which we cover in Chapter 3: adding a penalty term \(\lambda \|\boldsymbol{\beta}\|^2\) to the objective makes \(X^\top X + \lambda I\) always invertible and stabilizes the estimates.</p>
+
+        <h2>Common mistake</h2>
+
+        <p><strong>Common mistake:</strong> Students often interpret individual coefficients \(\hat{\beta}_j\) as "the effect of feature \(j\) on \(y\)" without qualification. This is only correct <em>ceteris paribus</em> — holding all other features fixed. In observational data where features are correlated, changing \(x_j\) in reality also changes other features, so \(\hat{\beta}_j\) does not represent the total causal effect of \(x_j\). It represents the partial effect conditional on the other features in the model. Omitting a relevant correlated feature changes every coefficient. This is why feature selection and domain knowledge matter as much as the fitting algorithm itself.</p>
+
+        <h2>Edge case</h2>
+
+        <p><strong>What happens as \(n \to \infty\) with fixed \(p\)?</strong> Under standard regularity conditions (features have finite second moments, no perfect multicollinearity in the population), the law of large numbers ensures that \(\frac{1}{n} X^\top X \to \mathbb{E}[XX^\top]\) and \(\frac{1}{n} X^\top \mathbf{y} \to \mathbb{E}[XY]\). If \(\mathbb{E}[XX^\top]\) is invertible, then \(\hat{\boldsymbol{\beta}} \to (\mathbb{E}[XX^\top])^{-1} \mathbb{E}[XY]\), which is the population OLS parameter. The estimator is consistent. But if the population covariance is singular (true multicollinearity), consistency fails regardless of sample size — more data cannot fix a fundamentally unidentifiable model.</p>
+
+        <h2>Where we go next</h2>
+
+        <p>We now have a complete theory for fitting linear models with many features. But the closed-form OLS estimator has a vulnerability: when features are correlated or numerous, the coefficients become unstable. Chapter 3 introduces <strong>ridge regression</strong>, which modifies the least-squares objective with an \(\ell_2\) penalty to shrink coefficients toward zero, trading a small amount of bias for a large reduction in variance. The derivation follows the same Socratic pattern, and the resulting formula \(\hat{\boldsymbol{\beta}}_{\text{ridge}} = (X^\top X + \lambda I)^{-1} X^\top \mathbf{y}\) is a direct modification of the normal equations derived here.</p>
+
+      </article>
+
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch1/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">1. The Learning Problem &amp; Simple Linear Regression</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch3/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">3. Ridge Regression</span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
 </body>
 </html>
