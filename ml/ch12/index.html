@@ -1,180 +1,227 @@
-<!-- File: /<slug>/ch12/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>12. Cross-Validation: LOO and k-Fold — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
-<meta name="description" content="Cross-validation as an estimator of expected risk, LOO and k-fold derivations, computational shortcuts for linear models, variance considerations, nested CV, and a hand-computed example.">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap" rel="stylesheet">
-<link rel="manifest" href="../../manifest.json">
-<link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="../../icons/icon-192.svg">
-<meta name="theme-color" content="#1B1B1F">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="iTube">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script>
-(function(){
-  var saved = localStorage.getItem("itube-theme");
-  var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-  document.documentElement.setAttribute("data-theme", theme);
-})();
-</script>
-<link rel="stylesheet" href="../../style.css">
+  <title>12. Clustering: k-Means &amp; k-Medoid — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
+  <meta name="description" content="How do we discover group structure without labels? We derive k-means and k-medoid from their objective functions, prove coordinate descent convergence, analyze initialization sensitivity with Lloyd's algorithm, and work through complete numeric examples showing cluster assignments and centroid updates.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
 </head>
 <body data-depth="2">
-<header class="top">
-  <div class="wrap">
-    <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
-    <div class="top-actions">
-      <div class="font-controls" role="group" aria-label="Adjust text size">
-        <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
-        <span id="font-size-label">100%</span>
-        <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
-        <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
       </div>
-      <button id="theme-btn" title="Toggle light/dark">◐</button>
     </div>
-  </div>
-</header>
-<main>
-<div class="wrap narrow">
-  <div class="breadcrumb">
-    <a href="../../index.html">iTube</a><span class="sep">/</span>
-    <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
-    <span>Ch. 12</span>
-  </div>
-  <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
-  <h1>12. Cross-Validation: LOO and k-Fold</h1>
-  <div class="chapter-meta">
-    <span>Chapter 12 of 17</span>
-    <span class="read-badge">23 min read</span>
-  </div>
-  <article>
+  </header>
 
-<h2>Why cross-validation? Estimating expected risk from data</h2>
-<p>Chapter 1 defined the <strong>expected risk</strong> \(R(f) = \mathbb{E}[L(f(X), Y)]\) as the true measure of generalization performance and showed that the empirical risk \(\hat R(f)\) on training data is optimistically biased — especially for flexible models that overfit (Chapter 11). Chapter 11 further decomposed test error into bias, variance, and noise, making clear that evaluating a model requires data <em>not used during training</em>. But holding out a fixed test set wastes precious samples in small-data regimes and yields a single noisy estimate.</p>
-<p><strong>Cross-validation</strong> (CV) solves both problems by systematically rotating which observations serve as validation data, producing a nearly unbiased estimate of expected risk that uses all available data for both training and evaluation. It is the primary tool for:</p>
-<ul>
-<li><strong>Model selection:</strong> choosing hyperparameters (\(k\) in kNN, \(\lambda\) in ridge, tree depth, SVM \(C\) and \(\gamma\)).</li>
-<li><strong>Model assessment:</strong> estimating the generalization error of a fully specified learning procedure.</li>
-<li><strong>Algorithm comparison:</strong> determining whether one learner outperforms another on a given task.</li>
-</ul>
-<p>This chapter derives the two most important variants — leave-one-out (LOO) and k-fold CV — analyzes their statistical properties (bias, variance, computational cost), presents exact shortcuts for linear models, and explains why <strong>nested CV</strong> is essential when model selection and assessment must both be performed on limited data.</p>
-<p><strong>Common mistake:</strong> using CV error to select a model AND reporting that same CV error as the final performance estimate. This double-dips on the data: the selected model is optimized for the CV criterion, so its CV error is optimistically biased as an estimate of true risk. Always use <em>nested</em> CV (outer loop for assessment, inner loop for selection) or a completely held-out test set untouched during any model selection. Reporting inner-loop CV error as final performance is one of the most frequent methodological errors in applied machine learning.</p>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
+        <span>Ch. 12</span>
+      </div>
+      <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
+      <h1>12. Clustering: k-Means &amp; k-Medoid</h1>
+      <div class="chapter-meta">
+        <span>Chapter 12 of 14</span>
+        <span class="read-badge">25 min read</span>
+      </div>
 
-<h2>Leave-one-out cross-validation</h2>
-<p><strong>Leave-one-out CV</strong> is the extreme case where each fold contains exactly one observation. For dataset size \(n\), LOO performs \(n\) train-test splits: train on all data except observation \(i\), evaluate loss on \(i\), average over all \(i\):</p>
-\[
-\widehat{R}_{\text{LOO}} = \frac{1}{n} \sum_{i=1}^{n} L\big(\hat f^{-i}(x_i), y_i\big)
-\]
-<p>where \(\hat f^{-i}\) denotes the model fitted without the \(i\)-th observation. LOO has two attractive theoretical properties:</p>
-<ul>
-<li><strong>Nearly unbiased:</strong> \(\mathbb{E}[\widehat{R}_{\text{LOO}}] \approx R_n\), the expected risk of a model trained on \(n-1\) samples. Since \(R_n \approx R_{n+1}\) for moderate \(n\), LOO estimates the risk of a model trained on essentially the full dataset.</li>
-<li><strong>Deterministic:</strong> unlike k-fold CV, LOO has no randomness from fold assignment; results are reproducible without seeding.</li>
-</ul>
-<p>The cost is computational: \(n\) refits are required. For OLS this is tractable via an exact shortcut (next section); for most other algorithms it is prohibitive at large \(n\). Statistically, LOO can have <strong>high variance</strong> because the \(n\) leave-one-out estimators are highly correlated (each pair of training sets shares \(n-2\) observations). This correlation inflates the variance of \(\widehat{R}_{\text{LOO}}\) relative to k-fold with moderate \(k\), despite using more folds.</p>
-<p><strong>Edge case:</strong> for unstable algorithms (e.g., stepwise variable selection, unpruned trees), removing a single point can drastically change the fitted model, making \(\hat f^{-i}\) unrepresentative of \(\hat f\). LOO then estimates the risk of a highly variable sequence of models rather than the stable target of interest. k-fold with \(k = 5\) or \(10\) is preferred in such cases because each fold's training set is closer in size and composition to the full dataset, yielding more representative fits.</p>
+      <article>
 
-<h2>k-Fold cross-validation</h2>
-<p><strong>k-fold CV</strong> partitions the data into \(k\) disjoint subsets (folds) of approximately equal size. For each fold \(j = 1, \dots, k\), train on the union of the other \(k-1\) folds and evaluate on fold \(j\):</p>
-\[
-\widehat{R}_{k\text{-fold}} = \frac{1}{k} \sum_{j=1}^{k} \frac{1}{|F_j|} \sum_{i \in F_j} L\big(\hat f^{-F_j}(x_i), y_i\big)
-\]
-<p>where \(F_j\) is the \(j\)-th fold and \(\hat f^{-F_j}\) is trained on all data outside \(F_j\). Common choices are \(k = 5\) or \(k = 10\), balancing bias and variance:</p>
-<ul>
-<li><strong>Bias:</strong> each training set has size \(n(k-1)/k\). For \(k = 5\), models are trained on 80% of data; for \(k = 10\), 90%. Bias relative to full-data risk increases as \(k\) decreases. \(k = n\) recovers LOO (minimal bias).</li>
-<li><strong>Variance:</strong> decreases as \(k\) decreases because fewer, less-correlated fold estimates are averaged. However, very small \(k\) (e.g., \(k = 2\)) introduces high variance from the arbitrary split. Empirically, \(k = 5\) or \(10\) minimizes mean squared error of the risk estimate across a wide range of tasks.</li>
-</ul>
-<p>k-fold CV requires only \(k\) refits (vs. \(n\) for LOO), making it practical for expensive algorithms. Stratified k-fold ensures each fold preserves the class distribution, reducing variance for classification tasks with imbalanced classes. Repeated k-fold (averaging over multiple random partitions) further reduces variance at linear computational cost.</p>
-<p><strong>Common mistake:</strong> performing preprocessing (feature scaling, feature selection, imputation) on the full dataset before splitting into folds. This leaks information from validation folds into training, producing optimistically biased CV estimates. All preprocessing must be fit <em>within</em> each fold's training data only, then applied to the validation fold. Pipeline abstractions in modern libraries enforce this discipline; manual implementations must replicate it explicitly.</p>
+        <h2>Learning without labels</h2>
 
-<h3>Worked example: hand-computed 3-fold CV</h3>
-<p>Dataset: \(n = 6\) points with true labels \(y = (0, 0, 1, 1, 1, 0)\). Algorithm: majority-class classifier (predicts mode of training labels). Partition into 3 folds of size 2: \(F_1 = \{1,2\}\), \(F_2 = \{3,4\}\), \(F_3 = \{5,6\}\).</p>
-<p><strong>Fold 1 validation:</strong> Train on \(\{3,4,5,6\}\) with labels \((1,1,1,0)\). Mode = 1. Predict 1 for both points in \(F_1\): errors at points 1 and 2 (true label 0). Fold error = \(2/2 = 1.0\).</p>
-<p><strong>Fold 2 validation:</strong> Train on \(\{1,2,5,6\}\) with labels \((0,0,1,0)\). Mode = 0. Predict 0 for both points in \(F_2\): errors at points 3 and 4 (true label 1). Fold error = \(2/2 = 1.0\).</p>
-<p><strong>Fold 3 validation:</strong> Train on \(\{1,2,3,4\}\) with labels \((0,0,1,1)\). Tie → break to 0. Predict 0 for both points in \(F_3\): error at point 5 (true 1), correct at point 6 (true 0). Fold error = \(1/2 = 0.5\).</p>
-<p>\(\widehat{R}_{3\text{-fold}} = (1.0 + 1.0 + 0.5)/3 = 0.833\). <strong>Sensitivity check:</strong> different partition \(F_1' = \{1,3\}, F_2' = \{2,4\}, F_3' = \{5,6\}\) gives fold errors: train on \(\{2,4,5,6\}\) labels \((0,1,1,0)\) → tie → predict 0; errors at 1(correct? pt1=0 ✓, pt3=1 ✗) → 0.5. Fold 2': train on \(\{1,3,5,6\}\) labels \((0,1,1,0)\) → tie → 0; errors at pt2(0✓), pt4(1✗) → 0.5. Fold 3': same as before → 0.5. Average = 0.5. The estimate varies from 0.5 to 0.833 depending on partition — illustrating k-fold's variance and motivating repeated CV or stratification. With \(n = 6\), LOO would give a deterministic (but potentially high-variance) alternative.</p>
+        <p>Every method in Chapters 1–11 was supervised: we had labeled training data \(\{(x_i, y_i)\}\) and learned a mapping from inputs to outputs. But in many real-world settings, labels are unavailable, expensive, or undefined. A biologist has gene expression profiles for thousands of samples but no prior classification. A marketer has customer purchase histories but no predefined segments. An astronomer has millions of stellar spectra but no catalog of star types.</p>
 
-<h2>Exact LOO shortcut for ordinary least squares</h2>
-<p>For OLS with squared loss, LOO-CV can be computed <em>without refitting</em> using the hat matrix \(H = X(X^\top X)^{-1}X^\top\) from Chapter 3. The key identity is:</p>
-\[
-\hat y_i^{-i} = \frac{\hat y_i - h_{ii} y_i}{1 - h_{ii}}
-\]
-<p>where \(\hat y_i\) is the fitted value from the full-data model and \(h_{ii}\) is the \(i\)-th diagonal element of \(H\) (the leverage). Therefore the LOO residual is:</p>
-\[
-e_i^{-i} = y_i - \hat y_i^{-i} = \frac{y_i - \hat y_i}{1 - h_{ii}} = \frac{e_i}{1 - h_{ii}}
-\]
-<p>and LOO-CV becomes:</p>
-\[
-\widehat{R}_{\text{LOO}} = \frac{1}{n} \sum_{i=1}^{n} \left( \frac{e_i}{1 - h_{ii}} \right)^2
-\]
-<p>This requires only a single OLS fit plus computation of the hat matrix diagonal (\(O(np^2)\) total), versus \(n\) refits costing \(O(n^2 p^2)\). Analogous shortcuts exist for ridge regression (using the ridge hat matrix \(H_\lambda = X(X^\top X + \lambda I)^{-1}X^\top\)) and for generalized linear models via one-step Newton approximations.</p>
-<p><strong>Edge case:</strong> when \(h_{ii} \approx 1\) (extreme leverage point), the denominator \(1 - h_{ii} \approx 0\) and the LOO residual explodes. This correctly signals that the point is highly influential: removing it changes the fit dramatically. But numerically, values of \(h_{ii}\) very close to 1 cause instability. Implementations clamp \(h_{ii} \leq 1 - \epsilon\) or flag high-leverage points for inspection. Also note that this shortcut applies only to squared loss; for logistic regression or other GLMs, approximate LOO via importance sampling or PSIS-LOO is used instead.</p>
+        <p>The question clustering answers is: <strong>can we discover meaningful group structure in unlabeled data, and what does "meaningful" even mean without ground truth?</strong></p>
 
-<h3>Worked example: LOO shortcut vs. brute force</h3>
-<p>Simple linear regression on \(n = 4\) points: \((1,2), (2,4), (3,5), (4,4)\). From Chapter 2 formulas: \(\bar x = 2.5, \bar y = 3.75, S_{xx} = 5, S_{xy} = 5\), so \(\hat\beta_1 = 1, \hat\beta_0 = 1.25\). Fitted values: \(\hat y = (2.25, 3.25, 4.25, 5.25)\). Residuals: \(e = (-0.25, 0.75, 0.75, -1.25)\).</p>
-<p>Hat matrix diagonal for simple linear regression: \(h_{ii} = \frac{1}{n} + \frac{(x_i - \bar x)^2}{S_{xx}}\).</p>
-\[
-h_{11} = 0.25 + \frac{(-1.5)^2}{5} = 0.25 + 0.45 = 0.70
-\]
-\[
-h_{22} = 0.25 + \frac{(-0.5)^2}{5} = 0.25 + 0.05 = 0.30
-\]
-\[
-h_{33} = 0.25 + \frac{(0.5)^2}{5} = 0.30, \quad h_{44} = 0.25 + \frac{(1.5)^2}{5} = 0.70
-\]
-<p>LOO residuals via shortcut:</p>
-\[
-e_1^{-1} = \frac{-0.25}{1 - 0.70} = \frac{-0.25}{0.30} = -0.833, \quad e_2^{-2} = \frac{0.75}{0.70} = 1.071
-\]
-\[
-e_3^{-3} = \frac{0.75}{0.70} = 1.071, \quad e_4^{-4} = \frac{-1.25}{0.30} = -4.167
-\]
-<p>\(\widehat{R}_{\text{LOO}} = \frac{1}{4}(0.833^2 + 1.071^2 + 1.071^2 + 4.167^2) = \frac{1}{4}(0.694 + 1.147 + 1.147 + 17.364) = \frac{20.352}{4} = 5.088\).</p>
-<p><strong>Verification:</strong> Brute-force LOO for point 4: refit on first 3 points. \(\bar x' = 2, \bar y' = 11/3, S_{xx}' = 2, S_{xy}' = 3\), \(\hat\beta_1' = 1.5, \hat\beta_0' = 11/3 - 3 = 2/3\). Predict at \(x=4\): \(\hat y_4^{-4} = 2/3 + 6 = 6.667\). Residual: \(4 - 6.667 = -2.667\). Wait — this disagrees with shortcut's \(-4.167\)! Let me recheck. Actually \(S_{xy}' = (1-2)(2-11/3) + (2-2)(4-11/3) + (3-2)(5-11/3) = (-1)(-5/3) + 0 + (1)(4/3) = 5/3 + 4/3 = 3\). \(S_{xx}' = 1+0+1 = 2\). \(\hat\beta_1' = 3/2 = 1.5\). \(\hat\beta_0' = 11/3 - 1.5(2) = 11/3 - 3 = 2/3\). \(\hat y_4^{-4} = 2/3 + 1.5(4) = 2/3 + 6 = 20/3 ≈ 6.667\). Residual = \(4 - 20/3 = -8/3 ≈ -2.667\). Squared = 7.111. Shortcut gave \((-4.167)^2 = 17.364\). Discrepancy indicates error in shortcut application. Recompute \(h_{44}\): \(x_4 = 4, \bar x = 2.5, (4-2.5)^2 = 2.25, S_{xx} = 5\). \(h_{44} = 1/4 + 2.25/5 = 0.25 + 0.45 = 0.70\). Correct. \(e_4 = 4 - 5.25 = -1.25\). \(e_4/(1-h_{44}) = -1.25/0.30 = -4.167\). But brute force gives -2.667. The discrepancy arises because the shortcut formula assumes the model includes an intercept AND uses centered parameterization consistently. Let me verify the identity directly: \(\hat y_4^{-4} = (\hat y_4 - h_{44} y_4)/(1-h_{44}) = (5.25 - 0.70 \cdot 4)/0.30 = (5.25 - 2.80)/0.30 = 2.45/0.30 = 8.167\). Then \(e_4^{-4} = 4 - 8.167 = -4.167\). But brute force gave 6.667. There is a genuine inconsistency — the issue is that my brute-force refit is correct but the shortcut should match. Let me recompute brute force more carefully... Actually, the shortcut IS correct; my brute-force arithmetic had an error. Recomputing: with points (1,2),(2,4),(3,5), the OLS line passes through \(\bar x=2, \bar y=11/3\). Slope = 1.5, intercept = 2/3. At x=4: 2/3 + 6 = 20/3. Hmm, this seems right. The shortcut must also be right algebraically. The resolution: I made an error in the full-model fit. Full data: (1,2),(2,4),(3,5),(4,4). \(\bar x=2.5, \bar y=3.75\). \(S_{xy} = (1-2.5)(2-3.75)+(2-2.5)(4-3.75)+(3-2.5)(5-3.75)+(4-2.5)(4-3.75) = (-1.5)(-1.75)+(-0.5)(0.25)+(0.5)(1.25)+(1.5)(0.25) = 2.625-0.125+0.625+0.375 = 3.5\). NOT 5! Earlier I wrote \(S_{xy}=5\) incorrectly. Correct: \(\hat\beta_1 = 3.5/5 = 0.7\). \(\hat\beta_0 = 3.75 - 0.7(2.5) = 3.75-1.75 = 2.0\). Fitted: \(\hat y = (2.7, 3.4, 4.1, 4.8)\). Residuals: \(e = (-0.7, 0.6, 0.9, -0.8)\). Now shortcut for point 4: \(e_4/(1-h_{44}) = -0.8/0.30 = -2.667\). Matches brute force! Lesson: always verify intermediate computations. <strong>Sensitivity check:</strong> point 4 has leverage 0.70 (high), so its LOO residual is inflated by factor \(1/0.30 ≈ 3.3\times\) relative to raw residual. Points 2 and 3 (leverage 0.30) inflate only by \(1/0.70 ≈ 1.4\times\). High-leverage points dominate LOO-CV, correctly reflecting their outsized influence.</p>
+        <p>Unlike supervised learning, there is no single correct answer in clustering. Different algorithms encode different notions of what a "cluster" is. k-Means defines clusters as compact, spherical groups centered around prototypes. k-Medoid defines them similarly but restricts centers to actual data points, making it robust to outliers. Hierarchical clustering (Chapter 13) defines clusters via nested merge/split operations. The choice of algorithm is itself a modeling decision about the nature of the structure you expect.</p>
 
-<h2>Variance, stability, and nested cross-validation</h2>
-<p>CV estimates are themselves random variables with non-trivial variance. Key sources:</p>
-<ul>
-<li><strong>Data variability:</strong> different datasets yield different CV estimates even with the same algorithm.</li>
-<li><strong>Partition variability (k-fold only):</strong> different random folds yield different estimates for the same dataset. Mitigated by repeated CV.</li>
-<li><strong>Algorithm instability:</strong> learners sensitive to small data perturbations produce high-variance CV estimates regardless of fold structure.</li>
-</ul>
-<p>Standard errors for CV estimates are notoriously difficult to compute reliably because fold errors are correlated. Naive standard deviation of fold means divided by \(\sqrt{k}\) underestimates true uncertainty. Bootstrap or repeated CV with many repetitions provides more honest confidence intervals.</p>
-<p><strong>Nested CV</strong> addresses the double-dipping problem mentioned earlier. The outer loop (say, 5-fold) provides unbiased risk assessment. Within each outer training fold, an inner CV loop selects hyperparameters. The outer test fold evaluates the model selected by inner CV, untouched by any selection process. The average outer test error is an unbiased estimate of the expected risk of the <em>entire model selection procedure</em>, not just a particular model. Nested CV is computationally expensive (outer × inner refits) but essential for honest evaluation when no separate test set exists.</p>
-<p><strong>Edge case:</strong> when \(n\) is very small (e.g., \(n < 30\)), even LOO-CV can have high variance, and nested CV may be infeasible. In such regimes, consider Bayesian model averaging, information criteria (AIC/BIC), or accepting wider uncertainty intervals rather than pretending precision exists. Also beware time-series or spatially correlated data: standard CV assumes exchangeability; use blocked or rolling-origin CV instead to preserve temporal/spatial structure.</p>
+        <h2>The k-Means objective function</h2>
 
-<h2>Connection to the broader framework</h2>
-<p>Cross-validation is the operational bridge between theory and practice throughout this book. Chapter 1's expected risk is what CV estimates. Chapter 4's ridge regularization parameter \(\lambda\) is selected by CV. Chapter 6's kNN chooses \(k\) via CV. Chapter 10's tree pruning uses CV to select \(\alpha\). Chapter 11's bias-variance trade-off is diagnosed by comparing training error to CV error (large gap → high variance). And every subsequent chapter's hyperparameter tuning relies on CV as the default evaluation protocol.</p>
-<p>Master cross-validation not as a black-box function call but as a principled estimation procedure with known strengths and limitations. Understand when LOO beats k-fold (small \(n\), stable algorithms), when k-fold beats LOO (large \(n\), unstable algorithms), why preprocessing must be inside the loop, and why nested CV is non-negotiable for honest assessment. If you can derive the OLS LOO shortcut, compute k-fold CV by hand, diagnose leakage from improper preprocessing, and articulate when nested CV is required versus when a simple train/test split suffices, you have internalized the evaluation methodology that makes all other chapters actionable in practice.</p>
+        <p>Given \(n\) data points \(x_1, \ldots, x_n \in \mathbb{R}^p\) and a desired number of clusters \(k\), k-means seeks to minimize the <strong>within-cluster sum of squared distances</strong>:</p>
 
-  </article>
-  <div class="chapter-nav">
-    <a class="chapter-nav-link prev" href="../ch11/index.html">
-      <span class="chapter-nav-label">← Previous</span>
-      <span class="chapter-nav-title">11. Bias-Variance Trade-off</span>
-    </a>
-    <a class="chapter-nav-link next" href="../ch13/index.html">
-      <span class="chapter-nav-label">Next →</span>
-      <span class="chapter-nav-title">13. Multi-Layer Perceptron</span>
-    </a>
-  </div>
-</div>
-</main>
-<footer>
-  <div class="wrap">
-    <span>© 2026 iTube. Read forever, free forever.</span>
-    <span>No video was harmed in the making of this platform.</span>
-  </div>
-</footer>
-<script src="../../theme.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-<script defer src="../../app.js"></script>
+        \[J(c, \mu) = \sum_{j=1}^{k} \sum_{i: c_i = j} \|x_i - \mu_j\|^2\]
+
+        <p>where \(c_i \in \{1, \ldots, k\}\) is the cluster assignment for point \(i\), and \(\mu_j \in \mathbb{R}^p\) is the centroid (prototype) of cluster \(j\). The objective measures total compactness: lower \(J\) means points are closer to their assigned centroids.</p>
+
+        <p>This is a combinatorial optimization problem over assignments \(c\) and continuous optimization over centroids \(\mu\). Joint minimization is NP-hard in general. But conditional on one set of variables, the other has a closed-form solution — this enables coordinate descent.</p>
+
+        <h2>Lloyd's algorithm: alternating optimization</h2>
+
+        <p>Lloyd's algorithm alternates two steps until convergence:</p>
+
+        <p><strong>Step 1 (Assignment):</strong> Fix centroids \(\mu_1, \ldots, \mu_k\). Assign each point to the nearest centroid:</p>
+
+        \[c_i \leftarrow \arg\min_{j \in \{1,\ldots,k\}} \|x_i - \mu_j\|^2\]
+
+        <p>This step minimizes \(J\) with respect to \(c\) while holding \(\mu\) fixed. Each point independently chooses its closest centroid, so this is exact and takes \(O(nkp)\) time.</p>
+
+        <p><strong>Step 2 (Update):</strong> Fix assignments \(c_1, \ldots, c_n\). Update each centroid to the mean of its assigned points:</p>
+
+        \[\mu_j \leftarrow \frac{1}{|S_j|} \sum_{i \in S_j} x_i, \quad \text{where } S_j = \{i : c_i = j\}\]
+
+        <p>This step minimizes \(J\) with respect to \(\mu\) while holding \(c\) fixed. Why is the mean optimal? For any fixed set \(S_j\), the quantity \(\sum_{i \in S_j} \|x_i - \mu_j\|^2\) is minimized at \(\mu_j = \frac{1}{|S_j|}\sum_{i \in S_j} x_i\) — this is exactly the result from Chapter 1 showing that the mean minimizes squared error. If \(S_j = \emptyset\), the centroid is undefined; common fixes include reinitializing to a random point or keeping the previous value.</p>
+
+        <h2>Convergence guarantees and limitations</h2>
+
+        <p>Each step of Lloyd's algorithm decreases (or maintains) \(J\). Since \(J \geq 0\) and there are finitely many distinct assignments (\(k^n\) at most), the algorithm must converge in finite iterations. However:</p>
+
+        <ul>
+          <li><strong>Local optima:</strong> Convergence is to a local minimum of \(J\), not necessarily the global minimum. Different initializations yield different solutions.</li>
+          <li><strong>Initialization sensitivity:</strong> Poor initialization can produce arbitrarily bad local optima. k-means++ initialization (choosing initial centroids with probability proportional to squared distance from existing centroids) provides an \(O(\log k)\) approximation guarantee and dramatically improves practical performance.</li>
+          <li><strong>Empty clusters:</strong> Points may abandon a centroid entirely during assignment, leaving \(|S_j| = 0\). This requires handling as noted above.</li>
+        </ul>
+
+        <h3>Worked example: k-Means on six points</h3>
+
+        <p>Data in \(\mathbb{R}^2\): \(x_1=(1,1)\), \(x_2=(1,2)\), \(x_3=(2,1)\), \(x_4=(5,5)\), \(x_5=(5,6)\), \(x_6=(6,5)\). Set \(k=2\).</p>
+
+        <p><strong>Initialization:</strong> Choose \(\mu_1^{(0)} = x_1 = (1,1)\), \(\mu_2^{(0)} = x_4 = (5,5)\).</p>
+
+        <p><strong>Iteration 1 — Assignment:</strong></p>
+
+        <p>Compute squared Euclidean distances from each point to both centroids:</p>
+
+        <table style="border-collapse:collapse; margin:1em 0;">
+          <tr style="border-bottom:2px solid var(--stone);">
+            <th style="padding:4px 8px; text-align:center;">Point</th>
+            <th style="padding:4px 8px; text-align:center;">\(d^2\) to \(\mu_1=(1,1)\)</th>
+            <th style="padding:4px 8px; text-align:center;">\(d^2\) to \(\mu_2=(5,5)\)</th>
+            <th style="padding:4px 8px; text-align:center;">Assign</th>
+          </tr>
+          <tr><td style="padding:4px 8px; text-align:center;">\(x_1=(1,1)\)</td><td style="text-align:center;">0</td><td style="text-align:center;">32</td><td style="text-align:center;">1</td></tr>
+          <tr><td style="padding:4px 8px; text-align:center;">\(x_2=(1,2)\)</td><td style="text-align:center;">1</td><td style="text-align:center;">25</td><td style="text-align:center;">1</td></tr>
+          <tr><td style="padding:4px 8px; text-align:center;">\(x_3=(2,1)\)</td><td style="text-align:center;">1</td><td style="text-align:center;">25</td><td style="text-align:center;">1</td></tr>
+          <tr><td style="padding:4px 8px; text-align:center;">\(x_4=(5,5)\)</td><td style="text-align:center;">32</td><td style="text-align:center;">0</td><td style="text-align:center;">2</td></tr>
+          <tr><td style="padding:4px 8px; text-align:center;">\(x_5=(5,6)\)</td><td style="text-align:center;">41</td><td style="text-align:center;">1</td><td style="text-align:center;">2</td></tr>
+          <tr><td style="padding:4px 8px; text-align:center;">\(x_6=(6,5)\)</td><td style="text-align:center;">41</td><td style="text-align:center;">1</td><td style="text-align:center;">2</td></tr>
+        </table>
+
+        <p>Assignments: \(S_1 = \{1,2,3\}\), \(S_2 = \{4,5,6\}\).</p>
+
+        <p><strong>Iteration 1 — Update:</strong></p>
+
+        \[\mu_1^{(1)} = \frac{(1,1)+(1,2)+(2,1)}{3} = \left(\frac{4}{3}, \frac{4}{3}\right) \approx (1.333, 1.333)\]
+
+        \[\mu_2^{(1)} = \frac{(5,5)+(5,6)+(6,5)}{3} = \left(\frac{16}{3}, \frac{16}{3}\right) \approx (5.333, 5.333)\]
+
+        <p><strong>Iteration 2 — Assignment:</strong></p>
+
+        <p>Recompute distances to new centroids. By symmetry, \(x_1,x_2,x_3\) remain closest to \(\mu_1^{(1)}\) and \(x_4,x_5,x_6\) to \(\mu_2^{(1)}\). Assignments unchanged → algorithm has converged.</p>
+
+        <p><strong>Final result:</strong> Two clusters \(\{x_1,x_2,x_3\}\) and \(\{x_4,x_5,x_6\}\) with centroids \((4/3, 4/3)\) and \((16/3, 16/3)\). Final objective:</p>
+
+        \[J = \underbrace{\|(1,1)-(4/3,4/3)\|^2 + \|(1,2)-(4/3,4/3)\|^2 + \|(2,1)-(4/3,4/3)\|^2}_{\text{Cluster 1}} + \underbrace{\|(5,5)-(16/3,16/3)\|^2 + \|(5,6)-(16/3,16/3)\|^2 + \|(6,5)-(16/3,16/3)\|^2}_{\text{Cluster 2}}\]
+
+        <p>Cluster 1: \((1/9+1/9) + (1/9+4/9) + (4/9+1/9) = 2/9 + 5/9 + 5/9 = 12/9 = 4/3\).</p>
+        <p>Cluster 2: same by symmetry = \(4/3\).</p>
+        <p>Total \(J = 8/3 \approx 2.667\).</p>
+
+        <h2>k-Medoid: robustness via data-point centers</h2>
+
+        <p>k-Means uses the mean as cluster center, which is sensitive to outliers. A single extreme point can pull the centroid far from the bulk of the cluster. <strong>k-Medoid</strong> (specifically the PAM algorithm) restricts cluster centers to be actual data points (<strong>medoids</strong>), optimizing:</p>
+
+        \[J_{\text{medoid}}(c, m) = \sum_{j=1}^{k} \sum_{i: c_i = j} d(x_i, m_j)\]
+
+        <p>where \(m_j \in \{x_1, \ldots, x_n\}\) and \(d\) is any metric (not necessarily Euclidean). Using absolute distances instead of squared distances further reduces outlier sensitivity.</p>
+
+        <p>The PAM algorithm proceeds similarly to Lloyd's but with a crucial difference in the update step: instead of computing a mean, it searches among the assigned points for the one that minimizes within-cluster distance when chosen as medoid. This makes each update \(O(|S_j|^2 p)\) rather than \(O(|S_j| p)\), making k-medoid significantly more expensive than k-means for large clusters.</p>
+
+        <p>The advantage: k-medoid works with arbitrary distance metrics (Manhattan, cosine, edit distance) and produces interpretable representatives (actual data points rather than synthetic means). It is preferred when cluster centers need to be exemplars or when the data is non-Euclidean.</p>
+
+        <h3>Worked example: k-Medoid vs. k-Means with an outlier</h3>
+
+        <p>Data: \(x_1=(0,0)\), \(x_2=(1,0)\), \(x_3=(0,1)\), \(x_4=(100,100)\). Set \(k=2\).</p>
+
+        <p><strong>k-Means</strong> (initialized with \(x_1, x_4\)): Cluster 1 gets \(\{x_1,x_2,x_3\}\) with centroid \((1/3, 1/3)\). Cluster 2 gets \(\{x_4\}\) with centroid \((100,100)\). The centroid \((1/3,1/3)\) is pulled slightly toward the origin by the three nearby points, but if \(x_4\) were \((10,10)\) instead, the boundary would shift significantly. The mean is always influenced by every point.</p>
+
+        <p><strong>k-Medoid:</strong> Candidate medoids must be actual data points. For cluster \(\{x_1,x_2,x_3\}\), the total distance using each candidate:</p>
+        <ul>
+          <li>\(m=x_1\): \(d(x_1,x_1)+d(x_2,x_1)+d(x_3,x_1) = 0+1+1 = 2\)</li>
+          <li>\(m=x_2\): \(1+0+\sqrt{2} \approx 2.414\)</li>
+          <li>\(m=x_3\): \(1+\sqrt{2}+0 \approx 2.414\)</li>
+        </ul>
+        <p>\(x_1\) minimizes total distance and is selected as medoid. The outlier \(x_4\) forms its own cluster with itself as medoid. Crucially, moving \(x_4\) to \((1000,1000)\) changes nothing about cluster 1's medoid — k-medoid is completely unaffected by how far the outlier is, as long as it remains in its own cluster.</p>
+
+        <h2>Choosing \(k\)</h2>
+
+        <p>Neither k-means nor k-medoid determines \(k\) automatically. Common heuristics include:</p>
+        <ul>
+          <li><strong>Elbow method:</strong> Plot \(J\) vs. \(k\); choose \(k\) where the decrease sharply slows ("elbow"). Subjective but widely used.</li>
+          <li><strong>Silhouette score:</strong> For each point, compute \(s(i) = \frac{b(i) - a(i)}{\max(a(i), b(i))}\) where \(a(i)\) is average intra-cluster distance and \(b(i)\) is average nearest-cluster distance. Average \(s(i)\) across all points; higher is better. Range \([-1, 1]\).</li>
+          <li><strong>Domain knowledge:</strong> Often the most reliable guide. If you know there should be 3 customer segments, use \(k=3\).</li>
+        </ul>
+
+        <h2>Common mistake</h2>
+
+        <p><strong>Common mistake:</strong> Students often apply k-means to non-spherical or varying-density clusters and interpret the results as ground truth. k-Means implicitly assumes clusters are convex, isotropic, and roughly equal in size because it optimizes squared Euclidean distance to centroids. Elongated, nested, or irregularly shaped clusters will be poorly captured. Always visualize the resulting clusters and consider whether the spherical assumption is reasonable. If not, switch to density-based methods (DBSCAN), spectral clustering, or hierarchical clustering (Chapter 13). Treating k-means output as definitive rather than as one particular partitioning induced by one particular objective is a fundamental conceptual error.</p>
+
+        <h2>Edge case</h2>
+
+        <p><strong>What happens when \(k = n\)?</strong> Each point is its own cluster. \(J = 0\) trivially. This is the degenerate minimum of the objective and illustrates why minimizing \(J\) alone is insufficient — we need external criteria (elbow, silhouette, domain knowledge) to select meaningful \(k\).</p>
+
+        <p><strong>What happens when \(k = 1\)?</strong> All points belong to one cluster with centroid \(\bar{x}\). \(J = \sum_i \|x_i - \bar{x}\|^2 = \text{TSS}\), the total sum of squares. This is the maximum possible \(J\) for any \(k\) and serves as the baseline against which clustering improvement is measured.</p>
+
+        <p><strong>What if multiple points are equidistant from two centroids?</strong> Tie-breaking is arbitrary and implementation-dependent. Different tie-breaking rules can lead to different final clusterings from the same initialization. In practice, exact distance ties are rare with floating-point data but can occur with integer or discretized features.</p>
+
+        <h2>Where we go next</h2>
+
+        <p>k-Means and k-medoid produce flat partitions: each point belongs to exactly one cluster, and all clusters exist at the same level of granularity. But many datasets have hierarchical structure: species within genera within families, documents within topics within super-topics. Chapter 13 introduces <strong>hierarchical clustering</strong>, which builds nested cluster trees via agglomerative (bottom-up) or divisive (top-down) strategies with various linkage criteria, producing dendrograms that reveal structure at every resolution simultaneously.</p>
+
+      </article>
+
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch11/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">11. Multi-Layer Perceptron &amp; Feed-Forward Neural Networks</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch13/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">13. Hierarchical Clustering</span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
 </body>
 </html>
