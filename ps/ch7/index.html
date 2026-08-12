@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>7. Random Variables and Discrete Distributions — Probability &amp; Statistics — iTube</title>
+  <meta name="description" content="What does it mean to map outcomes to numbers? We derive random variables as measurable functions, build PMFs from first principles, and derive the Bernoulli, Binomial, and Discrete Uniform distributions by asking what counting problem each one solves.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Probability &amp; Statistics</a><span class="sep">/</span>
+        <span>Ch. 7</span>
+      </div>
+      <div class="eyebrow">Probability &amp; Statistics</div>
+      <h1>7. Random Variables and Discrete Distributions</h1>
+      <div class="chapter-meta">
+        <span>Chapter 7 of 12</span>
+        <span class="read-badge">25 min read</span>
+      </div>
+      <article>
+
+        <h2>Why turn outcomes into numbers?</h2>
+        <p>In Chapters 2 through 4, we worked directly with events as subsets of a sample space. This works beautifully for coins and dice, but real-world problems involve quantities that are naturally numeric: heights, test scores, packet delays, stock returns. Even when the underlying outcomes aren't numeric (e.g., "red ball," "blue ball"), we often want to compute averages, variances, and limits — operations that require arithmetic.</p>
+        <p>The solution is to define a function that maps each outcome to a real number. But not just any function will do: we need the mapping to be compatible with our probability measure so that statements like "\(X \leq 3\)" have well-defined probabilities. This compatibility requirement leads us to the formal definition of a random variable, which we'll derive by asking what properties such a function must satisfy.</p>
+
+        <h2>Random variables: measurable functions</h2>
+        <p>A <strong>random variable</strong> \(X\) is a function from the sample space \(S\) to the real numbers \(\mathbb{R}\) such that for every real number \(x\), the set</p>
+        \[
+        \{s \in S : X(s) \leq x\}
+        \]
+        <p>is an event — that is, it belongs to the \(\sigma\)-algebra on \(S\) and therefore has a well-defined probability. This condition is called <strong>measurability</strong>. Without it, we couldn't assign meaning to \(P(X \leq x)\), and the entire edifice of distribution functions would collapse.</p>
+        <p>For finite or countable sample spaces (our focus in this chapter), every subset is typically an event, so every function \(X: S \to \mathbb{R}\) is automatically measurable. The technicality matters primarily for uncountable spaces, where pathological non-measurable functions exist. For now, think of a random variable as simply a numerical labeling of outcomes that respects the probability structure.</p>
+
+        <h3>Worked example: defining a random variable explicitly</h3>
+        <p>Consider flipping two fair coins. The sample space is \(S = \{HH, HT, TH, TT\}\), each with probability \(1/4\). Define \(X\) = "number of heads." Explicitly:</p>
+        \[
+        X(HH) = 2, \quad X(HT) = 1, \quad X(TH) = 1, \quad X(TT) = 0
+        \]
+        <p>Now compute \(P(X \leq 1)\). The set \(\{s : X(s) \leq 1\} = \{HT, TH, TT\}\), which has probability \(3/4\). Notice how the random variable lets us translate a question about counts ("at most one head") into a set operation on \(S\), then into a probability via the axioms from Chapter 2. This translation is the entire purpose of random variables.</p>
+
+        <h2>Probability mass functions: compressing the sample space</h2>
+        <p>Once we have a discrete random variable \(X\) taking values in a countable set \(\{x_1, x_2, \ldots\}\), we no longer need to carry around the original sample space. All probabilistic information about \(X\) is captured by the <strong>probability mass function</strong> (PMF):</p>
+        \[
+        p_X(x) = P(X = x)
+        \]
+        <p>The PMF must satisfy two properties, both inherited directly from the axioms of Chapter 2:</p>
+        <ol>
+          <li><strong>Non-negativity:</strong> \(p_X(x) \geq 0\) for all \(x\) (from Axiom 1).</li>
+          <li><strong>Normalization:</strong> \(\sum_x p_X(x) = 1\) (from Axioms 2 and 3, since the events \(\{X=x\}\) partition \(S\)).</li>
+        </ol>
+        <p>Any function satisfying these two properties is a valid PMF for some discrete random variable. Conversely, every discrete random variable induces exactly one PMF. This equivalence means we can work entirely in the space of PMFs without ever referencing the underlying sample space — a massive simplification.</p>
+
+        <p><strong>Common mistake:</strong> confusing \(P(X = x)\) with \(P(X \leq x)\). The PMF gives point probabilities; cumulative probabilities require summing the PMF over all values up to \(x\). For continuous random variables (Chapter 8), \(P(X = x) = 0\) for every individual \(x\), making the PMF useless — which is why we need density functions instead.</p>
+
+        <h2>The Bernoulli distribution: modeling a single binary trial</h2>
+        <p>What is the simplest possible random variable? One that takes only two values: success (1) or failure (0). If the probability of success is \(p\), then by normalization, the probability of failure is \(1-p\). The PMF is:</p>
+        \[
+        p_X(x) = \begin{cases} p & \text{if } x = 1 \\ 1-p & \text{if } x = 0 \\ 0 & \text{otherwise} \end{cases}
+        \]
+        <p>This is the <strong>Bernoulli distribution</strong> with parameter \(p\), written \(X \sim \operatorname{Bernoulli}(p)\). It's the atomic building block from which more complex discrete distributions are constructed.</p>
+
+        <h3>Deriving the mean and variance from first principles</h3>
+        <p>What is \(\mathbb{E}[X]\) for \(X \sim \operatorname{Bernoulli}(p)\)? Apply the definition of expectation for discrete random variables:</p>
+        \[
+        \mathbb{E}[X] = \sum_x x \cdot p_X(x) = 0 \cdot (1-p) + 1 \cdot p
+        \]
+        <p>Compute each term: \(0 \cdot (1-p) = 0\), and \(1 \cdot p = p\). Sum:</p>
+        \[
+        \mathbb{E}[X] = p
+        \]
+        <p>The expected value of a Bernoulli trial is exactly its success probability. This makes intuitive sense: if you succeed with probability 0.7, your long-run average payoff (counting successes as 1 and failures as 0) should be 0.7.</p>
+        <p>Now derive the variance. First compute \(\mathbb{E}[X^2]\):</p>
+        \[
+        \mathbb{E}[X^2] = \sum_x x^2 \cdot p_X(x) = 0^2 \cdot (1-p) + 1^2 \cdot p = p
+        \]
+        <p>(Notice \(X^2 = X\) for Bernoulli variables since \(0^2 = 0\) and \(1^2 = 1\).) Now apply the computational variance formula from Chapter 6:</p>
+        \[
+        \operatorname{Var}(X) = \mathbb{E}[X^2] - (\mathbb{E}[X])^2 = p - p^2
+        \]
+        <p>Factor:</p>
+        \[
+        \operatorname{Var}(X) = p(1-p)
+        \]
+        <p>This quadratic achieves its maximum at \(p = 0.5\) (maximum uncertainty) and drops to zero at \(p = 0\) or \(p = 1\) (certainty). The variance perfectly captures how unpredictable a single binary trial is as a function of its bias.</p>
+
+        <h2>The Binomial distribution: counting successes in repeated trials</h2>
+        <p>Now suppose we repeat the Bernoulli trial \(n\) times independently, each with the same success probability \(p\). Let \(Y\) be the total number of successes. What is the PMF of \(Y\)?</p>
+        <p>To derive it, ask: in how many ways can exactly \(k\) successes occur among \(n\) trials? From Chapter 1, the answer is \(\binom{n}{k}\). Each specific sequence with \(k\) successes and \(n-k\) failures has probability \(p^k (1-p)^{n-k}\) by independence (multiplication rule from Chapter 3). Since all such sequences are mutually exclusive, sum their probabilities:</p>
+        \[
+        P(Y = k) = \binom{n}{k} p^k (1-p)^{n-k}, \quad k = 0, 1, \ldots, n
+        \]
+        <p>This is the <strong>Binomial distribution</strong>, written \(Y \sim \operatorname{Binomial}(n, p)\). Every component has a clear origin: the binomial coefficient from counting, the powers from independence, and the range from the finite number of trials.</p>
+
+        <h3>Verifying normalization via the binomial theorem</h3>
+        <p>A natural follow-up question: does this PMF actually sum to 1? We need to verify:</p>
+        \[
+        \sum_{k=0}^{n} \binom{n}{k} p^k (1-p)^{n-k} = 1
+        \]
+        <p>Recognize the left side as the binomial expansion of \((p + (1-p))^n\) by the binomial theorem (which itself follows from the combinatorial interpretation of coefficients derived in Chapter 1):</p>
+        \[
+        (p + (1-p))^n = 1^n = 1
+        \]
+        <p>So normalization holds automatically — not by fiat, but as a direct consequence of algebraic identity. This connection between probability and combinatorics is why the binomial distribution appears everywhere: it's the probabilistic shadow of Pascal's triangle.</p>
+
+        <h3>Deriving the binomial mean via linearity of expectation</h3>
+        <p>We could compute \(\mathbb{E}[Y] = \sum_k k \binom{n}{k} p^k (1-p)^{n-k}\) directly, but there's a far cleaner approach using the structure we already know. Write \(Y\) as a sum of indicator variables:</p>
+        \[
+        Y = X_1 + X_2 + \cdots + X_n
+        \]
+        <p>where each \(X_i \sim \operatorname{Bernoulli}(p)\) indicates whether trial \(i\) succeeded. By linearity of expectation (which holds regardless of independence):</p>
+        \[
+        \mathbb{E}[Y] = \sum_{i=1}^n \mathbb{E}[X_i] = \sum_{i=1}^n p = np
+        \]
+        <p>No summation identities needed. The expected number of successes in \(n\) trials is simply \(n\) times the per-trial success probability. This decomposition technique — expressing a complex random variable as a sum of simpler ones — is one of the most powerful tools in probability, and we'll use it repeatedly in Chapters 9 and 11.</p>
+
+        <h3>Deriving the binomial variance via independence</h3>
+        <p>For variance, independence matters. Since the \(X_i\) are independent Bernoulli trials, variances add:</p>
+        \[
+        \operatorname{Var}(Y) = \sum_{i=1}^n \operatorname{Var}(X_i) = \sum_{i=1}^n p(1-p) = np(1-p)
+        \]
+        <p>If the trials were dependent, we'd need covariance terms (Chapter 6), but independence eliminates them entirely. Notice the variance scales linearly with \(n\), while the standard deviation scales as \(\sqrt{n}\) — this square-root scaling is the origin of the \(\sqrt{n}\) factors in confidence intervals (Chapter 11) and the central limit theorem (Chapter 11).</p>
+
+        <h3>Worked example: quality control inspection</h3>
+        <p>A factory produces items with defect rate \(p = 0.02\). An inspector samples \(n = 50\) items independently. What is the probability of finding exactly 3 defective items?</p>
+        <p>Let \(Y \sim \operatorname{Binomial}(50, 0.02)\). We want \(P(Y = 3)\):</p>
+        \[
+        P(Y = 3) = \binom{50}{3} (0.02)^3 (0.98)^{47}
+        \]
+        <p>Compute each factor step by step. First, the binomial coefficient:</p>
+        \[
+        \binom{50}{3} = \frac{50 \times 49 \times 48}{3 \times 2 \times 1} = \frac{117600}{6} = 19600
+        \]
+        <p>Next, \((0.02)^3 = 0.000008\). Then \((0.98)^{47}\): using logarithms or calculator, \((0.98)^{47} \approx 0.3867\). Now multiply all three factors:</p>
+        \[
+        P(Y = 3) = 19600 \times 0.000008 \times 0.3867
+        \]
+        <p>First multiply \(19600 \times 0.000008 = 0.1568\). Then \(0.1568 \times 0.3867 \approx 0.0606\).</p>
+        <p>The probability of exactly 3 defects in a sample of 50 is approximately 0.0606, or about 6%. As a sanity check, the expected number of defects is \(np = 50 \times 0.02 = 1\), so observing 3 is above average but not astronomically unlikely — consistent with a 6% probability.</p>
+
+        <p><strong>Edge case:</strong> what happens as \(n \to \infty\) with \(np = \lambda\) fixed? The binomial PMF converges to the Poisson distribution \(e^{-\lambda} \lambda^k / k!\), which we'll derive properly in Chapter 9. This limiting relationship explains why Poisson models rare events in large populations: it's literally the binomial distribution stretched to infinity while keeping the expected count constant.</p>
+
+        <h2>The Discrete Uniform distribution: maximum entropy on finite sets</h2>
+        <p>Suppose a discrete random variable \(X\) takes values in a finite set \(\{a_1, a_2, \ldots, a_n\}\) and you have no reason to believe any value is more likely than another. What PMF should you assign?</p>
+        <p>The principle of indifference (or maximum entropy, formally justified in information theory) says: assign equal probability to each outcome. By normalization:</p>
+        \[
+        p_X(a_i) = \frac{1}{n} \quad \text{for all } i = 1, \ldots, n
+        \]
+        <p>This is the <strong>Discrete Uniform distribution</strong>. Its mean and variance depend on the specific values \(\{a_i\}\), but for the canonical case where \(X\) takes integer values \(\{1, 2, \ldots, n\}\):</p>
+        \[
+        \mathbb{E}[X] = \frac{n+1}{2}, \quad \operatorname{Var}(X) = \frac{n^2 - 1}{12}
+        \]
+
+        <h3>Deriving the uniform mean and variance</h3>
+        <p>For \(X\) uniform on \(\{1, 2, \ldots, n\}\), the mean is:</p>
+        \[
+        \mathbb{E}[X] = \sum_{k=1}^n k \cdot \frac{1}{n} = \frac{1}{n} \sum_{k=1}^n k
+        \]
+        <p>Use the arithmetic series formula \(\sum_{k=1}^n k = n(n+1)/2\) (provable by induction or Gauss's pairing argument):</p>
+        \[
+        \mathbb{E}[X] = \frac{1}{n} \cdot \frac{n(n+1)}{2} = \frac{n+1}{2}
+        \]
+        <p>For variance, first compute \(\mathbb{E}[X^2]\):</p>
+        \[
+        \mathbb{E}[X^2] = \frac{1}{n} \sum_{k=1}^n k^2 = \frac{1}{n} \cdot \frac{n(n+1)(2n+1)}{6} = \frac{(n+1)(2n+1)}{6}
+        \]
+        <p>(using the sum-of-squares formula \(\sum k^2 = n(n+1)(2n+1)/6\)). Now apply the computational variance formula:</p>
+        \[
+        \operatorname{Var}(X) = \mathbb{E}[X^2] - (\mathbb{E}[X])^2 = \frac{(n+1)(2n+1)}{6} - \left(\frac{n+1}{2}\right)^2
+        \]
+        <p>Factor out \((n+1)\) and find common denominator:</p>
+        \[
+        = (n+1)\left[\frac{2n+1}{6} - \frac{n+1}{4}\right] = (n+1)\left[\frac{4(2n+1) - 6(n+1)}{24}\right]
+        \]
+        <p>Simplify the numerator: \(8n + 4 - 6n - 6 = 2n - 2 = 2(n-1)\). So:</p>
+        \[
+        = (n+1) \cdot \frac{2(n-1)}{24} = \frac{(n+1)(n-1)}{12} = \frac{n^2 - 1}{12}
+        \]
+        <p>Every step used only elementary algebra and standard summation formulas. The variance grows quadratically with \(n\), reflecting increasing spread as the support widens.</p>
+
+        <h3>Worked example: fair die roll</h3>
+        <p>A fair six-sided die has \(X\) uniform on \(\{1,2,3,4,5,6\}\). Verify the formulas: \(\mathbb{E}[X] = (6+1)/2 = 3.5\), matching the familiar average. \(\operatorname{Var}(X) = (36-1)/12 = 35/12 \approx 2.917\), matching the value used in Chapter 5's dice examples. The general formulas reproduce known special cases exactly.</p>
+
+        <p><strong>Common mistake:</strong> assuming "uniform" always means equal probability over integers. The discrete uniform distribution is defined relative to a specific finite set; if the set isn't consecutive integers starting at 1, the mean and variance formulas above don't apply directly. Always identify the support explicitly before applying closed-form expressions.</p>
+
+        <h2>Connecting forward</h2>
+        <p>Discrete distributions are the foundation for everything that follows. The Bernoulli and Binomial reappear in hypothesis testing (Chapter 12) as the null distributions for proportion tests. The Poisson limit of the Binomial (Chapter 9) models arrival processes and rare events. Most importantly, the techniques developed here — decomposing complex variables into sums of indicators, using generating functions, verifying normalization via combinatorial identities — transfer directly to continuous distributions in Chapter 8, where integration replaces summation but the logical structure remains identical.</p>
+
+      </article>
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch6/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">6. Descriptive Statistics: Mean, Median, Mode, Standard Deviation, Correlation, and Covariance</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch8/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">8. Continuous Random Variables and Probability Density Functions</span>
+        </a>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
+</body>
+</html>
