@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>4. Marginal, Conditional, and Joint Probability; Bayes' Theorem — Probability &amp; Statistics — iTube</title>
+  <meta name="description" content="How do we update beliefs when new evidence arrives? We derive conditional probability from first principles by asking what 'probability given B' must mean geometrically, build up to joint and marginal distributions, and arrive at Bayes' theorem as the inevitable algebraic consequence of symmetry.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Probability &amp; Statistics</a><span class="sep">/</span>
+        <span>Ch. 4</span>
+      </div>
+      <div class="eyebrow">Probability &amp; Statistics</div>
+      <h1>4. Marginal, Conditional, and Joint Probability; Bayes' Theorem</h1>
+      <div class="chapter-meta">
+        <span>Chapter 4 of 12</span>
+        <span class="read-badge">25 min read</span>
+      </div>
+      <article>
+
+        <h2>The question that starts everything</h2>
+        <p>In Chapter 3, we defined independence via the equation \(P(A \cap B) = P(A)P(B)\). But this definition was motivated by an informal idea: "knowing \(B\) tells you nothing about \(A\)." What does it mean, precisely, to know that \(B\) has occurred? How should your probability assignment for \(A\) change once you learn \(B\) is true? And if it changes, is there a general formula governing that update?</p>
+        <p>This is the central question of this chapter. The answer — conditional probability — is not just another formula to memorize. It is the mechanism by which probability theory models learning itself. Every statistical inference method in this book, from Bayesian estimation (Chapter 7) to hypothesis testing (Chapter 12), ultimately rests on updating probabilities in light of evidence. Let's derive the update rule from scratch.</p>
+
+        <h2>Deriving conditional probability geometrically</h2>
+        <p>Suppose you have a sample space \(S\) with a probability measure \(P\), and you learn that event \(B\) has occurred. This means the actual outcome must lie somewhere inside \(B\). Effectively, \(B\) has become your new sample space — everything outside \(B\) is now impossible.</p>
+        <p>Now ask: within this restricted universe \(B\), what fraction of the probability mass belongs to \(A\)? Only the part of \(A\) that overlaps with \(B\) still matters; the rest of \(A\) (the portion in \(B^c\)) has been ruled out. So the relevant mass is \(P(A \cap B)\). But we can't just call this the new probability of \(A\), because probabilities must sum to 1 over the effective sample space, and \(P(B)\) might be less than 1. We need to rescale so that the total mass within \(B\) becomes exactly 1.</p>
+        <p>The unique rescaling that achieves this is division by \(P(B)\):</p>
+        \[
+        P(A \mid B) = \frac{P(A \cap B)}{P(B)}, \quad \text{provided } P(B) > 0
+        \]
+        <p>This is the definition of <strong>conditional probability</strong>. It isn't an arbitrary convention — it's the only function that satisfies three requirements simultaneously: (1) it assigns zero to events disjoint from \(B\), (2) it assigns one to \(B\) itself, and (3) it preserves relative proportions among subsets of \(B\). Any other formula would violate at least one of these.</p>
+
+        <h3>Worked example: drawing cards without replacement</h3>
+        <p>Draw two cards sequentially from a standard 52-card deck without replacement. What is the probability that the second card is an ace, given that the first card was an ace?</p>
+        <p>Let \(A_1\) = "first card is an ace" and \(A_2\) = "second card is an ace." We want \(P(A_2 \mid A_1)\). By definition:</p>
+        \[
+        P(A_2 \mid A_1) = \frac{P(A_1 \cap A_2)}{P(A_1)}
+        \]
+        <p>Compute each piece. First, \(P(A_1) = 4/52 = 1/13\). Next, \(P(A_1 \cap A_2)\): the probability both cards are aces. Using the multiplication rule (which we'll derive formally below, but which follows directly from rearranging the conditional probability definition):</p>
+        \[
+        P(A_1 \cap A_2) = P(A_1) \cdot P(A_2 \mid A_1)
+        \]
+        <p>Wait — this is circular if we're trying to find \(P(A_2 \mid A_1)\). Instead, count directly: there are \(\binom{52}{2} = 1326\) equally likely unordered pairs, and \(\binom{4}{2} = 6\) pairs where both are aces. But since we're dealing with ordered draws, it's cleaner to use sequential counting: \(P(A_1 \cap A_2) = \frac{4}{52} \cdot \frac{3}{51} = \frac{12}{2652} = \frac{1}{221}\).</p>
+        <p>Now substitute into the conditional probability formula:</p>
+        \[
+        P(A_2 \mid A_1) = \frac{1/221}{1/13} = \frac{1}{221} \cdot \frac{13}{1} = \frac{13}{221}
+        \]
+        <p>Simplify: \(221 = 13 \times 17\), so \(13/221 = 1/17\).</p>
+        <p>The probability that the second card is an ace given the first was an ace is \(1/17 \approx 0.0588\). Compare this to the unconditional probability \(P(A_2) = 4/52 = 1/13 \approx 0.0769\). Learning that the first card was an ace <em>decreased</em> the probability that the second is also an ace — because one ace has been removed from the deck. This is dependence in action, quantified precisely by conditional probability.</p>
+
+        <p><strong>Common mistake:</strong> confusing \(P(A \mid B)\) with \(P(A \cap B)\). The conditional probability is always larger than or equal to the joint probability (since you're dividing by \(P(B) \leq 1\)). If your computed \(P(A \mid B)\) is smaller than \(P(A \cap B)\), you've inverted the fraction. Always ask: "am I computing the probability of A within the restricted world where B is true?" If yes, divide by \(P(B)\).</p>
+
+        <h2>The multiplication rule and chain rule</h2>
+        <p>Rearranging the conditional probability definition gives the <strong>multiplication rule</strong>:</p>
+        \[
+        P(A \cap B) = P(A \mid B) \cdot P(B)
+        \]
+        <p>This is deceptively powerful. It lets you compute joint probabilities from conditional ones — which is often easier because conditional probabilities reflect sequential or causal reasoning ("given that the first draw was an ace, what's the chance the second is?").</p>
+        <p>By symmetry, we could equally write \(P(A \cap B) = P(B \mid A) \cdot P(A)\). Equating the two expressions gives:</p>
+        \[
+        P(A \mid B) \cdot P(B) = P(B \mid A) \cdot P(A)
+        \]
+        <p>This symmetric relationship is the seed from which Bayes' theorem grows. But first, let's extend the multiplication rule to more than two events.</p>
+        <p>For three events \(A\), \(B\), \(C\):</p>
+        \[
+        P(A \cap B \cap C) = P(A) \cdot P(B \mid A) \cdot P(C \mid A \cap B)
+        \]
+        <p>Why? Apply the multiplication rule twice. First, treat \(A \cap B\) as a single event:</p>
+        \[
+        P(A \cap B \cap C) = P(C \mid A \cap B) \cdot P(A \cap B)
+        \]
+        <p>Then expand \(P(A \cap B) = P(B \mid A) \cdot P(A)\). Substitute back:</p>
+        \[
+        P(A \cap B \cap C) = P(A) \cdot P(B \mid A) \cdot P(C \mid A \cap B)
+        \]
+        <p>This pattern generalizes to any number of events and is called the <strong>chain rule</strong> of probability. It will be essential when we model sequences of dependent trials in Chapter 7 (Markov chains, hidden Markov models) and when deriving likelihoods for sequential data in Chapter 12.</p>
+
+        <h2>Joint, marginal, and conditional: the three-way relationship</h2>
+        <p>When working with two random quantities (say, the outcome of a die roll and the outcome of a coin flip), we need language for three distinct types of probability:</p>
+        <ul>
+          <li><strong>Joint probability</strong> \(P(A \cap B)\): the probability that both events occur together.</li>
+          <li><strong>Marginal probability</strong> \(P(A)\): the probability of \(A\) alone, ignoring \(B\).</li>
+          <li><strong>Conditional probability</strong> \(P(A \mid B)\): the probability of \(A\) within the restricted world where \(B\) is known to have occurred.</li>
+        </ul>
+        <p>These three are linked by two fundamental relationships. The first is the multiplication rule we just derived: \(P(A \cap B) = P(A \mid B) P(B)\). The second is the <strong>law of total probability</strong>, which recovers marginals from conditionals.</p>
+
+        <h3>The law of total probability</h3>
+        <p>Suppose \(B_1, B_2, \ldots, B_n\) form a <strong>partition</strong> of the sample space: they are mutually exclusive (\(B_i \cap B_j = \emptyset\) for \(i \neq j\)) and exhaustive (\(\bigcup_i B_i = S\)). Then for any event \(A\):</p>
+        \[
+        P(A) = \sum_{i=1}^{n} P(A \mid B_i) \cdot P(B_i)
+        \]
+        <p>Why is this true? Decompose \(A\) into its intersections with each partition element: \(A = \bigcup_i (A \cap B_i)\). Since the \(B_i\) are disjoint, these intersections are also disjoint. By Axiom 3 (countable additivity from Chapter 2):</p>
+        \[
+        P(A) = \sum_{i=1}^{n} P(A \cap B_i)
+        \]
+        <p>Now apply the multiplication rule to each term: \(P(A \cap B_i) = P(A \mid B_i) P(B_i)\). Substituting gives the result.</p>
+        <p>This law says: to find the overall probability of \(A\), average its conditional probabilities across all possible scenarios \(B_i\), weighted by how likely each scenario is. It's the bridge between conditional and marginal probability, and it's the denominator in Bayes' theorem.</p>
+
+        <h3>Worked example: medical testing</h3>
+        <p>A disease affects 1% of the population. A diagnostic test has sensitivity 95% (true positive rate: \(P(\text{positive} \mid \text{disease}) = 0.95\)) and specificity 90% (true negative rate: \(P(\text{negative} \mid \text{no disease}) = 0.90\), so false positive rate \(P(\text{positive} \mid \text{no disease}) = 0.10\)). What is the overall probability that a randomly selected person tests positive?</p>
+        <p>Let \(D\) = "has disease" and \(+\) = "tests positive." The events \(D\) and \(D^c\) form a partition. By the law of total probability:</p>
+        \[
+        P(+) = P(+ \mid D) P(D) + P(+ \mid D^c) P(D^c)
+        \]
+        <p>Substitute the known values: \(P(+ \mid D) = 0.95\), \(P(D) = 0.01\), \(P(+ \mid D^c) = 0.10\), \(P(D^c) = 0.99\).</p>
+        \[
+        P(+) = (0.95)(0.01) + (0.10)(0.99)
+        \]
+        <p>Compute each term: \(0.95 \times 0.01 = 0.0095\). \(0.10 \times 0.99 = 0.099\). Sum:</p>
+        \[
+        P(+) = 0.0095 + 0.099 = 0.1085
+        \]
+        <p>Approximately 10.85% of people test positive. Notice that this is much higher than the disease prevalence (1%) because the false positive rate, applied to the vast majority who don't have the disease, contributes far more positive tests than the true positives do. This counterintuitive result is exactly why we need the law of total probability rather than relying on intuition alone.</p>
+
+        <h2>Bayes' theorem: inverting conditional probability</h2>
+        <p>We now have all the pieces. Recall the symmetric relationship from earlier:</p>
+        \[
+        P(A \mid B) P(B) = P(B \mid A) P(A)
+        \]
+        <p>Solving for \(P(A \mid B)\):</p>
+        \[
+        P(A \mid B) = \frac{P(B \mid A) P(A)}{P(B)}
+        \]
+        <p>This is <strong>Bayes' theorem</strong>. But it becomes truly operational when we expand the denominator using the law of total probability. If \(A_1, A_2, \ldots, A_n\) form a partition (e.g., different hypotheses about the state of the world), then for any observed evidence \(B\):</p>
+        \[
+        P(A_i \mid B) = \frac{P(B \mid A_i) P(A_i)}{\sum_{j=1}^{n} P(B \mid A_j) P(A_j)}
+        \]
+        <p>Each component has a name and a role:</p>
+        <ul>
+          <li>\(P(A_i)\): the <strong>prior</strong> — your belief about hypothesis \(A_i\) before seeing evidence \(B\).</li>
+          <li>\(P(B \mid A_i)\): the <strong>likelihood</strong> — how probable the evidence is under hypothesis \(A_i\).</li>
+          <li>\(P(A_i \mid B)\): the <strong>posterior</strong> — your updated belief about \(A_i\) after seeing \(B\).</li>
+          <li>The denominator: the <strong>marginal likelihood</strong> or <strong>evidence</strong> — a normalizing constant ensuring the posteriors sum to 1.</li>
+        </ul>
+        <p>Bayes' theorem is not a philosophical stance; it is an algebraic identity that follows inevitably from the definition of conditional probability and the law of total probability. Its power lies in converting likelihoods (which are often easy to model from physical or mechanistic assumptions) into posteriors (which are what we actually want to know).</p>
+
+        <h3>Worked example: revisiting the medical test</h3>
+        <p>Using the same medical testing scenario above, suppose a person tests positive. What is the probability they actually have the disease? That is, compute \(P(D \mid +)\).</p>
+        <p>Apply Bayes' theorem:</p>
+        \[
+        P(D \mid +) = \frac{P(+ \mid D) P(D)}{P(+)}
+        \]
+        <p>We already computed all three quantities: \(P(+ \mid D) = 0.95\), \(P(D) = 0.01\), and \(P(+) = 0.1085\). Substitute:</p>
+        \[
+        P(D \mid +) = \frac{(0.95)(0.01)}{0.1085} = \frac{0.0095}{0.1085}
+        \]
+        <p>Compute the division: \(0.0095 / 0.1085 \approx 0.0876\).</p>
+        <p>Despite a positive test result from a test with 95% sensitivity, the probability of actually having the disease is only about 8.76%. This dramatic gap between the test's accuracy and the posterior probability arises because the prior prevalence (1%) is so low that false positives dominate. This is the base rate fallacy in quantitative form, and Bayes' theorem is the tool that prevents it.</p>
+
+        <p><strong>Common mistake:</strong> treating the likelihood \(P(B \mid A)\) as if it were the posterior \(P(A \mid B)\). These are fundamentally different quantities with different units of meaning. The likelihood asks "how well does hypothesis A explain the data?" The posterior asks "how probable is hypothesis A given the data?" Confusing them leads to the prosecutor's fallacy in legal contexts and systematic overconfidence in diagnostic settings. Always check: am I conditioning on the hypothesis (likelihood) or on the data (posterior)?</p>
+
+        <h2>Edge cases and boundary behavior</h2>
+        <p>What happens when \(P(B) = 0\)? The conditional probability \(P(A \mid B)\) is undefined by the ratio definition. In continuous sample spaces, individual outcomes often have probability zero, yet we still want to condition on them. This motivates the more advanced machinery of conditional densities and Radon-Nikodym derivatives, which we'll encounter in Chapter 10 when discussing conditional PDFs. For now, remember: the discrete definition requires \(P(B) > 0\); violations signal either a modeling error or a need for continuous methods.</p>
+        <p>What happens when the prior \(P(A_i) = 0\)? Then the posterior \(P(A_i \mid B) = 0\) regardless of the likelihood. Zero priors are irrevocable — no amount of evidence can resurrect a hypothesis you assigned zero probability to initially. This is why Bayesian practitioners avoid hard zeros in priors unless they genuinely represent logical impossibility.</p>
+        <p>What happens when all likelihoods are equal (\(P(B \mid A_i) = c\) for all \(i\))? Then the posterior equals the prior: \(P(A_i \mid B) = P(A_i)\). Uninformative evidence leaves beliefs unchanged — exactly as it should. This connects directly back to the independence definition from Chapter 3: if \(B\) is independent of all \(A_i\), then observing \(B\) provides no information.</p>
+
+        <h2>Connecting forward</h2>
+        <p>Conditional probability is the engine of statistical learning. In Chapter 5, we'll use it to define conditional expectation and variance — the tools that let us summarize how one variable behaves given knowledge of another. In Chapter 7, the binomial distribution emerges from repeated application of the multiplication rule to independent Bernoulli trials. In Chapter 10, conditional PDFs extend these ideas to continuous settings. And in Chapter 12, every hypothesis test implicitly compares likelihoods under competing hypotheses, making Bayes' theorem the conceptual ancestor of frequentist inference even when priors aren't explicitly invoked.</p>
+
+      </article>
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch3/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">3. Independence and Mutually Exclusive Events</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch5/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">5. Conditional Expectation and Variance</span>
+        </a>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
+</body>
+</html>
