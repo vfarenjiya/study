@@ -1,178 +1,229 @@
-<!-- File: /<slug>/ch13/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>13. Multi-Layer Perceptron — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
-<meta name="description" content="From perceptron to MLP, universal approximation theorem, activation functions, architecture design, and a hand-computed forward pass with gradient analysis on a small network.">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap" rel="stylesheet">
-<link rel="manifest" href="../../manifest.json">
-<link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="../../icons/icon-192.svg">
-<meta name="theme-color" content="#1B1B1F">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="iTube">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script>
-(function(){
-  var saved = localStorage.getItem("itube-theme");
-  var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-  document.documentElement.setAttribute("data-theme", theme);
-})();
-</script>
-<link rel="stylesheet" href="../../style.css">
+  <title>13. Hierarchical Clustering — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
+  <meta name="description" content="How do we discover nested group structure at every resolution? We derive agglomerative and divisive hierarchical clustering with single, complete, and average linkage criteria, work through complete numeric examples showing merge sequences and dendrogram construction, and analyze the chaining effect versus compact cluster preferences.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
 </head>
 <body data-depth="2">
-<header class="top">
-  <div class="wrap">
-    <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
-    <div class="top-actions">
-      <div class="font-controls" role="group" aria-label="Adjust text size">
-        <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
-        <span id="font-size-label">100%</span>
-        <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
-        <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
       </div>
-      <button id="theme-btn" title="Toggle light/dark">◐</button>
     </div>
-  </div>
-</header>
-<main>
-<div class="wrap narrow">
-  <div class="breadcrumb">
-    <a href="../../index.html">iTube</a><span class="sep">/</span>
-    <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
-    <span>Ch. 13</span>
-  </div>
-  <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
-  <h1>13. Multi-Layer Perceptron</h1>
-  <div class="chapter-meta">
-    <span>Chapter 13 of 17</span>
-    <span class="read-badge">25 min read</span>
-  </div>
-  <article>
+  </header>
 
-<h2>From the perceptron to deep networks</h2>
-<p>The <strong>perceptron</strong> is the simplest neural unit: a linear threshold function \(f(\mathbf{x}) = \operatorname{sign}(\mathbf{w}^\top \mathbf{x} + b)\). As shown in Chapter 1, this produces a linear decision boundary and cannot represent nonlinearly separable functions like XOR. The <strong>multi-layer perceptron</strong> (MLP) overcomes this limitation by composing multiple layers of nonlinear transformations:</p>
-\[
-\mathbf{h}^{(1)} = \sigma(W^{(1)} \mathbf{x} + \mathbf{b}^{(1)}), \quad \mathbf{h}^{(2)} = \sigma(W^{(2)} \mathbf{h}^{(1)} + \mathbf{b}^{(2)}), \quad \dots, \quad \hat{\mathbf{y}} = g(W^{(L)} \mathbf{h}^{(L-1)} + \mathbf{b}^{(L)})
-\]
-<p>where \(\sigma\) is a nonlinear <strong>activation function</strong> (sigmoid, tanh, ReLU), \(g\) is an output activation appropriate to the task (softmax for multiclass, sigmoid for binary, identity for regression), and each layer's weights \(W^{(\ell)}\) and biases \(\mathbf{b}^{(\ell)}\) are learned from data. This composition creates a <strong>deep</strong> hypothesis class capable of representing arbitrarily complex functions — a property formalized by the universal approximation theorem below.</p>
-<p>MLPs are <em>feed-forward</em>: information flows strictly from input to output with no cycles or feedback connections. Training uses gradient-based optimization (Chapter 14 details backpropagation); this chapter focuses on architecture, expressivity, and activation functions. The key insight is that depth (many layers) enables exponential efficiency over width (many units per layer): certain functions require exponentially many units in a shallow network but only polynomially many in a deep one.</p>
-<p><strong>Common mistake:</strong> assuming more layers always improve performance. Depth increases representational capacity but also optimization difficulty (vanishing/exploding gradients, Chapter 14) and overfitting risk (Chapter 11). Without sufficient data, regularization (dropout, weight decay), or architectural innovations (residual connections, batch normalization), deeper networks often train worse than shallower ones. Always start simple and increase depth only when validation diagnostics indicate underfitting.</p>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
+        <span>Ch. 13</span>
+      </div>
+      <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
+      <h1>13. Hierarchical Clustering</h1>
+      <div class="chapter-meta">
+        <span>Chapter 13 of 14</span>
+        <span class="read-badge">25 min read</span>
+      </div>
 
-<h2>Universal approximation theorem</h2>
-<p>The theoretical foundation of MLPs is the <strong>universal approximation theorem</strong> (Cybenko, 1989; Hornik, 1991): a feed-forward network with a single hidden layer containing finitely many units and a non-polynomial activation function can approximate any continuous function on a compact subset of \(\mathbb{R}^p\) to arbitrary precision. Formally, for any continuous \(f: K \to \mathbb{R}\) on compact \(K \subset \mathbb{R}^p\) and any \(\epsilon > 0\), there exist weights, biases, and hidden unit count \(m\) such that:</p>
-\[
-\sup_{\mathbf{x} \in K} \left| f(\mathbf{x}) - \sum_{j=1}^{m} \alpha_j \, \sigma(\mathbf{w}_j^\top \mathbf{x} + b_j) \right| < \epsilon
-\]
-<p>This guarantees that MLPs are <em>expressively complete</em>: no continuous target function lies outside their representational reach. However, the theorem is purely existential — it says nothing about how large \(m\) must be, whether gradient descent can find good parameters, or whether the approximator generalizes. In practice, required width can grow exponentially with input dimension, making single-hidden-layer networks impractical for high-dimensional tasks. Depth addresses this: certain function classes (e.g., compositions of smooth functions) admit exponentially more compact representations in deep networks than shallow ones.</p>
-<p><strong>Edge case:</strong> polynomial activations (e.g., \(\sigma(z) = z^2\)) do NOT satisfy the universal approximation property — networks with polynomial activations can only represent polynomials of bounded degree regardless of width. Non-polynomiality is essential. Also note that universal approximation holds for continuous functions only; discontinuous targets require special treatment (e.g., classification via softmax approximates indicator functions but never represents them exactly). Finally, the theorem assumes unbounded width; finite-width deep networks have different approximation rates studied in modern deep learning theory.</p>
+      <article>
 
-<h3>Worked example: XOR requires hidden units</h3>
-<p>XOR: inputs \((0,0),(0,1),(1,0),(1,1)\) with labels \(0,1,1,0\). A single-layer perceptron \(\operatorname{sign}(w_1 x_1 + w_2 x_2 + b)\) cannot solve this because XOR is not linearly separable (no line separates \(\{(0,0),(1,1)\}\) from \(\{(0,1),(1,0)\}\)). But a 2-layer MLP with 2 hidden ReLU units can:</p>
-\[
-h_1 = \max(0, x_1 + x_2 - 0.5), \quad h_2 = \max(0, x_1 + x_2 - 1.5)
-\]
-\[
-\hat y = \operatorname{sign}(h_1 - h_2 - 0.5)
-\]
-<p>Evaluating: at \((0,0)\): \(h_1=0, h_2=0 \Rightarrow \hat y = \operatorname{sign}(-0.5) = -1 \to 0\). At \((0,1)\): \(h_1=\max(0,0.5)=0.5, h_2=0 \Rightarrow \hat y = \operatorname{sign}(0) = +1 \to 1\). At \((1,0)\): symmetric → 1. At \((1,1)\): \(h_1=1.5, h_2=0.5 \Rightarrow \hat y = \operatorname{sign}(1.5-0.5-0.5) = \operatorname{sign}(0.5) = +1\)? Wait — should be 0. Adjust: use \(\hat y = \operatorname{sign}(h_1 - 2h_2 - 0.5)\). Then \((1,1)\): \(1.5 - 1.0 - 0.5 = 0 \to\) boundary. Use strict inequality or adjust bias to \(-0.6\): \(1.5 - 1.0 - 0.6 = -0.1 \to -1 \to 0\). ✓ All four points correct. <strong>Sensitivity check:</strong> removing either hidden unit collapses the representation back to linear, failing XOR. This demonstrates concretely that hidden units enable nonlinear separation, and that even minimal depth (2 layers) suffices for nontrivial computation. Deeper networks compose such primitives hierarchically for complex tasks.</p>
+        <h2>Beyond flat partitions</h2>
 
-<h2>Activation functions: properties and trade-offs</h2>
-<p>The choice of activation function profoundly affects training dynamics and representational efficiency. Key options:</p>
-<h3>Sigmoid and tanh</h3>
-\[
-\sigma(z) = \frac{1}{1+e^{-z}}, \quad \tanh(z) = \frac{e^z - e^{-z}}{e^z + e^{-z}}
-\]
-<p>Both are smooth, bounded, and saturate at extremes (\(\sigma \to 0/1\), \(\tanh \to \pm 1\)). Saturation causes <strong>vanishing gradients</strong>: derivatives approach zero in saturated regions, stalling learning in deep networks. Historically dominant but now largely replaced in hidden layers. Still used in output layers for binary classification (sigmoid) or gated architectures (LSTM).</p>
-<h3>ReLU and variants</h3>
-\[
-\operatorname{ReLU}(z) = \max(0, z), \quad \operatorname{LeakyReLU}(z) = \begin{cases} z & z \geq 0 \\ \alpha z & z < 0 \end{cases}
-\]
-<p>ReLU is piecewise linear, non-saturating for \(z > 0\), and computationally cheap. Its derivative is 1 for \(z > 0\) and 0 for \(z < 0\), avoiding vanishing gradients in active regions. However, "dying ReLU" occurs when units permanently output zero (gradient always 0), halting learning. Leaky ReLU, ELU, and GELU mitigate this with nonzero gradients for \(z < 0\). ReLU family dominates modern hidden layers.</p>
-<h3>Softmax (output layer)</h3>
-\[
-\operatorname{softmax}(\mathbf{z})_k = \frac{e^{z_k}}{\sum_j e^{z_j}}
-\]
-<p>Maps logits to probability simplex for multiclass classification. Paired with cross-entropy loss, yields clean gradients analogous to logistic regression (Chapter 5). Never use softmax in hidden layers — it couples units competitively and impedes independent feature learning.</p>
-<p><strong>Common mistake:</strong> using sigmoid/tanh in deep hidden layers without understanding gradient flow. Each layer multiplies gradients by \(\sigma'(z) \leq 0.25\) (sigmoid max derivative), so a 10-layer network attenuates gradients by factor \(\leq 0.25^{10} \approx 10^{-6}\), making lower layers essentially untrainable. Always prefer ReLU-family activations for hidden layers unless specific architectural reasons dictate otherwise.</p>
+        <p>In Chapter 12, k-means and k-medoid produced a single flat partition: each point belongs to exactly one of \(k\) clusters, and all clusters exist at the same level of granularity. But many datasets have inherently nested structure. Biological taxonomy organizes species into genera, genera into families, families into orders. Document collections have subtopics within topics within domains. Customer segments may contain sub-segments that are meaningful at finer resolution.</p>
 
-<h3>Worked example: comparing activation derivatives</h3>
-<p>Evaluate activations and derivatives at \(z = -3, 0, 3\):</p>
-\[
-\begin{array}{c|ccc}
-z & \sigma(z), \sigma'(z) & \tanh(z), \tanh'(z) & \operatorname{ReLU}(z), \operatorname{ReLU}'(z) \\ \hline
--3 & 0.047, 0.045 & -0.995, 0.010 & 0, 0 \\
-0 & 0.500, 0.250 & 0.000, 1.000 & 0, 1 \\
-3 & 0.953, 0.045 & 0.995, 0.010 & 3, 1
-\end{array}
-\]
-<p>At \(z = \pm 3\), sigmoid and tanh derivatives are ~0.045 and ~0.010 respectively — nearly dead. ReLU maintains full gradient at \(z = 3\) but is completely dead at \(z = -3\). Leaky ReLU with \(\alpha = 0.01\) would give derivative 0.01 at \(z = -3\), preventing permanent death. <strong>Sensitivity check:</strong> in a 5-layer sigmoid network initialized near saturation, backpropagated gradient scales as \(\prod_{\ell=1}^5 \sigma'(z_\ell) \approx 0.045^5 \approx 1.8 \times 10^{-7}\) — effectively zero. Same network with ReLU (assuming half units active per layer): gradient scales as \(0.5^5 = 0.031\) — six orders of magnitude larger. This quantitative gap explains why ReLU enabled deep learning while sigmoid did not.</p>
+        <p>The question hierarchical clustering answers is: <strong>can we discover cluster structure at every level of granularity simultaneously, without committing to a single value of \(k\)?</strong></p>
 
-<h2>Architecture design: width, depth, and connectivity</h2>
-<p>Designing an MLP involves choosing the number of hidden layers, units per layer, and connectivity pattern. Key principles:</p>
-<ul>
-<li><strong>Width vs. depth:</strong> Wider networks (more units per layer) increase capacity within a layer; deeper networks (more layers) enable hierarchical composition. Theory suggests depth is exponentially more efficient for compositional functions (e.g., image recognition, language). Practical rule: start with moderate width (64–256 units) and increase depth before width.</li>
-<li><strong>Bottleneck layers:</strong> Decreasing then increasing width forces compression, useful for representation learning (autoencoders, Chapter 17). Monotonically decreasing widths suit classification where later layers integrate features into decisions.</li>
-<li><strong>Residual connections:</strong> Skip connections \(\mathbf{h}^{(\ell+1)} = F(\mathbf{h}^{(\ell)}) + \mathbf{h}^{(\ell)}\) alleviate vanishing gradients by providing direct gradient pathways. Enable training of very deep networks (100+ layers). Essential for modern architectures.</li>
-<li><strong>Batch normalization:</strong> Normalizing layer inputs stabilizes training, allows higher learning rates, and acts as mild regularizer. Typically inserted after linear transform, before activation.</li>
-</ul>
-<p><strong>Edge case:</strong> excessively wide layers waste parameters and computation without improving generalization if data is limited. Parameter count grows as \(O(w^2 L)\) for width \(w\) and depth \(L\); doubling width quadruples parameters. Always monitor validation loss during scaling — if it plateaus or rises while training loss continues falling, you've exceeded useful capacity. Also note that architecture interacts with optimizer and regularization: Adam tolerates wider networks better than SGD; dropout enables wider networks safely; weight decay constrains effective capacity independently of parameter count.</p>
+        <p>The answer is a <strong>dendrogram</strong>: a tree diagram where leaves are individual data points, internal nodes represent merges (or splits), and the height of each node encodes the dissimilarity at which the merge occurred. Cutting the dendrogram at any height yields a valid flat partition, so the user can choose resolution after seeing the full hierarchy rather than before.</p>
 
-<h2>Forward pass computation: a complete worked example</h2>
-<p>Understanding MLPs requires tracing data through every operation. Consider a minimal 2-layer network for binary classification: input dimension 2, hidden layer with 2 ReLU units, sigmoid output.</p>
-<p><strong>Parameters:</strong></p>
-\[
-W^{(1)} = \begin{pmatrix} 1 & -1 \\ 1 & 1 \end{pmatrix}, \quad \mathbf{b}^{(1)} = \begin{pmatrix} 0 \\ -1 \end{pmatrix}, \quad W^{(2)} = \begin{pmatrix} 1 & -2 \end{pmatrix}, \quad b^{(2)} = 0.5
-\]
-<p><strong>Input:</strong> \(\mathbf{x} = (1, 2)^\top\).</p>
-<p><strong>Hidden layer:</strong></p>
-\[
-\mathbf{z}^{(1)} = W^{(1)} \mathbf{x} + \mathbf{b}^{(1)} = \begin{pmatrix} 1\cdot1 + (-1)\cdot2 \\ 1\cdot1 + 1\cdot2 \end{pmatrix} + \begin{pmatrix} 0 \\ -1 \end{pmatrix} = \begin{pmatrix} -1 \\ 3 \end{pmatrix} + \begin{pmatrix} 0 \\ -1 \end{pmatrix} = \begin{pmatrix} -1 \\ 2 \end{pmatrix}
-\]
-\[
-\mathbf{h}^{(1)} = \operatorname{ReLU}(\mathbf{z}^{(1)}) = \begin{pmatrix} \max(0,-1) \\ \max(0,2) \end{pmatrix} = \begin{pmatrix} 0 \\ 2 \end{pmatrix}
-\]
-<p><strong>Output layer:</strong></p>
-\[
-z^{(2)} = W^{(2)} \mathbf{h}^{(1)} + b^{(2)} = \begin{pmatrix} 1 & -2 \end{pmatrix} \begin{pmatrix} 0 \\ 2 \end{pmatrix} + 0.5 = (0 - 4) + 0.5 = -3.5
-\]
-\[
-\hat y = \sigma(z^{(2)}) = \frac{1}{1 + e^{3.5}} = \frac{1}{1 + 33.115} = 0.0293
-\]
-<p>Predicted probability of class 1 is ~2.9% → classify as class 0. <strong>Gradient insight (foreshadowing Chapter 14):</strong> since \(h_1^{(1)} = 0\) (dead ReLU), \(\partial \hat y / \partial W_{11}^{(1)} = 0\) and \(\partial \hat y / \partial W_{12}^{(1)} = 0\) — these weights receive no gradient signal for this input. Only \(W_{21}^{(1)}, W_{22}^{(1)}\) and all \(W^{(2)}\) parameters are updated. If this unit stays dead across the entire dataset, those weights never learn — the dying ReLU problem in action. <strong>Sensitivity check:</strong> changing \(\mathbf{b}^{(1)}\) from \((0,-1)\) to \((0.5,-1)\) makes \(z_1^{(1)} = -0.5\), still dead. Changing to \((2,-1)\) gives \(z_1^{(1)} = 1\), activating the unit: \(h_1^{(1)} = 1\), \(z^{(2)} = 1 - 4 + 0.5 = -2.5\), \(\hat y = 0.076\). Small bias change flips unit state and significantly alters output — illustrating sensitivity to initialization and the importance of careful bias initialization (typically small positive values for ReLU to avoid initial death).</p>
+        <h2>Two strategies: bottom-up and top-down</h2>
 
-<h2>Connection to the broader framework</h2>
-<p>MLPs generalize nearly every model in this book. Logistic regression (Chapter 5) is a single-layer MLP with sigmoid output and no hidden layer. Linear regression (Chapters 2–3) is the same with identity output. Ridge regression (Chapter 4) adds \(\ell_2\) regularization to weights. LDA (Chapter 8) corresponds to a linear network trained with cross-entropy under Gaussian assumptions. Decision trees (Chapter 10) partition space axis-alignedly; MLPs learn oblique, smooth partitions via superposition of sigmoidal/ReLU basis functions. SVMs (Chapter 9) with kernel trick implicitly map to high-dimensional spaces; MLPs learn explicit mappings end-to-end. And Chapter 14's backpropagation is simply the chain rule applied systematically to compute gradients through this compositional structure.</p>
-<p>Master MLPs not as black boxes but as differentiable programs whose architecture encodes inductive biases about the target function. Understand why depth beats width for compositional tasks, why ReLU displaced sigmoid, why residual connections enable scale, and how universal approximation guarantees existence but not learnability. If you can trace a forward pass by hand, explain vanishing gradients quantitatively, justify architectural choices from first principles, and connect MLPs to classical models as special cases, you have internalized the foundation upon which all modern deep learning rests.</p>
+        <p>There are two fundamental approaches to building hierarchical clusterings:</p>
 
-  </article>
-  <div class="chapter-nav">
-    <a class="chapter-nav-link prev" href="../ch12/index.html">
-      <span class="chapter-nav-label">← Previous</span>
-      <span class="chapter-nav-title">12. Cross-Validation: LOO and k-Fold</span>
-    </a>
-    <a class="chapter-nav-link next" href="../ch14/index.html">
-      <span class="chapter-nav-label">Next →</span>
-      <span class="chapter-nav-title">14. Feed-Forward Neural Network</span>
-    </a>
-  </div>
-</div>
-</main>
-<footer>
-  <div class="wrap">
-    <span>© 2026 iTube. Read forever, free forever.</span>
-    <span>No video was harmed in the making of this platform.</span>
-  </div>
-</footer>
-<script src="../../theme.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-<script defer src="../../app.js"></script>
+        <p><strong>Agglomerative (bottom-up):</strong> Start with each point as its own cluster. At each step, merge the two most similar clusters. Continue until all points belong to a single cluster. This produces \(n-1\) merges for \(n\) points.</p>
+
+        <p><strong>Divisive (top-down):</strong> Start with all points in one cluster. At each step, split the least cohesive cluster into two sub-clusters. Continue until every point is its own cluster.</p>
+
+        <p>Agglomerative methods are far more common in practice because they are computationally simpler (\(O(n^3)\) naive, \(O(n^2 \log n)\) with optimizations) and produce the same dendrogram regardless of tie-breaking order (under mild conditions). Divisive methods require solving a partitioning problem at each split, which is generally harder. We focus on agglomerative clustering below, noting that the GATE DA syllabus mentions both directions but emphasizes linkage criteria, which apply primarily to the agglomerative framework.</p>
+
+        <h2>Linkage criteria: defining inter-cluster distance</h2>
+
+        <p>The critical design choice in agglomerative clustering is how to measure the distance between two <em>clusters</em> (sets of points), given only pairwise distances between individual points. Three standard linkage criteria dominate:</p>
+
+        <h3>Single linkage (minimum linkage)</h3>
+
+        \[d_{\text{single}}(C_a, C_b) = \min_{x_i \in C_a, x_j \in C_b} d(x_i, x_j)\]
+
+        <p>The distance between two clusters is the distance between their closest pair of points. Single linkage favors merging clusters that are connected by even a single close pair, regardless of how far apart the bulk of the clusters are.</p>
+
+        <h3>Complete linkage (maximum linkage)</h3>
+
+        \[d_{\text{complete}}(C_a, C_b) = \max_{x_i \in C_a, x_j \in C_b} d(x_i, x_j)\]
+
+        <p>The distance between two clusters is the distance between their farthest pair of points. Complete linkage only merges clusters when <em>all</em> cross-pairs are close, favoring compact, spherical clusters of similar diameter.</p>
+
+        <h3>Average linkage (UPGMA)</h3>
+
+        \[d_{\text{avg}}(C_a, C_b) = \frac{1}{|C_a||C_b|} \sum_{x_i \in C_a} \sum_{x_j \in C_b} d(x_i, x_j)\]
+
+        <p>The distance between two clusters is the average of all cross-pair distances. Average linkage balances single and complete linkage, avoiding both chaining and excessive compactness bias.</p>
+
+        <p>These three criteria produce fundamentally different hierarchies from the same data. The choice encodes what you mean by "similar clusters" and should be guided by domain knowledge and exploratory analysis.</p>
+
+        <h3>Worked example</h3>
+
+        <h4>Agglomerative clustering on five points with all three linkages</h4>
+
+        <p>Data in \(\mathbb{R}^1\) (for simplicity): \(A=1\), \(B=2\), \(C=5\), \(D=8\), \(E=9\).</p>
+
+        <p>Pairwise distance matrix (absolute difference):</p>
+
+        <table style="border-collapse:collapse; margin:1em 0;">
+          <tr style="border-bottom:2px solid var(--stone);">
+            <th style="padding:4px 8px;"></th>
+            <th style="padding:4px 8px; text-align:center;">A</th>
+            <th style="padding:4px 8px; text-align:center;">B</th>
+            <th style="padding:4px 8px; text-align:center;">C</th>
+            <th style="padding:4px 8px; text-align:center;">D</th>
+            <th style="padding:4px 8px; text-align:center;">E</th>
+          </tr>
+          <tr><td style="padding:4px 8px;"><strong>A</strong></td><td style="text-align:center;">0</td><td style="text-align:center;">1</td><td style="text-align:center;">4</td><td style="text-align:center;">7</td><td style="text-align:center;">8</td></tr>
+          <tr><td style="padding:4px 8px;"><strong>B</strong></td><td style="text-align:center;">1</td><td style="text-align:center;">0</td><td style="text-align:center;">3</td><td style="text-align:center;">6</td><td style="text-align:center;">7</td></tr>
+          <tr><td style="padding:4px 8px;"><strong>C</strong></td><td style="text-align:center;">4</td><td style="text-align:center;">3</td><td style="text-align:center;">0</td><td style="text-align:center;">3</td><td style="text-align:center;">4</td></tr>
+          <tr><td style="padding:4px 8px;"><strong>D</strong></td><td style="text-align:center;">7</td><td style="text-align:center;">6</td><td style="text-align:center;">3</td><td style="text-align:center;">0</td><td style="text-align:center;">1</td></tr>
+          <tr><td style="padding:4px 8px;"><strong>E</strong></td><td style="text-align:center;">8</td><td style="text-align:center;">7</td><td style="text-align:center;">4</td><td style="text-align:center;">1</td><td style="text-align:center;">0</td></tr>
+        </table>
+
+        <h4>Single linkage</h4>
+
+        <p><strong>Step 1:</strong> Minimum pairwise distance is \(d(A,B)=1\) and \(d(D,E)=1\). Break tie arbitrarily; merge \(\{A,B\}\) first at height 1.</p>
+
+        <p><strong>Step 2:</strong> Current clusters: \(\{A,B\}, \{C\}, \{D\}, \{E\}\). Compute single-linkage distances from \(\{A,B\}\) to others:</p>
+        <ul>
+          <li>\(d_{\text{single}}(\{A,B\}, \{C\}) = \min(d(A,C), d(B,C)) = \min(4,3) = 3\)</li>
+          <li>\(d_{\text{single}}(\{A,B\}, \{D\}) = \min(7,6) = 6\)</li>
+          <li>\(d_{\text{single}}(\{A,B\}, \{E\}) = \min(8,7) = 7\)</li>
+        </ul>
+        <p>Other pairwise: \(d(C,D)=3\), \(d(C,E)=4\), \(d(D,E)=1\). Minimum is \(d(D,E)=1\). Merge \(\{D,E\}\) at height 1.</p>
+
+        <p><strong>Step 3:</strong> Current clusters: \(\{A,B\}, \{C\}, \{D,E\}\). Distances:</p>
+        <ul>
+          <li>\(d_{\text{single}}(\{A,B\}, \{C\}) = 3\)</li>
+          <li>\(d_{\text{single}}(\{A,B\}, \{D,E\}) = \min(7,6,8,7) = 6\)</li>
+          <li>\(d_{\text{single}}(\{C\}, \{D,E\}) = \min(3,4) = 3\)</li>
+        </ul>
+        <p>Minimum is 3 (tie between \(\{A,B\}\)-\(\{C\}\) and \(\{C\}\)-\(\{D,E\}\)). Merge \(\{A,B\}\) with \(\{C\}\) at height 3 → \(\{A,B,C\}\).</p>
+
+        <p><strong>Step 4:</strong> Clusters: \(\{A,B,C\}, \{D,E\}\). Distance:</p>
+        <ul>
+          <li>\(d_{\text{single}}(\{A,B,C\}, \{D,E\}) = \min(7,6,3,8,7,4) = 3\)</li>
+        </ul>
+        <p>Merge at height 3. All points united.</p>
+
+        <p><strong>Single-linkage dendrogram heights:</strong> \(\{A,B\}\) at 1, \(\{D,E\}\) at 1, \(\{A,B,C\}\) at 3, \(\{A,B,C,D,E\}\) at 3.</p>
+
+        <h4>Complete linkage</h4>
+
+        <p><strong>Step 1:</strong> Same as single: merge \(\{A,B\}\) at height 1, then \(\{D,E\}\) at height 1.</p>
+
+        <p><strong>Step 2:</strong> Current clusters: \(\{A,B\}, \{C\}, \{D,E\}\). Complete-linkage distances:</p>
+        <ul>
+          <li>\(d_{\text{complete}}(\{A,B\}, \{C\}) = \max(d(A,C), d(B,C)) = \max(4,3) = 4\)</li>
+          <li>\(d_{\text{complete}}(\{A,B\}, \{D,E\}) = \max(7,6,8,7) = 8\)</li>
+          <li>\(d_{\text{complete}}(\{C\}, \{D,E\}) = \max(3,4) = 4\)</li>
+        </ul>
+        <p>Minimum is 4 (tie). Merge \(\{A,B\}\) with \(\{C\}\) at height 4 → \(\{A,B,C\}\).</p>
+
+        <p><strong>Step 3:</strong> Clusters: \(\{A,B,C\}, \{D,E\}\). Distance:</p>
+        <ul>
+          <li>\(d_{\text{complete}}(\{A,B,C\}, \{D,E\}) = \max(7,6,3,8,7,4) = 8\)</li>
+        </ul>
+        <p>Merge at height 8.</p>
+
+        <p><strong>Complete-linkage dendrogram heights:</strong> \(\{A,B\}\) at 1, \(\{D,E\}\) at 1, \(\{A,B,C\}\) at 4, \(\{A,B,C,D,E\}\) at 8.</p>
+
+        <p><strong>Key difference:</strong> Single linkage merged everything at height 3 because \(C\) was only distance 3 from \(D\). Complete linkage delayed the final merge to height 8 because \(A\) is distance 8 from \(E\). Single linkage sees connectivity; complete linkage sees diameter.</p>
+
+        <h2>The chaining effect</h2>
+
+        <p>Single linkage suffers from the <strong>chaining effect</strong>: it tends to produce elongated, straggly clusters because it only requires one close pair to merge. A chain of points spaced at distance 1 will be merged into a single cluster even if the endpoints are far apart, while two compact clusters separated by a gap slightly larger than 1 will remain separate. This makes single linkage sensitive to noise bridges between otherwise distinct groups.</p>
+
+        <p>Complete linkage avoids chaining but has the opposite problem: it can split naturally elongated or irregularly shaped clusters because it demands all cross-pairs be close. Average linkage provides a compromise that works well in many practical settings.</p>
+
+        <h2>Reading the dendrogram</h2>
+
+        <p>The dendrogram encodes the full hierarchy. To extract a flat partition with \(k\) clusters, cut the dendrogram at the height just below the \((k-1)\)-th highest merge. Large vertical gaps between consecutive merge heights suggest natural cluster boundaries: if merges occur at heights 1, 1.5, 2, and then jump to 10, cutting between 2 and 10 yields a stable partition. Small, uniform merge heights suggest no clear structure.</p>
+
+        <p>Importantly, the horizontal ordering of leaves in a dendrogram is arbitrary — only the vertical heights carry information. Rotating branches around internal nodes does not change the clustering.</p>
+
+        <h2>Common mistake</h2>
+
+        <p><strong>Common mistake:</strong> Students often interpret the horizontal proximity of leaves in a dendrogram as indicating similarity. Two leaves drawn adjacent to each other horizontally may have been merged at a very high level; their adjacency is merely an artifact of the drawing convention. Only the vertical height of the lowest common ancestor encodes dissimilarity. Always read dendrograms vertically, never horizontally. A related mistake: assuming that hierarchical clustering produces a "correct" number of clusters. Unlike supervised learning with ground truth, the number of clusters is always a subjective judgment informed by the dendrogram's structure, domain knowledge, and downstream utility. There is no universally optimal \(k\).</p>
+
+        <h2>Edge case</h2>
+
+        <p><strong>What happens when all pairwise distances are equal?</strong> Every merge occurs at the same height. The dendrogram is completely balanced (or unbalanced depending on tie-breaking), and no level of the hierarchy is preferred over any other. This correctly reflects the absence of structure: when all points are equidistant, there is no meaningful grouping. Any flat partition extracted from such a dendrogram is equally arbitrary.</p>
+
+        <p><strong>What about computational complexity?</strong> Naive agglomerative clustering recomputes the full distance matrix after each merge, taking \(O(n^3)\). Optimizations like the SLINK algorithm (single linkage, \(O(n^2)\) time and space) and nearest-neighbor chain methods reduce this for specific linkages. For large \(n\), approximate methods or sampling-based approaches become necessary. This contrasts with k-means (Chapter 12), which scales linearly in \(n\) per iteration.</p>
+
+        <h2>Where we go next</h2>
+
+        <p>Hierarchical clustering reveals structure at every resolution but operates directly in the original feature space. When data lives in high dimensions, distances become less informative (the curse of dimensionality discussed in Chapter 5), and clustering degrades. Chapter 14 introduces <strong>Principal Component Analysis (PCA)</strong>, which finds low-dimensional linear projections that preserve maximum variance, enabling effective visualization, denoising, and preprocessing for downstream clustering and classification.</p>
+
+      </article>
+
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch12/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">12. Clustering: k-Means &amp; k-Medoid</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch14/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">14. Dimensionality Reduction &amp; Principal Component Analysis</span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
 </body>
 </html>
