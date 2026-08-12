@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>6. Descriptive Statistics: Mean, Median, Mode, Standard Deviation, Correlation, and Covariance — Probability &amp; Statistics — iTube</title>
+  <meta name="description" content="What does it mean to summarize a dataset with a single number or a pair of numbers? We derive mean, median, mode, variance, covariance, and correlation from optimization principles and geometric intuition, showing why each measure captures something the others miss.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Probability &amp; Statistics</a><span class="sep">/</span>
+        <span>Ch. 6</span>
+      </div>
+      <div class="eyebrow">Probability &amp; Statistics</div>
+      <h1>6. Descriptive Statistics: Mean, Median, Mode, Standard Deviation, Correlation, and Covariance</h1>
+      <div class="chapter-meta">
+        <span>Chapter 6 of 12</span>
+        <span class="read-badge">30 min read</span>
+      </div>
+      <article>
+
+        <h2>Why summarize at all?</h2>
+        <p>A dataset is a collection of observations — sometimes thousands or millions of them. Staring at raw numbers rarely yields insight. We need summaries: single numbers or small collections of numbers that capture the essential structure of the data while discarding irrelevant detail. But which summaries? And why these particular ones rather than others?</p>
+        <p>The answer is that every descriptive statistic is the solution to an implicit optimization problem or a geometric relationship. The mean isn't just "the average" — it's the value that minimizes squared error. The median isn't just "the middle" — it's the value that minimizes absolute error. Variance isn't just "spread" — it's the expected squared deviation from the mean. Covariance and correlation aren't just "association" — they quantify linear dependence through inner products. In this chapter, we derive each measure from the question it answers, test naive alternatives on concrete data, and show exactly what information each summary preserves and what it discards.</p>
+
+        <h2>The mean: minimizing squared error</h2>
+        <p>Suppose you have \(n\) observed values \(x_1, x_2, \ldots, x_n\) and you want to pick a single number \(\hat{x}\) that best represents the entire set. What does "best" mean? One natural criterion: choose \(\hat{x}\) to minimize the total squared distance to all observations:</p>
+        \[
+        \hat{x} = \arg\min_{c} \sum_{i=1}^{n} (x_i - c)^2
+        \]
+        <p>Why squared distance rather than plain distance? Squared distance penalizes large deviations more heavily, producing a unique minimum that responds smoothly to every data point. Let's solve this optimization explicitly.</p>
+        <p>Define \(S(c) = \sum_{i=1}^n (x_i - c)^2\). Expand the square inside the sum:</p>
+        \[
+        S(c) = \sum_{i=1}^n (x_i^2 - 2x_i c + c^2)
+        \]
+        <p>Distribute the summation across terms (summation is linear):</p>
+        \[
+        S(c) = \sum_{i=1}^n x_i^2 - 2c \sum_{i=1}^n x_i + n c^2
+        \]
+        <p>This is a quadratic function of \(c\). To find its minimum, differentiate with respect to \(c\) and set the derivative to zero:</p>
+        \[
+        \frac{dS}{dc} = -2 \sum_{i=1}^n x_i + 2nc = 0
+        \]
+        <p>Solve for \(c\):</p>
+        \[
+        2nc = 2 \sum_{i=1}^n x_i \quad \Longrightarrow \quad c = \frac{1}{n} \sum_{i=1}^n x_i
+        \]
+        <p>This is the <strong>sample mean</strong>, denoted \(\bar{x}\). The second derivative \(d^2S/dc^2 = 2n > 0\) confirms this is indeed a minimum. So the mean is precisely the value that minimizes total squared deviation — no other number does better under this criterion.</p>
+
+        <h3>Worked example: computing the mean and verifying optimality</h3>
+        <p>Consider the dataset \(\{2, 4, 4, 4, 5, 5, 7, 9\}\). Compute the mean:</p>
+        \[
+        \bar{x} = \frac{2 + 4 + 4 + 4 + 5 + 5 + 7 + 9}{8}
+        \]
+        <p>Sum step by step: \(2+4=6\), \(6+4=10\), \(10+4=14\), \(14+5=19\), \(19+5=24\), \(24+7=31\), \(31+9=40\). Divide:</p>
+        \[
+        \bar{x} = \frac{40}{8} = 5
+        \]
+        <p>Now verify that \(\bar{x} = 5\) truly minimizes squared error. Compute total squared deviation at \(c = 5\):</p>
+        \[
+        (2-5)^2 + (4-5)^2 + (4-5)^2 + (4-5)^2 + (5-5)^2 + (5-5)^2 + (7-5)^2 + (9-5)^2
+        \]
+        \[
+        = 9 + 1 + 1 + 1 + 0 + 0 + 4 + 16 = 32
+        \]
+        <p>Try a nearby candidate, say \(c = 4\):</p>
+        \[
+        (2-4)^2 + (4-4)^2 + (4-4)^2 + (4-4)^2 + (5-4)^2 + (5-4)^2 + (7-4)^2 + (9-4)^2
+        \]
+        \[
+        = 4 + 0 + 0 + 0 + 1 + 1 + 9 + 25 = 40
+        \]
+        <p>Since \(40 > 32\), the mean genuinely produces lower total squared error than this alternative. The derivation is confirmed numerically.</p>
+
+        <p><strong>Common mistake:</strong> assuming the mean is always the "best" summary. It's only best under squared error. If your cost function treats overestimation and underestimation asymmetrically (e.g., medical dosing where overdose is worse than underdose), the mean is suboptimal. Always ask: what loss function does my application actually care about?</p>
+
+        <h2>The median: minimizing absolute error</h2>
+        <p>What if outliers make squared error inappropriate? A single extreme value can pull the mean arbitrarily far from the bulk of the data. An alternative criterion: minimize total <em>absolute</em> deviation:</p>
+        \[
+        \hat{x} = \arg\min_{c} \sum_{i=1}^{n} |x_i - c|
+        \]
+        <p>The absolute value function is not differentiable at zero, so we can't use calculus directly. Instead, reason geometrically. Sort the data: \(x_{(1)} \leq x_{(2)} \leq \cdots \leq x_{(n)}\). Moving \(c\) slightly to the right decreases the distance to all points above \(c\) but increases the distance to all points below \(c\). The net change is proportional to (number of points below \(c\)) minus (number of points above \(c\)). This net change is zero precisely when \(c\) splits the data into two equal halves — that is, when \(c\) is the <strong>median</strong>.</p>
+        <p>Formally: if \(n\) is odd, the median is \(x_{((n+1)/2)}\). If \(n\) is even, any value between \(x_{(n/2)}\) and \(x_{(n/2+1)}\) minimizes absolute deviation; conventionally we take their average.</p>
+
+        <h3>Worked example: median vs. mean under outlier contamination</h3>
+        <p>Using the same dataset \(\{2, 4, 4, 4, 5, 5, 7, 9\}\), the sorted values are already ordered. With \(n = 8\) (even), the median is the average of the 4th and 5th values: \((4 + 5)/2 = 4.5\).</p>
+        <p>Now replace the largest value 9 with 900, creating \(\{2, 4, 4, 4, 5, 5, 7, 900\}\). Recompute both summaries:</p>
+        \[
+        \text{Mean} = \frac{2+4+4+4+5+5+7+900}{8} = \frac{931}{8} = 116.375
+        \]
+        \[
+        \text{Median} = \frac{4+5}{2} = 4.5 \quad \text{(unchanged)}
+        \]
+        <p>The mean jumped from 5 to 116.375 due to a single outlier. The median didn't move at all. This demonstrates the median's robustness: it depends only on the ordering of data, not on magnitudes of extreme values. When data may contain errors or heavy tails, the median is often a more reliable location estimate than the mean.</p>
+
+        <p><strong>Edge case:</strong> what if multiple values tie at the middle position? For discrete data with repeated values, the median is still well-defined as the value (or midpoint between values) that splits cumulative probability at 50%. For continuous distributions, the median is the unique value \(m\) satisfying \(P(X \leq m) = 0.5\), provided the CDF is strictly increasing at that point.</p>
+
+        <h2>The mode: maximizing likelihood under uniform bins</h2>
+        <p>The <strong>mode</strong> is the most frequently occurring value in a dataset (or the value at which a probability density achieves its maximum). Unlike the mean and median, the mode doesn't arise from minimizing a loss function over all real numbers — it arises from asking "where is the data most concentrated?"</p>
+        <p>For discrete data, the mode is simply the value with highest frequency. For continuous data, we typically estimate it via histogram binning or kernel density estimation. The mode is especially useful for categorical data (where mean and median are undefined) and for identifying multimodal distributions where a single central tendency measure would be misleading.</p>
+
+        <h3>Worked example: mode in a bimodal distribution</h3>
+        <p>Consider exam scores: \(\{45, 48, 50, 52, 55, 78, 80, 82, 85, 88\}\). The mean is \(66.3\) and the median is \(66.5\), both suggesting performance near the middle. But the data clearly clusters around two peaks: one near 50 and another near 82. Neither the mean nor the median reveals this bimodality. Reporting the modes (approximately 50 and 82) communicates structure that central tendency measures obscure entirely.</p>
+
+        <p><strong>Common mistake:</strong> reporting a single mode for multimodal data. Many software packages return only the first mode encountered. Always visualize the distribution before summarizing with a mode — if multiple peaks exist, report all of them or acknowledge the limitation.</p>
+
+        <h2>Variance and standard deviation: quantifying spread</h2>
+        <p>Location alone is insufficient. Two datasets can share the same mean but differ dramatically in dispersion. We need a measure of how far observations typically fall from the center. Since we've established the mean as the squared-error-optimal center, the natural companion is the average squared deviation from it:</p>
+        \[
+        s^2 = \frac{1}{n-1} \sum_{i=1}^{n} (x_i - \bar{x})^2
+        \]
+        <p>This is the <strong>sample variance</strong>. Why divide by \(n-1\) instead of \(n\)? This is Bessel's correction, and it deserves a careful explanation.</p>
+
+        <h3>Deriving Bessel's correction</h3>
+        <p>Suppose the true population mean \(\mu\) were known. Then \(\frac{1}{n}\sum(x_i - \mu)^2\) would be an unbiased estimator of the population variance \(\sigma^2\). But \(\mu\) is unknown, so we substitute \(\bar{x}\). The problem: \(\bar{x}\) is computed from the same data, so it's always closer to the observations than \(\mu\) is, making \(\sum(x_i - \bar{x})^2\) systematically smaller than \(\sum(x_i - \mu)^2\).</p>
+        <p>To quantify this bias, expand \(\sum(x_i - \mu)^2\) by adding and subtracting \(\bar{x}\):</p>
+        \[
+        \sum_{i=1}^n (x_i - \mu)^2 = \sum_{i=1}^n \big[(x_i - \bar{x}) + (\bar{x} - \mu)\big]^2
+        \]
+        <p>Expand the square:</p>
+        \[
+        = \sum_{i=1}^n (x_i - \bar{x})^2 + 2(\bar{x} - \mu)\sum_{i=1}^n (x_i - \bar{x}) + n(\bar{x} - \mu)^2
+        \]
+        <p>The middle term vanishes because \(\sum(x_i - \bar{x}) = 0\) by definition of the mean. Take expectations of both sides (treating \(x_i\) as random samples from a distribution with variance \(\sigma^2\)):</p>
+        \[
+        \mathbb{E}\!\left[\sum_{i=1}^n (x_i - \mu)^2\right] = \mathbb{E}\!\left[\sum_{i=1}^n (x_i - \bar{x})^2\right] + n\,\mathbb{E}\!\left[(\bar{x} - \mu)^2\right]
+        \]
+        <p>The left side equals \(n\sigma^2\) (each term contributes \(\sigma^2\)). The last term on the right is \(n \cdot \operatorname{Var}(\bar{x}) = n \cdot \sigma^2/n = \sigma^2\). Substituting:</p>
+        \[
+        n\sigma^2 = \mathbb{E}\!\left[\sum_{i=1}^n (x_i - \bar{x})^2\right] + \sigma^2
+        \]
+        <p>Rearrange:</p>
+        \[
+        \mathbb{E}\!\left[\sum_{i=1}^n (x_i - \bar{x})^2\right] = (n-1)\sigma^2
+        \]
+        <p>Therefore, dividing by \(n-1\) (not \(n\)) yields an unbiased estimator: \(\mathbb{E}[s^2] = \sigma^2\). The correction accounts for the one degree of freedom consumed by estimating \(\mu\) with \(\bar{x}\).</p>
+
+        <p>The <strong>standard deviation</strong> is \(s = \sqrt{s^2}\). It has the same units as the original data (unlike variance, which is in squared units), making it interpretable as a typical deviation from the mean.</p>
+
+        <h3>Worked example: variance computation with Bessel's correction</h3>
+        <p>Using \(\{2, 4, 4, 4, 5, 5, 7, 9\}\) with \(\bar{x} = 5\), compute squared deviations:</p>
+        \[
+        (2-5)^2 = 9, \quad (4-5)^2 = 1, \quad (4-5)^2 = 1, \quad (4-5)^2 = 1
+        \]
+        \[
+        (5-5)^2 = 0, \quad (5-5)^2 = 0, \quad (7-5)^2 = 4, \quad (9-5)^2 = 16
+        \]
+        <p>Sum: \(9+1+1+1+0+0+4+16 = 32\). Now apply Bessel's correction:</p>
+        \[
+        s^2 = \frac{32}{8-1} = \frac{32}{7} \approx 4.571
+        \]
+        <p>Standard deviation: \(s = \sqrt{32/7} \approx 2.138\). If we had divided by \(n=8\) instead, we'd get \(32/8 = 4.0\), underestimating the true population variance by approximately 12.5% in this case. The correction matters most for small samples and diminishes as \(n\) grows.</p>
+
+        <p><strong>Edge case:</strong> when \(n = 1\), \(s^2\) is undefined (division by zero). This reflects genuine epistemic limitation: with a single observation, you cannot estimate variability. Any reported standard deviation for \(n=1\) is either fabricated or derived from external assumptions.</p>
+
+        <h2>Covariance: measuring joint variation</h2>
+        <p>Variance describes spread in one dimension. What about the relationship between two variables \(X\) and \(Y\)? Do they tend to be large together, or does one increase while the other decreases? The natural extension of variance to two dimensions is <strong>covariance</strong>:</p>
+        \[
+        \operatorname{Cov}(X, Y) = \mathbb{E}\big[(X - \mathbb{E}[X])(Y - \mathbb{E}[Y])\big]
+        \]
+        <p>For sample data, the unbiased estimator mirrors the variance formula:</p>
+        \[
+        s_{xy} = \frac{1}{n-1} \sum_{i=1}^{n} (x_i - \bar{x})(y_i - \bar{y})
+        \]
+        <p>Why this particular product form? Consider what happens when \(X\) and \(Y\) are both above their means simultaneously: the product \((x_i - \bar{x})(y_i - \bar{y})\) is positive. When one is above and the other below, it's negative. Averaging these products yields a positive number when variables co-vary in the same direction, negative when they co-vary oppositely, and zero when there's no linear association.</p>
+
+        <h3>Worked example: computing covariance</h3>
+        <p>Given paired data \((x, y)\): \((1,2), (2,4), (3,5), (4,4), (5,5)\). First compute means: \(\bar{x} = 15/5 = 3\), \(\bar{y} = 20/5 = 4\). Now compute cross-products of deviations:</p>
+        \[
+        (1-3)(2-4) = (-2)(-2) = 4
+        \]
+        \[
+        (2-3)(4-4) = (-1)(0) = 0
+        \]
+        \[
+        (3-3)(5-4) = (0)(1) = 0
+        \]
+        \[
+        (4-3)(4-4) = (1)(0) = 0
+        \]
+        \[
+        (5-3)(5-4) = (2)(1) = 2
+        \]
+        <p>Sum: \(4+0+0+0+2 = 6\). Apply Bessel's correction:</p>
+        \[
+        s_{xy} = \frac{6}{5-1} = \frac{6}{4} = 1.5
+        \]
+        <p>Positive covariance indicates that \(X\) and \(Y\) tend to increase together. But what does "1.5" mean in absolute terms? Without knowing the scales of \(X\) and \(Y\), we can't judge strength. This motivates normalization.</p>
+
+        <h2>Correlation: scale-invariant linear association</h2>
+        <p>Covariance depends on units: measuring height in meters vs. centimeters changes covariance by a factor of 100, even though the underlying relationship is identical. To obtain a unitless measure bounded between \(-1\) and \(1\), normalize by the product of standard deviations:</p>
+        \[
+        r = \frac{s_{xy}}{s_x s_y} = \frac{\sum_{i=1}^n (x_i - \bar{x})(y_i - \bar{y})}{\sqrt{\sum_{i=1}^n (x_i - \bar{x})^2} \sqrt{\sum_{i=1}^n (y_i - \bar{y})^2}}
+        \]
+        <p>This is the <strong>Pearson correlation coefficient</strong>. Why is it bounded? By the Cauchy-Schwarz inequality applied to the vectors of centered observations:</p>
+        \[
+        \left|\sum_{i=1}^n (x_i - \bar{x})(y_i - \bar{y})\right| \leq \sqrt{\sum_{i=1}^n (x_i - \bar{x})^2} \cdot \sqrt{\sum_{i=1}^n (y_i - \bar{y})^2}
+        \]
+        <p>Dividing both sides by the right-hand side gives \(|r| \leq 1\). Equality holds if and only if \(y_i - \bar{y} = k(x_i - \bar{x})\) for some constant \(k\) — that is, perfect linear relationship. Thus correlation measures the strength of <em>linear</em> association specifically.</p>
+
+        <h3>Worked example: correlation from previous covariance</h3>
+        <p>Continuing the previous example, compute \(s_x\) and \(s_y\). For \(x\): squared deviations from \(\bar{x}=3\) are \(4, 1, 0, 1, 4\); sum = 10; \(s_x^2 = 10/4 = 2.5\); \(s_x = \sqrt{2.5} \approx 1.581\). For \(y\): squared deviations from \(\bar{y}=4\) are \(4, 0, 1, 0, 1\); sum = 6; \(s_y^2 = 6/4 = 1.5\); \(s_y = \sqrt{1.5} \approx 1.225\).</p>
+        <p>Now compute correlation:</p>
+        \[
+        r = \frac{1.5}{1.581 \times 1.225} = \frac{1.5}{1.937} \approx 0.774
+        \]
+        <p>A correlation of 0.774 indicates strong positive linear association. Note that this is invariant to rescaling: if we multiplied all \(y\)-values by 100, covariance would increase by 100×, but \(s_y\) would also increase by 100×, leaving \(r\) unchanged.</p>
+
+        <p><strong>Common mistake:</strong> interpreting \(r = 0\) as "no relationship." Correlation measures only <em>linear</em> association. Variables can have perfect nonlinear relationships (e.g., \(Y = X^2\) on symmetric \(X\)) with zero correlation. Always plot data before concluding absence of association.</p>
+
+        <p><strong>Edge case:</strong> when \(s_x = 0\) or \(s_y = 0\) (constant variable), correlation is undefined. Geometrically, a constant vector has no direction, so the angle between it and any other vector is meaningless. In practice, check for zero variance before computing correlation.</p>
+
+<h2>Connecting forward</h2>        <p>Descriptive statistics are the foundation upon which inferential methods rest. The sample mean and variance become estimators of population parameters in Chapter 11 (confidence intervals). Covariance matrices generalize to multivariate normal distributions in Chapter 9. Correlation underlies simple linear regression, whose residuals connect directly to the conditional variance decomposition from Chapter 5. And the distinction between mean and median foreshadows the choice between squared-error and absolute-error loss functions that recurs throughout statistical decision theory.</p>      </article>      <div class="chapter-nav">        <a class="chapter-nav-link prev" href="../ch5/index.html">          <span class="chapter-nav-label">← Previous</span>          <span class="chapter-nav-title">5. Conditional Expectation and Variance</span>        </a>        <a class="chapter-nav-link next" href="../ch7/index.html">          <span class="chapter-nav-label">Next →</span>          <span class="chapter-nav-title">7. Random Variables and Discrete Distributions</span>        </a>      </div>    </div>  </main>  <footer>    <div class="wrap">      <span>© 2026 iTube. Read forever, free forever.</span>      <span>No video was harmed in the making of this platform.</span>    </div>  </footer>  <script src="../../theme.js"></script>  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>  <script defer src="../../app.js"></script></body></html>
