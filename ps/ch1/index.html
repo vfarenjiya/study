@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>1. Counting — Permutations and Combinations — Probability &amp; Statistics — iTube</title>
+  <meta name="description" content="Why does order matter in counting? We derive permutations and combinations from first principles by asking what question each formula answers, testing naive approaches on concrete examples, and building up to the binomial coefficient step by step.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Probability &amp; Statistics</a><span class="sep">/</span>
+        <span>Ch. 1</span>
+      </div>
+      <div class="eyebrow">Probability &amp; Statistics</div>
+      <h1>1. Counting — Permutations and Combinations</h1>
+      <div class="chapter-meta">
+        <span>Chapter 1 of 12</span>
+        <span class="read-badge">25 min read</span>
+      </div>
+      <article>
+
+        <h2>The fundamental question of counting</h2>
+        <p>Before we can assign probabilities to anything, we need to know how many ways something can happen. Probability, at its most basic level, is a ratio: the number of favorable outcomes divided by the total number of possible outcomes. But "number of possible outcomes" is not always obvious. If you shuffle a deck of cards, how many distinct orderings exist? If you choose three people from a group of ten to form a committee, how many different committees are possible? These two questions feel similar — both involve selecting from a finite set — but they have dramatically different answers. Why?</p>
+        <p>The answer lies in a single distinction that governs all of combinatorics: <strong>does order matter?</strong> Every counting formula you will encounter in this chapter is ultimately an answer to that question, applied under specific constraints. Rather than memorizing formulas, we will derive each one by asking the concrete counting problem it solves, trying the obvious approach, seeing where it overcounts or undercounts, and correcting it step by step.</p>
+
+        <h2>Permutations: when order matters</h2>
+        <p>Suppose you have \(n\) distinct objects and you want to arrange all of them in a sequence. How many distinct sequences (orderings) are there?</p>
+        <p>A natural first instinct is to think about this position by position. For the first position in the sequence, you can choose any of the \(n\) objects. Once you've placed one object there, you have \(n-1\) remaining choices for the second position. Then \(n-2\) for the third, and so on, until only one object remains for the last position. The total number of arrangements is therefore the product of all these choices:</p>
+        \[
+        n \times (n-1) \times (n-2) \times \cdots \times 2 \times 1
+        \]
+        <p>This product appears so frequently in counting that it has its own notation. We define the <strong>factorial</strong> of \(n\), written \(n!\), as exactly this product:</p>
+        \[
+        n! = n \times (n-1) \times (n-2) \times \cdots \times 2 \times 1
+        \]
+        <p>with the special convention that \(0! = 1\). (We'll see why this convention is necessary shortly.) So the number of ways to arrange all \(n\) distinct objects is simply \(n!\).</p>
+
+        <h3>Worked example: arranging four books</h3>
+        <p>Let's verify this on a small case you can enumerate by hand. Suppose you have four distinct books labeled A, B, C, D, and you want to arrange them on a shelf. According to the formula, the number of arrangements should be \(4! = 4 \times 3 \times 2 \times 1 = 24\).</p>
+        <p>To confirm, count systematically: fix A in the first position. The remaining three books {B, C, D} can be arranged in \(3! = 6\) ways: BCD, BDC, CBD, CDB, DBC, DCB. Similarly, fixing B first gives another 6, fixing C first gives another 6, and fixing D first gives another 6. Total: \(6 + 6 + 6 + 6 = 24\). The formula matches the brute-force enumeration exactly.</p>
+
+        <h3>Partial permutations: choosing and ordering \(k\) out of \(n\)</h3>
+        <p>Now suppose you don't want to arrange all \(n\) objects — you only want to pick \(k\) of them (where \(k \leq n\)) and arrange those \(k\) in a sequence. How many distinct ordered selections are there?</p>
+        <p>The same position-by-position reasoning applies, but now we stop after \(k\) positions instead of \(n\). For the first position, \(n\) choices. For the second, \(n-1\). For the third, \(n-2\). Continuing this pattern, for the \(k\)-th position, we have \(n - k + 1\) choices remaining. The total is:</p>
+        \[
+        n \times (n-1) \times (n-2) \times \cdots \times (n - k + 1)
+        \]
+        <p>This product has exactly \(k\) factors. It can be written compactly using factorials. Notice that if we multiply and divide by \((n-k)!\), the numerator becomes the full factorial \(n!\):</p>
+        \[
+        n \times (n-1) \times \cdots \times (n-k+1) = \frac{n \times (n-1) \times \cdots \times (n-k+1) \times (n-k)!}{(n-k)!} = \frac{n!}{(n-k)!}
+        \]
+        <p>This quantity is called the number of <strong>\(k\)-permutations of \(n\)</strong>, often denoted \(P(n, k)\) or \({}_nP_k\):</p>
+        \[
+        P(n, k) = \frac{n!}{(n-k)!}
+        \]
+
+        <h3>Worked example: top three finishers in a race</h3>
+        <p>Eight runners compete in a race. How many possible outcomes are there for the gold, silver, and bronze medal positions? Here \(n = 8\) and \(k = 3\), and order matters because first place is different from second place.</p>
+        <p>Applying the formula:</p>
+        \[
+        P(8, 3) = \frac{8!}{(8-3)!} = \frac{8!}{5!}
+        \]
+        <p>Rather than computing \(8! = 40320\) and \(5! = 120\) separately, cancel directly:</p>
+        \[
+        \frac{8 \times 7 \times 6 \times 5!}{5!} = 8 \times 7 \times 6 = 336
+        \]
+        <p>There are 336 distinct podium outcomes. Notice that if we had naively computed \(8^3 = 512\) (allowing the same runner to win multiple medals), we would have overcounted by permitting impossible outcomes like "Runner A wins both gold and silver." The permutation formula correctly enforces the constraint that each runner can occupy at most one position.</p>
+
+        <p><strong>Common mistake:</strong> students sometimes write \(P(n,k) = n! / k!\) instead of \(n! / (n-k)!\). The denominator must cancel the <em>unused</em> positions (the \(n-k\) objects you didn't pick), not the ones you did pick. A quick sanity check: \(P(n, n)\) should equal \(n!\) (arranging all objects). With the correct formula, \(n!/(n-n)! = n!/0! = n!/1 = n!\). With the wrong formula, \(n!/n! = 1\), which is clearly incorrect.</p>
+
+        <h2>Combinations: when order doesn't matter</h2>
+        <p>Now consider a fundamentally different question: you have \(n\) distinct objects and you want to choose \(k\) of them, but you do <em>not</em> care about the order in which they're selected. A committee of {Alice, Bob, Charlie} is the same committee as {Charlie, Alice, Bob}. How many distinct unordered subsets of size \(k\) exist?</p>
+        <p>We already know how to count <em>ordered</em> selections of size \(k\): that's \(P(n,k) = n!/(n-k)!\). But each unordered subset of size \(k\) has been counted multiple times in that total — once for every possible ordering of its \(k\) members. How many orderings does a set of \(k\) elements have? Exactly \(k!\), by the same factorial reasoning we used above.</p>
+        <p>So the permutation count \(P(n,k)\) overcounts each combination by a factor of exactly \(k!\). To get the true number of unordered subsets, we divide:</p>
+        \[
+        \binom{n}{k} = \frac{P(n,k)}{k!} = \frac{n!}{k!\,(n-k)!}
+        \]
+        <p>This is the <strong>binomial coefficient</strong>, read "\(n\) choose \(k\)." It is arguably the single most important quantity in all of combinatorics, and it will reappear throughout this book — in the binomial distribution (Chapter 7), in Bayes' theorem calculations (Chapter 4), and in hypothesis testing (Chapter 12).</p>
+
+        <h3>Worked example: choosing a committee</h3>
+        <p>From a group of 10 people, how many distinct 3-person committees can be formed? Here \(n = 10\), \(k = 3\), and order doesn't matter.</p>
+        \[
+        \binom{10}{3} = \frac{10!}{3!\,7!} = \frac{10 \times 9 \times 8 \times 7!}{3! \times 7!} = \frac{10 \times 9 \times 8}{3 \times 2 \times 1}
+        \]
+        <p>Compute the numerator: \(10 \times 9 = 90\), \(90 \times 8 = 720\). Compute the denominator: \(3 \times 2 \times 1 = 6\). Divide: \(720 / 6 = 120\).</p>
+        <p>There are 120 distinct committees. Compare this to the ordered version: \(P(10,3) = 720\). Each committee was counted \(3! = 6\) times in the permutation count (once for each ordering of its three members), and indeed \(720 / 6 = 120\).</p>
+
+        <h3>Why \(0! = 1\): the boundary case</h3>
+        <p>Earlier we stated \(0! = 1\) as a convention. Now we can see why it's not arbitrary — it's forced by the combinatorics. How many ways are there to choose 0 objects from \(n\)? There is exactly one way: choose nothing. So \(\binom{n}{0}\) must equal 1. Plugging into the formula:</p>
+        \[
+        \binom{n}{0} = \frac{n!}{0!\,n!} = \frac{1}{0!}
+        \]
+        <p>For this to equal 1, we <em>must</em> have \(0! = 1\). Similarly, \(\binom{n}{n} = n!/(n!\,0!) = 1/0!\), and there is exactly one way to choose all \(n\) objects, so again \(0! = 1\) is required. The convention isn't a definition imposed from outside; it's the unique value that makes the counting formulas consistent at their boundaries.</p>
+
+        <p><strong>Edge case:</strong> what if \(k &gt; n\)? Then \(\binom{n}{k} = 0\), because you cannot choose more objects than exist. The factorial formula reflects this if we adopt the convention that \(1/m! = 0\) when \(m\) is negative (or more precisely, that \(\binom{n}{k} = 0\) for \(k &gt; n\) by definition). In practice, always check whether \(k \leq n\) before applying the formula.</p>
+
+        <h2>Symmetry and useful identities</h2>
+        <p>The binomial coefficient satisfies a symmetry that is immediately obvious from the formula but worth internalizing:</p>
+        \[
+        \binom{n}{k} = \binom{n}{n-k}
+        \]
+        <p>Choosing \(k\) objects to include is the same as choosing \(n-k\) objects to exclude. Algebraically, swapping \(k\) and \(n-k\) in the denominator \(k!(n-k)!\) leaves the expression unchanged. This identity is useful computationally: \(\binom{100}{97}\) is tedious to compute directly, but \(\binom{100}{3}\) is easy, and they're equal.</p>
+        <p>A less obvious but equally important identity is <strong>Pascal's rule</strong>:</p>
+        \[
+        \binom{n}{k} = \binom{n-1}{k-1} + \binom{n-1}{k}
+        \]
+        <p>Why is this true? Fix one particular object among the \(n\). Any subset of size \(k\) either includes this object or doesn't. If it includes the object, we need to choose the remaining \(k-1\) members from the other \(n-1\) objects: \(\binom{n-1}{k-1}\) ways. If it doesn't include the object, we need to choose all \(k\) members from the other \(n-1\): \(\binom{n-1}{k}\) ways. These two cases are exhaustive and mutually exclusive, so their sum equals \(\binom{n}{k}\). This identity is the recursive foundation of Pascal's triangle, and it will become essential when we derive properties of the binomial distribution in Chapter 7.</p>
+
+        <h2>Connecting counting to probability</h2>
+        <p>Why does any of this matter for probability? Because in a finite sample space where all outcomes are equally likely, the probability of an event \(A\) is:</p>
+        \[
+        P(A) = \frac{|A|}{|S|}
+        \]
+        <p>where \(|A|\) is the number of favorable outcomes and \(|S|\) is the total number of outcomes. Both \(|A|\) and \(|S|\) are counting problems. The entire machinery of permutations and combinations exists to compute these cardinalities correctly.</p>
+        <p>For example: what is the probability of being dealt a full house (three of one rank and two of another) in a five-card poker hand? The denominator is \(\binom{52}{5} = 2{,}598{,}960\) — the number of unordered 5-card hands. The numerator requires choosing a rank for the triple (13 choices), choosing 3 of its 4 suits (\(\binom{4}{3} = 4\)), choosing a different rank for the pair (12 remaining choices), and choosing 2 of its 4 suits (\(\binom{4}{2} = 6\)): \(13 \times 4 \times 12 \times 6 = 3{,}744\). The probability is \(3{,}744 / 2{,}598{,}960 \approx 0.00144\). Without correct counting, this calculation is impossible.</p>
+        <p>This connection between counting and probability is the bridge to Chapter 2, where we formalize sample spaces and events, and to Chapter 7, where the binomial coefficient becomes the core ingredient of the binomial distribution.</p>
+
+        <p><strong>Common mistake:</strong> mixing up when to use permutations versus combinations. The test is always: <em>would swapping two selected items produce a meaningfully different outcome?</em> If yes (race placements, passwords, seating arrangements), use permutations. If no (committees, card hands, lottery numbers), use combinations. When in doubt, ask yourself whether the problem statement distinguishes between orderings of the same elements.</p>
+
+      </article>
+      <div class="chapter-nav">
+        <div class="chapter-nav-empty"></div>
+        <a class="chapter-nav-link next" href="../ch2/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">2. Probability Axioms, Sample Spaces, and Events</span>
+        </a>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
+</body>
+</html>
