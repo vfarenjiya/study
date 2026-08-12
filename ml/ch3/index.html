@@ -1,254 +1,252 @@
-<!-- File: /<slug>/ch3/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>3. Multiple Linear Regression — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
-<meta name="description" content="Matrix formulation of OLS, the normal equations derived via calculus and geometry, multicollinearity, adjusted R-squared, and a hand-computed two-predictor example.">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap" rel="stylesheet">
-<link rel="manifest" href="../../manifest.json">
-<link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="../../icons/icon-192.svg">
-<meta name="theme-color" content="#1B1B1F">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="iTube">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script>
-(function(){
-  var saved = localStorage.getItem("itube-theme");
-  var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-  document.documentElement.setAttribute("data-theme", theme);
-})();
-</script>
-<link rel="stylesheet" href="../../style.css">
+  <title>3. Ridge Regression — Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA) — iTube</title>
+  <meta name="description" content="What happens when OLS coefficients explode due to correlated features? We derive ridge regression as a penalized least-squares problem, show why it always has a unique solution, and work through a numeric example demonstrating coefficient shrinkage.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
 </head>
 <body data-depth="2">
-<header class="top">
-  <div class="wrap">
-    <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
-    <div class="top-actions">
-      <div class="font-controls" role="group" aria-label="Adjust text size">
-        <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
-        <span id="font-size-label">100%</span>
-        <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
-        <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
       </div>
-      <button id="theme-btn" title="Toggle light/dark">◐</button>
     </div>
-  </div>
-</header>
-<main>
-<div class="wrap narrow">
-  <div class="breadcrumb">
-    <a href="../../index.html">iTube</a><span class="sep">/</span>
-    <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
-    <span>Ch. 3</span>
-  </div>
-  <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
-  <h1>3. Multiple Linear Regression</h1>
-  <div class="chapter-meta">
-    <span>Chapter 3 of 17</span>
-    <span class="read-badge">24 min read</span>
-  </div>
-  <article>
+  </header>
 
-<h2>From one predictor to many: the matrix model</h2>
-<p><strong>Multiple linear regression</strong> generalizes the simple linear model of Chapter 2 from a single scalar input to a vector of \(p\) predictors. The model for observation \(i\) is</p>
-\[
-y_i = \beta_0 + \beta_1 x_{i1} + \beta_2 x_{i2} + \dots + \beta_p x_{ip} + \varepsilon_i, \quad i = 1, \dots, n
-\]
-<p>where \(\beta_0\) is still the intercept, \(\beta_1, \dots, \beta_p\) are the <strong>regression coefficients</strong>, and \(\varepsilon_i\) are unobserved errors satisfying the same classical assumptions as before (\(\mathbb{E}[\varepsilon_i] = 0\), constant variance, independence). The hypothesis class is now \(\mathcal{H} = \{ f(\mathbf{x}) = \beta_0 + \boldsymbol\beta^\top \mathbf{x} : \beta_0 \in \mathbb{R}, \boldsymbol\beta \in \mathbb{R}^p \}\), a \((p+1)\)-dimensional linear subspace of all functions from \(\mathbb{R}^p\) to \(\mathbb{R}\).</p>
-<p>Writing out \(n\) such equations individually is unwieldy. The entire model compresses into a single matrix equation by absorbing the intercept into the coefficient vector. Define the <strong>design matrix</strong> \(X \in \mathbb{R}^{n \times (p+1)}\) whose first column is all ones (for the intercept) and whose remaining columns are the predictor vectors:</p>
-\[
-X = \begin{pmatrix}
-1 & x_{11} & x_{12} & \dots & x_{1p} \\
-1 & x_{21} & x_{22} & \dots & x_{2p} \\
-\vdots & \vdots & \vdots & \ddots & \vdots \\
-1 & x_{n1} & x_{n2} & \dots & x_{np}
-\end{pmatrix}, \quad
-\boldsymbol\beta = \begin{pmatrix} \beta_0 \\ \beta_1 \\ \vdots \\ \beta_p \end{pmatrix}, \quad
-\mathbf{y} = \begin{pmatrix} y_1 \\ y_2 \\ \vdots \\ y_n \end{pmatrix}
-\]
-<p>The model becomes simply \(\mathbf{y} = X \boldsymbol\beta + \boldsymbol\varepsilon\). Every algebraic fact about simple linear regression — the normal equations, the projection geometry, the Pythagorean decomposition — generalizes cleanly in this notation. The cost is abstraction: you must be comfortable reading matrix expressions as shorthand for sums over observations. The payoff is that derivations that took pages of summation algebra in Chapter 2 now fit in three lines.</p>
-<p><strong>Common mistake:</strong> treating each coefficient \(\beta_j\) as the marginal effect of \(x_j\) on \(y\) <em>unconditionally</em>. In multiple regression, \(\beta_j\) is the effect of \(x_j\) <em>holding all other predictors fixed</em>. If \(x_j\) and \(x_k\) are correlated, changing \(x_j\) in reality also changes \(x_k\), so the total effect on \(y\) differs from \(\beta_j\). Confusing the partial coefficient with the total effect is the single most frequent misinterpretation of multiple regression output in applied work.</p>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</a><span class="sep">/</span>
+        <span>Ch. 3</span>
+      </div>
+      <div class="eyebrow">Machine Learning: Supervised &amp; Unsupervised Learning (GATE DA)</div>
+      <h1>3. Ridge Regression</h1>
+      <div class="chapter-meta">
+        <span>Chapter 3 of 14</span>
+        <span class="read-badge">25 min read</span>
+      </div>
 
-<h2>The multivariate OLS estimator: derivation</h2>
-<p>We minimize the residual sum of squares, now written compactly using the Euclidean norm:</p>
-\[
-\text{RSS}(\boldsymbol\beta) = \| \mathbf{y} - X \boldsymbol\beta \|^2 = (\mathbf{y} - X \boldsymbol\beta)^\top (\mathbf{y} - X \boldsymbol\beta)
-\]
-<p>Expanding the quadratic form:</p>
-\[
-\text{RSS}(\boldsymbol\beta) = \mathbf{y}^\top \mathbf{y} - 2 \boldsymbol\beta^\top X^\top \mathbf{y} + \boldsymbol\beta^\top X^\top X \boldsymbol\beta
-\]
-<p>Differentiating with respect to the vector \(\boldsymbol\beta\) (using standard matrix calculus identities \(\frac{\partial}{\partial \boldsymbol\beta}(\boldsymbol\beta^\top \mathbf{a}) = \mathbf{a}\) and \(\frac{\partial}{\partial \boldsymbol\beta}(\boldsymbol\beta^\top A \boldsymbol\beta) = 2A\boldsymbol\beta\) for symmetric \(A\)):</p>
-\[
-\nabla_{\boldsymbol\beta} \text{RSS} = -2 X^\top \mathbf{y} + 2 X^\top X \boldsymbol\beta
-\]
-<p>Setting the gradient to zero yields the <strong>normal equations</strong>:</p>
-\[
-X^\top X \boldsymbol\beta = X^\top \mathbf{y}
-\]
-<p>If \(X^\top X\) is invertible, we obtain the closed-form <strong>OLS estimator</strong>:</p>
-\[
-\hat{\boldsymbol\beta} = (X^\top X)^{-1} X^\top \mathbf{y}
-\]
-<p>This is the multivariate analogue of equations (1)–(2) from Chapter 2. When \(p = 1\), expanding \(X^\top X\) and \(X^\top \mathbf{y}\) recovers exactly the scalar formulas \(\hat\beta_1 = S_{xy}/S_{xx}\) and \(\hat\beta_0 = \bar y - \hat\beta_1 \bar x\). The matrix form unifies both cases and scales to arbitrary \(p\) without notational change.</p>
-<p><strong>Edge case:</strong> \(X^\top X\) is singular (non-invertible) when the columns of \(X\) are linearly dependent — that is, when one predictor is an exact linear combination of others, or when \(n \lt p+1\). In this case the normal equations have infinitely many solutions: there is no unique OLS estimate. This is the algebraic signature of <strong>perfect multicollinearity</strong>. Practically, it arises when you include both a variable and its duplicate, when you include all \(K\) dummy variables for a \(K\)-level categorical feature alongside an intercept (the "dummy variable trap"), or when \(p \geq n\). Ridge regression (Chapter 4) resolves this by adding \(\lambda I\) to \(X^\top X\), guaranteeing invertibility for any \(\lambda \gt 0\).</p>
+      <article>
 
-<h3>Worked example: hand-computed two-predictor OLS</h3>
-<p>Suppose we have \(n = 4\) observations with two predictors (\(p = 2\)): study hours (\(x_1\)), sleep hours (\(x_2\)), and exam score (\(y\)):</p>
-\[
-\begin{array}{c|cc|c}
-i & x_{i1} & x_{i2} & y_i \\ \hline
-1 & 1 & 6 & 50 \\
-2 & 2 & 7 & 60 \\
-3 & 3 & 5 & 65 \\
-4 & 4 & 8 & 85
-\end{array}
-\]
-<p><strong>Step 1: Build \(X\) and compute \(X^\top X\).</strong></p>
-\[
-X = \begin{pmatrix} 1 & 1 & 6 \\ 1 & 2 & 7 \\ 1 & 3 & 5 \\ 1 & 4 & 8 \end{pmatrix}
-\]
-\[
-X^\top X = \begin{pmatrix}
-4 & 10 & 26 \\
-10 & 30 & 67 \\
-26 & 67 & 174
-\end{pmatrix}
-\]
-<p>(Each entry is a dot product of columns of \(X\): e.g., \((X^\top X)_{23} = 1\cdot6 + 2\cdot7 + 3\cdot5 + 4\cdot8 = 6+14+15+32 = 67\).)</p>
-<p><strong>Step 2: Compute \(X^\top \mathbf{y}\).</strong></p>
-\[
-X^\top \mathbf{y} = \begin{pmatrix}
-50 + 60 + 65 + 85 \\
-1\cdot50 + 2\cdot60 + 3\cdot65 + 4\cdot85 \\
-6\cdot50 + 7\cdot60 + 5\cdot65 + 8\cdot85
-\end{pmatrix} = \begin{pmatrix} 260 \\ 705 \\ 1725 \end{pmatrix}
-\]
-<p><strong>Step 3: Solve \((X^\top X) \hat{\boldsymbol\beta} = X^\top \mathbf{y}\).</strong> For a \(3\times3\) system, we compute \((X^\top X)^{-1}\) or solve directly. Using Gaussian elimination or a symbolic solver (shown here via the adjugate for transparency):</p>
-\[
-\det(X^\top X) = 4(30\cdot174 - 67^2) - 10(10\cdot174 - 67\cdot26) + 26(10\cdot67 - 30\cdot26)
-\]
-\[
-= 4(5220 - 4489) - 10(1740 - 1742) + 26(670 - 780) = 4(731) - 10(-2) + 26(-110)
-\]
-\[
-= 2924 + 20 - 2860 = 84
-\]
-<p>The determinant is nonzero, confirming unique solvability. Computing the inverse (omitting cofactor arithmetic for brevity; verify by multiplication):</p>
-\[
-(X^\top X)^{-1} = \frac{1}{84} \begin{pmatrix} 731 & -20 & -110 \\ -20 & 8 & -2 \\ -110 & -2 & 20 \end{pmatrix}
-\]
-<p><strong>Step 4: Multiply to get \(\hat{\boldsymbol\beta}\).</strong></p>
-\[
-\hat{\boldsymbol\beta} = \frac{1}{84} \begin{pmatrix} 731 & -20 & -110 \\ -20 & 8 & -2 \\ -110 & -2 & 20 \end{pmatrix} \begin{pmatrix} 260 \\ 705 \\ 1725 \end{pmatrix}
-\]
-<p>First component (intercept): \(\frac{1}{84}(731\cdot260 - 20\cdot705 - 110\cdot1725) = \frac{1}{84}(190060 - 14100 - 189750) = \frac{-13790}{84} \approx -164.17\). Wait — this seems extreme. Let me recompute carefully.</p>
-<p>Actually, let us solve the system directly via row reduction to avoid inversion errors. Augmented matrix:</p>
-\[
-\left(\begin{array}{ccc|c} 4 & 10 & 26 & 260 \\ 10 & 30 & 67 & 705 \\ 26 & 67 & 174 & 1725 \end{array}\right)
-\]
-<p>R1 ÷ 4 → \((1, 2.5, 6.5 | 65)\). Eliminate below: R2 ← R2 − 10·R1 = \((0, 5, 2 | 55)\). R3 ← R3 − 26·R1 = \((0, 2, 5 | 35)\). Now R2 ÷ 5 → \((0, 1, 0.4 | 11)\). Eliminate: R3 ← R3 − 2·R2 = \((0, 0, 4.2 | 13)\). Back-substitute: \(\hat\beta_2 = 13/4.2 \approx 3.095\). Then \(\hat\beta_1 = 11 - 0.4(3.095) = 11 - 1.238 = 9.762\). Then \(\hat\beta_0 = 65 - 2.5(9.762) - 6.5(3.095) = 65 - 24.405 - 20.118 = 20.477\).</p>
-<p>So \(\hat{\boldsymbol\beta} \approx (20.48,\ 9.76,\ 3.10)^\top\). The fitted model is \(\hat y = 20.48 + 9.76 x_1 + 3.10 x_2\). <strong>Interpretation:</strong> holding sleep constant, each additional study hour adds ~9.76 points; holding study constant, each additional sleep hour adds ~3.10 points. <strong>Sensitivity check:</strong> if observation 4 were \((4, 8, 75)\) instead of 85, then \(X^\top \mathbf{y}\) would change only in its third component (by \(-10\)), shifting \(\hat\beta_2\) downward substantially while \(\hat\beta_1\) shifts less — illustrating that coefficients are jointly determined and sensitive to individual points, especially when predictors are correlated (here \(r_{x_1,x_2} \approx 0.47\)).</p>
+        <h2>When OLS breaks down</h2>
 
-<h2>Geometric interpretation: projection onto a subspace</h2>
-<p>The geometric picture from Chapter 2 generalizes directly. The fitted values \(\hat{\mathbf{y}} = X \hat{\boldsymbol\beta}\) lie in the <strong>column space</strong> of \(X\), denoted \(\mathcal{C}(X)\), which is a \((p+1)\)-dimensional subspace of \(\mathbb{R}^n\) (assuming full column rank). The normal equations \(X^\top (\mathbf{y} - X \hat{\boldsymbol\beta}) = \mathbf{0}\) state that the residual vector \(\mathbf{e} = \mathbf{y} - \hat{\mathbf{y}}\) is orthogonal to every column of \(X\), hence orthogonal to all of \(\mathcal{C}(X)\). Therefore \(\hat{\mathbf{y}}\) is the <strong>orthogonal projection</strong> of \(\mathbf{y}\) onto \(\mathcal{C}(X)\).</p>
-<p>The projection matrix (also called the <strong>hat matrix</strong>) is</p>
-\[
-H = X (X^\top X)^{-1} X^\top
-\]
-<p>so that \(\hat{\mathbf{y}} = H \mathbf{y}\). The hat matrix is symmetric (\(H^\top = H\)) and idempotent (\(H^2 = H\)), properties that characterize orthogonal projections. Its diagonal entries \(h_{ii}\) are the <strong>leverages</strong>: they measure how far observation \(i\)'s predictor vector is from the centroid of all predictor vectors, and satisfy \(0 \leq h_{ii} \leq 1\) and \(\sum h_{ii} = p + 1\). High-leverage points (\(h_{ii}\) close to 1) have disproportionate influence on their own fitted values and can distort the entire fit.</p>
-<p>The residual maker matrix is \(M = I - H\), so \(\mathbf{e} = M \mathbf{y}\). Since \(M\) is also symmetric and idempotent, \(\|\mathbf{e}\|^2 = \mathbf{y}^\top M \mathbf{y}\). The Pythagorean decomposition \(\text{TSS} = \text{ESS} + \text{RSS}\) holds exactly as in Chapter 2, because \(\hat{\mathbf{y}} - \bar y \mathbf{1} \in \mathcal{C}(X)\) and \(\mathbf{e} \perp \mathcal{C}(X)\) implies the cross-term vanishes.</p>
-<p><strong>Edge case:</strong> when \(p + 1 = n\) and \(X\) has full rank, \(\mathcal{C}(X) = \mathbb{R}^n\), so \(H = I\), \(\hat{\mathbf{y}} = \mathbf{y}\), and \(\text{RSS} = 0\). The model interpolates perfectly but has zero degrees of freedom for error estimation — \(R^2 = 1\) trivially, and no generalization assessment is possible. This is the extreme overfitting case previewed in Chapter 1 and analyzed formally via bias-variance decomposition in Chapter 11.</p>
+        <p>In Chapter 2, we derived the ordinary least squares (OLS) estimator \(\hat{\boldsymbol{\beta}} = (X^\top X)^{-1} X^\top \mathbf{y}\). This formula works beautifully when \(X^\top X\) is well-conditioned — that is, when its eigenvalues are all reasonably large and similar in magnitude. But what happens when two or more features are nearly identical?</p>
 
-<h2>Multicollinearity: diagnosis and consequences</h2>
-<p><strong>Multicollinearity</strong> occurs when predictors are highly (but not perfectly) correlated. Unlike perfect collinearity, \(X^\top X\) remains invertible, so \(\hat{\boldsymbol\beta}\) exists uniquely. But the inverse \((X^\top X)^{-1}\) has very large entries, making the variance of \(\hat{\boldsymbol\beta}\) enormous. Specifically, under homoscedastic errors with variance \(\sigma^2\):</p>
-\[
-\operatorname{Var}(\hat{\boldsymbol\beta}) = \sigma^2 (X^\top X)^{-1}
-\]
-<p>The variance of \(\hat\beta_j\) inflates by a factor called the <strong>variance inflation factor</strong> (VIF):</p>
-\[
-\operatorname{VIF}_j = \frac{1}{1 - R_j^2}
-\]
-<p>where \(R_j^2\) is the \(R^2\) from regressing predictor \(x_j\) on all other predictors. When \(x_j\) is nearly a linear combination of the others, \(R_j^2 \approx 1\) and \(\operatorname{VIF}_j \to \infty\). A VIF above 5–10 is conventionally flagged as problematic.</p>
-<p>The consequence is not bias — OLS remains unbiased under the classical assumptions regardless of collinearity — but <em>instability</em>. Small changes in \(\mathbf{y}\) produce large swings in \(\hat{\boldsymbol\beta}\), confidence intervals widen dramatically, and individual coefficients become statistically insignificant even when the overall model has high \(R^2\). Predictions may still be accurate if the new data lies in the same correlated subspace as the training data, but interpretation of individual coefficients becomes unreliable.</p>
-<p><strong>Common mistake:</strong> dropping a predictor solely because its p-value is large in a collinear model. In the presence of multicollinearity, insignificance reflects imprecision, not irrelevance. Removing a collinear predictor can drastically change the remaining coefficients' signs and magnitudes. Better remedies include combining correlated predictors (PCA, Chapter 17), applying regularization (ridge regression, Chapter 4), or collecting more data to break the correlation structure.</p>
+        <p>Consider a concrete scenario: you are predicting house prices using both "square footage" and "square meters." These are perfectly collinear (one is exactly 0.0929 times the other). The matrix \(X^\top X\) becomes singular — its determinant is zero, its inverse does not exist, and the OLS formula literally cannot be computed. Even if the correlation is merely 0.999 rather than 1.000, the smallest eigenvalue of \(X^\top X\) becomes tiny, making \((X^\top X)^{-1}\) have enormous entries. The resulting coefficients \(\hat{\boldsymbol{\beta}}\) swing wildly: one feature gets a huge positive coefficient, the other a huge negative coefficient, and they nearly cancel out to produce predictions that are numerically unstable. A tiny change in \(\mathbf{y}\) produces a massive change in \(\hat{\boldsymbol{\beta}}\).</p>
 
-<h3>Worked example: computing VIF and diagnosing collinearity</h3>
-<p>Using the two-predictor dataset from the earlier worked example, regress \(x_2\) on \(x_1\) (with intercept) to compute \(R_2^2\). The data: \(x_1 = (1,2,3,4)\), \(x_2 = (6,7,5,8)\). From Chapter 2's formula:</p>
-\[
-\bar x_1 = 2.5, \quad \bar x_2 = 6.5, \quad S_{x_1 x_1} = 5, \quad S_{x_1 x_2} = (−1.5)(−0.5)+(−0.5)(0.5)+(0.5)(−1.5)+(1.5)(1.5) = 0.75 − 0.25 − 0.75 + 2.25 = 2.0
-\]
-\[
-S_{x_2 x_2} = 0.25 + 0.25 + 2.25 + 2.25 = 5.0
-\]
-\[
-r_{x_1 x_2} = \frac{2.0}{\sqrt{5 \times 5}} = \frac{2}{5} = 0.4, \quad R_2^2 = r^2 = 0.16
-\]
-<p>By symmetry, \(R_1^2 = R_2^2 = 0.16\). Therefore:</p>
-\[
-\operatorname{VIF}_1 = \operatorname{VIF}_2 = \frac{1}{1 - 0.16} = \frac{1}{0.84} \approx 1.19
-\]
-<p>A VIF of 1.19 indicates negligible collinearity — the predictors are nearly orthogonal. <strong>Sensitivity check:</strong> if \(x_2\) were \((6, 7, 6, 8)\) instead (changing only observation 3 from 5 to 6), then \(S_{x_1 x_2} = 3.0\), \(S_{x_2 x_2} = 4.0\), \(r = 3/\sqrt{20} \approx 0.671\), \(R^2 \approx 0.45\), and \(\operatorname{VIF} \approx 1.82\) — still moderate. But if \(x_2 = (6, 7, 8, 9)\) (perfectly linear with \(x_1\)), then \(r = 1\), \(R^2 = 1\), and VIF is infinite — perfect collinearity, matching the edge case discussed above. This progression shows how VIF smoothly quantifies the continuum from orthogonality to singularity.</p>
+        <p>This is the problem of <strong>multicollinearity</strong>. The question ridge regression answers is: <strong>can we modify the least-squares objective so that the solution is always stable, even when features are highly correlated, while still staying close to the OLS fit?</strong></p>
 
-<h2>Adjusted \(R^2\) and model selection</h2>
-<p>In multiple regression, \(R^2 = 1 - \text{RSS}/\text{TSS}\) is monotonically non-decreasing in \(p\): adding any predictor, even pure noise, cannot increase RSS and typically decreases it slightly. This makes raw \(R^2\) useless for comparing models with different numbers of predictors. The <strong>adjusted \(R^2\)</strong> corrects for this by penalizing model complexity:</p>
-\[
-R^2_{\text{adj}} = 1 - \frac{\text{RSS}/(n - p - 1)}{\text{TSS}/(n - 1)} = 1 - \frac{n - 1}{n - p - 1}(1 - R^2)
-\]
-<p>The numerator divides RSS by the residual degrees of freedom \(n - p - 1\) rather than \(n\), and the denominator divides TSS by \(n - 1\). When a new predictor reduces RSS by less than what would be expected by chance, the penalty dominates and \(R^2_{\text{adj}}\) decreases. Unlike raw \(R^2\), adjusted \(R^2\) can be negative (when the model performs worse than the null model after accounting for complexity) and can decrease when irrelevant predictors are added.</p>
-<p>Adjusted \(R^2\) is a heuristic, not a formal criterion. More principled alternatives include AIC, BIC, and cross-validation (Chapter 12), which directly estimate out-of-sample prediction error. But adjusted \(R^2\) remains widely reported because it is intuitive, requires no tuning parameters, and is available in every statistical software package. It serves as a useful first screen: if adding a predictor increases raw \(R^2\) but decreases \(R^2_{\text{adj}}\), the predictor is likely not worth keeping.</p>
-<p><strong>Edge case:</strong> when \(p + 1 \geq n\), the residual degrees of freedom \(n - p - 1 \leq 0\) and adjusted \(R^2\) is undefined. This is another manifestation of the overfitting regime where OLS interpolates the data. Regularization (Chapter 4) or dimensionality reduction (Chapter 17) must be applied before any goodness-of-fit measure is meaningful. Also note that adjusted \(R^2\) assumes the classical linear model; under heteroscedasticity or model misspecification, it can be misleading even when well-defined.</p>
+        <h2>The naive fix and why it fails</h2>
 
-<h3>Worked example: raw vs. adjusted \(R^2\) with an irrelevant predictor</h3>
-<p>Continuing the two-predictor example, suppose we computed \(\text{RSS} = 28.5\) and \(\text{TSS} = 700\) (hypothetical values consistent with the earlier fit). With \(n = 4\), \(p = 2\):</p>
-\[
-R^2 = 1 - \frac{28.5}{700} = 1 - 0.0407 = 0.9593
-\]
-\[
-R^2_{\text{adj}} = 1 - \frac{4 - 1}{4 - 2 - 1}(1 - 0.9593) = 1 - \frac{3}{1}(0.0407) = 1 - 0.1221 = 0.8779
-\]
-<p>Now add a third predictor \(x_3\) that is pure random noise, reducing RSS only marginally to 27.0. With \(p = 3\):</p>
-\[
-R^2_{\text{new}} = 1 - \frac{27.0}{700} = 0.9614 \quad (\text{increased!})
-\]
-\[
-R^2_{\text{adj, new}} = 1 - \frac{3}{4 - 3 - 1}(1 - 0.9614)
-\]
-<p>But \(n - p - 1 = 0\) — adjusted \(R^2\) is undefined! With \(n = 4\) and \(p = 3\), we have exhausted all degrees of freedom. Even if \(n = 5\) (adding one more observation), \(R^2_{\text{adj, new}} = 1 - \frac{4}{1}(0.0386) = 0.8456\), which is <em>lower</em> than the previous 0.8779 despite higher raw \(R^2\). Adjusted \(R^2\) correctly penalizes the irrelevant predictor. This illustrates why raw \(R^2\) should never be used alone for model comparison.</p>
+        <p>A first instinct might be: just drop one of the correlated features. If square footage and square meters carry the same information, keep only one. This works for perfect collinearity, but it is brittle for near-collinearity. Which feature do you drop? What if three features are pairwise correlated at 0.95 but no pair is redundant on its own? Dropping any single one loses information. You need a method that handles all features simultaneously, shrinking their coefficients in a coordinated way rather than making binary include/exclude decisions.</p>
 
-<h2>Connection to the broader framework</h2>
-<p>Multiple linear regression is the workhorse that connects nearly every other chapter in this book. Chapter 2's simple regression is the \(p = 1\) special case. Chapter 4's ridge regression modifies the normal equations to \((X^\top X + \lambda I)\hat{\boldsymbol\beta} = X^\top \mathbf{y}\), resolving the singularity edge case discussed above and shrinking coefficients toward zero. Chapter 5's logistic regression replaces squared loss with logistic loss but retains the same design matrix structure and the same iterative weighted least squares algorithm that solves a sequence of OLS problems. Chapter 8's LDA uses within-class and between-class scatter matrices whose algebra mirrors \(X^\top X\). Chapter 9's SVM dual involves a Gram matrix \(K = XX^\top\) that is the transpose of the OLS information matrix. Chapter 11's bias-variance decomposition is most cleanly derived for OLS, where the bias and variance terms have closed forms involving \(H\). Chapter 12's cross-validation has an exact shortcut for OLS (leave-one-out CV equals \(\frac{1}{n}\sum (e_i / (1 - h_{ii}))^2\)) that exploits the hat matrix. And Chapter 17's PCA can be understood as finding the orthogonal basis for \(\mathcal{C}(X)\) that diagonalizes \(X^\top X\), directly addressing multicollinearity by rotating to uncorrelated components.</p>
-<p>Master the matrix formulation not as notation but as <em>thinking</em>. Every subsequent algorithm either generalizes, regularizes, or reinterprets the OLS solution. The projection geometry, the normal equations, the role of \(X^\top X\), and the consequences of its conditioning are the recurring motifs of the entire supervised learning curriculum. If you can derive \(\hat{\boldsymbol\beta}\), interpret its variance, diagnose collinearity, and explain why adjusted \(R^2\) exists, you have the foundation for everything that follows.</p>
+        <p>Another instinct: add a small constant to the diagonal of \(X^\top X\) before inverting. This is actually exactly what ridge regression does — but we need to understand <em>why</em> this corresponds to a principled optimization problem, not just a numerical hack. The justification comes from modifying the objective function itself.</p>
 
-  </article>
-  <div class="chapter-nav">
-    <a class="chapter-nav-link prev" href="../ch2/index.html">
-      <span class="chapter-nav-label">← Previous</span>
-      <span class="chapter-nav-title">2. Simple Linear Regression</span>
-    </a>
-    <a class="chapter-nav-link next" href="../ch4/index.html">
-      <span class="chapter-nav-label">Next →</span>
-      <span class="chapter-nav-title">4. Ridge Regression</span>
-    </a>
-  </div>
-</div>
-</main>
-<footer>
-  <div class="wrap">
-    <span>© 2026 iTube. Read forever, free forever.</span>
-    <span>No video was harmed in the making of this platform.</span>
-  </div>
-</footer>
-<script src="../../theme.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-<script defer src="../../app.js"></script>
+        <h2>The ridge objective: penalizing large coefficients</h2>
+
+        <p>Recall that OLS minimizes the residual sum of squares:</p>
+
+        \[\text{RSS}(\boldsymbol{\beta}) = \|\mathbf{y} - X\boldsymbol{\beta}\|^2\]
+
+        <p>Ridge regression adds a penalty term that discourages large coefficient values:</p>
+
+        \[\text{RSS}_{\text{ridge}}(\boldsymbol{\beta}) = \|\mathbf{y} - X\boldsymbol{\beta}\|^2 + \lambda \|\boldsymbol{\beta}\|^2\]
+
+        <p>where \(\lambda \geq 0\) is a tuning parameter (hyperparameter) that controls the strength of the penalty, and \(\|\boldsymbol{\beta}\|^2 = \sum_{j=0}^{p} \beta_j^2\) is the squared \(\ell_2\) norm of the coefficient vector.</p>
+
+        <p>Why squared norm rather than absolute value? Two reasons. First, the squared norm is differentiable everywhere (unlike \(|\beta_j|\), which has a corner at zero), so we can find the minimum via calculus just as we did for OLS. Second, the squared norm penalizes many medium-sized coefficients less harshly than one enormous coefficient, encouraging the model to spread predictive weight across correlated features rather than concentrating it in one. This is exactly the behavior we want under multicollinearity.</p>
+
+        <p>A critical detail: <strong>the intercept \(\beta_0\) is typically excluded from the penalty.</strong> Penalizing the intercept would make the solution depend on the arbitrary origin of \(y\)'s measurement scale. In practice, we center \(\mathbf{y}\) and all columns of \(X\) (subtracting their means) before applying ridge, which makes \(\hat{\beta}_0 = 0\) automatically, and then penalize only the remaining \(p\) slope coefficients. For notational simplicity in the derivation below, we assume this centering has been done and write the penalty over all components of \(\boldsymbol{\beta}\), understanding that in implementation \(\beta_0\) is handled separately.</p>
+
+        <h2>Deriving the ridge estimator</h2>
+
+        <p>We minimize \(\text{RSS}_{\text{ridge}}(\boldsymbol{\beta})\) by taking the gradient with respect to \(\boldsymbol{\beta}\) and setting it to zero. Expanding the objective:</p>
+
+        \[\text{RSS}_{\text{ridge}}(\boldsymbol{\beta}) = (\mathbf{y} - X\boldsymbol{\beta})^\top (\mathbf{y} - X\boldsymbol{\beta}) + \lambda \boldsymbol{\beta}^\top \boldsymbol{\beta}\]
+
+        <p>Taking the gradient term by term, using the same matrix calculus rules from Chapter 2:</p>
+
+        <ul>
+          <li>\(\nabla_{\boldsymbol{\beta}} [(\mathbf{y} - X\boldsymbol{\beta})^\top (\mathbf{y} - X\boldsymbol{\beta})] = -2X^\top(\mathbf{y} - X\boldsymbol{\beta}) = -2X^\top \mathbf{y} + 2X^\top X \boldsymbol{\beta}\)</li>
+          <li>\(\nabla_{\boldsymbol{\beta}} [\lambda \boldsymbol{\beta}^\top \boldsymbol{\beta}] = 2\lambda \boldsymbol{\beta}\)</li>
+        </ul>
+
+        <p>Combining and setting equal to zero:</p>
+
+        \[-2X^\top \mathbf{y} + 2X^\top X \boldsymbol{\beta} + 2\lambda \boldsymbol{\beta} = \mathbf{0}\]
+
+        <p>Dividing by 2 and rearranging:</p>
+
+        \[(X^\top X + \lambda I)\boldsymbol{\beta} = X^\top \mathbf{y}\]
+
+        <p>where \(I\) is the \((p+1) \times (p+1)\) identity matrix. This is the <strong>ridge normal equation</strong>. Compare it to the OLS normal equation \(X^\top X \boldsymbol{\beta} = X^\top \mathbf{y}\) from Chapter 2: the only difference is the addition of \(\lambda I\) to the left-hand side matrix.</p>
+
+        <p>Solving for \(\boldsymbol{\beta}\):</p>
+
+        \[\boxed{\hat{\boldsymbol{\beta}}_{\text{ridge}} = (X^\top X + \lambda I)^{-1} X^\top \mathbf{y}}</\]
+
+        <p>This is the <strong>ridge regression estimator</strong>. It has the same structural form as OLS, but with a modified matrix to invert.</p>
+
+        <h2>Why the ridge solution always exists</h2>
+
+        <p>The key question: is \(X^\top X + \lambda I\) always invertible, even when \(X^\top X\) is singular?</p>
+
+        <p>Yes, for any \(\lambda > 0\). Here is why. The matrix \(X^\top X\) is always positive semidefinite: for any vector \(\mathbf{v}\), \(\mathbf{v}^\top (X^\top X) \mathbf{v} = \|X\mathbf{v}\|^2 \geq 0\). Its eigenvalues are therefore all \(\geq 0\). Adding \(\lambda I\) shifts every eigenvalue up by exactly \(\lambda\). So the eigenvalues of \(X^\top X + \lambda I\) are all \(\geq \lambda > 0\). A symmetric matrix with strictly positive eigenvalues is positive definite, and every positive definite matrix is invertible.</p>
+
+        <p>This is the fundamental guarantee of ridge regression: <strong>for any \(\lambda > 0\), the ridge estimator exists and is unique, regardless of how collinear the features are.</strong> Even if \(p > n\) (more features than observations), where OLS is completely undefined, ridge regression still produces a well-defined answer.</p>
+
+        <h2>Geometric interpretation: shrinking toward zero</h2>
+
+        <p>What does the penalty actually do to the coefficients? Consider the spectral decomposition of \(X^\top X\). Let its eigenvalues be \(d_1 \geq d_2 \geq \cdots \geq d_{p+1} \geq 0\) with corresponding orthonormal eigenvectors \(\mathbf{v}_1, \ldots, \mathbf{v}_{p+1}\). The OLS estimator can be written in this basis as:</p>
+
+        \[\hat{\boldsymbol{\beta}}_{\text{OLS}} = \sum_{j=1}^{p+1} \frac{\mathbf{v}_j^\top X^\top \mathbf{y}}{d_j} \mathbf{v}_j\]
+
+        <p>The ridge estimator replaces each \(d_j\) in the denominator with \(d_j + \lambda\):</p>
+
+        \[\hat{\boldsymbol{\beta}}_{\text{ridge}} = \sum_{j=1}^{p+1} \frac{\mathbf{v}_j^\top X^\top \mathbf{y}}{d_j + \lambda} \mathbf{v}_j = \sum_{j=1}^{p+1} \frac{d_j}{d_j + \lambda} \cdot \frac{\mathbf{v}_j^\top X^\top \mathbf{y}}{d_j} \mathbf{v}_j\]
+
+        <p>Each component of the OLS solution along eigenvector \(\mathbf{v}_j\) is multiplied by the shrinkage factor \(\frac{d_j}{d_j + \lambda}\). When \(d_j\) is large (a well-determined direction in feature space), this factor is close to 1 and ridge barely changes the OLS coefficient. When \(d_j\) is small (a poorly determined direction, corresponding to near-collinearity), this factor is close to 0 and ridge shrinks that component aggressively toward zero.</p>
+
+        <p>This is exactly the right behavior: directions where the data provides strong signal are preserved; directions where the data is ambiguous are suppressed. The penalty acts as a continuous, adaptive filter on the coefficient space.</p>
+
+        <h3>Worked example</h3>
+
+        <h4>Ridge vs. OLS under near-collinearity</h4>
+
+        <p>Let's see the shrinkage in action on a tiny dataset where two features are nearly identical. Suppose \(n = 3\), \(p = 2\), with centered data (so no intercept):</p>
+
+        <ul>
+          <li>\(x_1\): 1, 0, −1</li>
+          <li>\(x_2\): 1.01, 0, −0.99</li>
+          <li>\(y\): 3, 0, −3</li>
+        </ul>
+
+        <p>Note that \(x_2 \approx x_1\); they differ by at most 0.01. Both are already centered (mean ≈ 0).</p>
+
+        <p><strong>Step 1: Build \(X\) and compute \(X^\top X\).</strong></p>
+
+        \[X = \begin{pmatrix} 1 & 1.01 \\ 0 & 0 \\ -1 & -0.99 \end{pmatrix}\]
+
+        \[X^\top X = \begin{pmatrix} 1^2 + 0^2 + (-1)^2 & 1(1.01) + 0 + (-1)(-0.99) \\ 1.01(1) + 0 + (-0.99)(-1) & 1.01^2 + 0^2 + (-0.99)^2 \end{pmatrix}\]
+
+        <p>Computing each entry:</p>
+        <ul>
+          <li>\((1,1)\): \(1 + 0 + 1 = 2\)</li>
+          <li>\((1,2)\): \(1.01 + 0.99 = 2.00\)</li>
+          <li>\((2,1)\): \(2.00\) (symmetric)</li>
+          <li>\((2,2)\): \(1.0201 + 0 + 0.9801 = 2.0002\)</li>
+        </ul>
+
+        \[X^\top X = \begin{pmatrix} 2 & 2 \\ 2 & 2.0002 \end{pmatrix}\]
+
+        <p>The determinant is \(2(2.0002) - 2(2) = 4.0004 - 4 = 0.0004\). This is extremely small — the matrix is nearly singular, confirming severe multicollinearity.</p>
+
+        <p><strong>Step 2: Compute \(X^\top \mathbf{y}\).</strong></p>
+
+        \[X^\top \mathbf{y} = \begin{pmatrix} 1(3) + 0(0) + (-1)(-3) \\ 1.01(3) + 0(0) + (-0.99)(-3) \end{pmatrix} = \begin{pmatrix} 3 + 3 \\ 3.03 + 2.97 \end{pmatrix} = \begin{pmatrix} 6 \\ 6 \end{pmatrix}\]
+
+        <p><strong>Step 3: Compute OLS (for comparison).</strong></p>
+
+        <p>Inverting \(X^\top X\):</p>
+
+        \[(X^\top X)^{-1} = \frac{1}{0.0004} \begin{pmatrix} 2.0002 & -2 \\ -2 & 2 \end{pmatrix} = \begin{pmatrix} 5000.5 & -5000 \\ -5000 & 5000 \end{pmatrix}\]
+
+        \[\hat{\boldsymbol{\beta}}_{\text{OLS}} = \begin{pmatrix} 5000.5 & -5000 \\ -5000 & 5000 \end{pmatrix} \begin{pmatrix} 6 \\ 6 \end{pmatrix} = \begin{pmatrix} 30003 - 30000 \\ -30000 + 30000 \end{pmatrix} = \begin{pmatrix} 3 \\ 0 \end{pmatrix}\]
+
+        <p>Wait — these look reasonable. But notice the extreme sensitivity: the coefficients involve differences of numbers around 30,000 to produce answers around 3. If \(y\) changed by just 0.001, the coefficients could shift by hundreds. This is the instability.</p>
+
+        <p><strong>Step 4: Compute ridge with \(\lambda = 1\).</strong></p>
+
+        \[X^\top X + \lambda I = \begin{pmatrix} 2 + 1 & 2 \\ 2 & 2.0002 + 1 \end{pmatrix} = \begin{pmatrix} 3 & 2 \\ 2 & 3.0002 \end{pmatrix}\]
+
+        <p>Determinant: \(3(3.0002) - 2(2) = 9.0006 - 4 = 5.0006\). Compare to OLS's 0.0004 — the ridge matrix is enormously better conditioned.</p>
+
+        <p>Inverse:</p>
+
+        \[(X^\top X + I)^{-1} = \frac{1}{5.0006} \begin{pmatrix} 3.0002 & -2 \\ -2 & 3 \end{pmatrix} \approx \begin{pmatrix} 0.6000 & -0.3999 \\ -0.3999 & 0.5999 \end{pmatrix}\]
+
+        <p>Ridge estimate:</p>
+
+        \[\hat{\boldsymbol{\beta}}_{\text{ridge}} \approx \begin{pmatrix} 0.6000 & -0.3999 \\ -0.3999 & 0.5999 \end{pmatrix} \begin{pmatrix} 6 \\ 6 \end{pmatrix} = \begin{pmatrix} 3.6000 - 2.3994 \\ -2.3994 + 3.5994 \end{pmatrix} = \begin{pmatrix} 1.2006 \\ 1.2000 \end{pmatrix}\]
+
+        <p><strong>Step 5: Interpret the result.</strong></p>
+
+        <p>OLS assigned all the predictive weight to \(x_1\) (\(\hat{\beta}_1 = 3, \hat{\beta}_2 = 0\)), an arbitrary choice between two nearly identical features. Ridge splits the weight roughly equally: \(\hat{\beta}_1 \approx 1.20, \hat{\beta}_2 \approx 1.20\). The total predictive effect (\(\approx 2.4\) per unit of either feature) is smaller than OLS's 3, reflecting the shrinkage. But the coefficients are stable, interpretable, and reflect the symmetry of the problem. If we perturbed \(y\) slightly, the ridge coefficients would change smoothly, while the OLS coefficients could swing wildly.</p>
+
+        <h2>Choosing \(\lambda\): the bias-variance tradeoff</h2>
+
+        <p>The tuning parameter \(\lambda\) controls a fundamental tradeoff. When \(\lambda = 0\), ridge reduces to OLS: unbiased but potentially high variance under multicollinearity. As \(\lambda \to \infty\), all coefficients shrink to zero: the model predicts \(\bar{y}\) for everything, with zero variance but maximum bias.</p>
+
+        <p>The optimal \(\lambda\) balances these extremes. In practice, \(\lambda\) is chosen by cross-validation (covered in Chapter 10): fit ridge at many candidate \(\lambda\) values, evaluate prediction error on held-out folds, and select the \(\lambda\) that minimizes estimated test error. There is no closed-form formula for the optimal \(\lambda\); it depends on the unknown signal-to-noise ratio and the degree of collinearity in the data.</p>
+
+        <h2>Common mistake</h2>
+
+        <p><strong>Common mistake:</strong> Students sometimes apply the ridge penalty to the intercept \(\beta_0\). This is incorrect because it makes the solution dependent on the arbitrary vertical shift of \(y\). If you add 100 to every \(y_i\), the true relationship hasn't changed, but a penalized intercept would be pulled toward zero differently, producing different slope estimates. Always center \(\mathbf{y}\) and the columns of \(X\) first (making \(\hat{\beta}_0 = 0\)), apply ridge to the slopes only, then add back \(\bar{y}\) as the intercept if needed. Most software libraries handle this automatically, but understanding why matters for interpreting results correctly.</p>
+
+        <h2>Edge case</h2>
+
+        <p><strong>What happens as \(\lambda \to 0^+\)?</strong> The ridge estimator converges to the OLS estimator whenever \(X^\top X\) is invertible. When \(X^\top X\) is singular, the ridge estimator converges to the <em>minimum-norm</em> OLS solution — the one among the infinitely many OLS solutions that has the smallest \(\|\boldsymbol{\beta}\|^2\). This is the Moore-Penrose pseudoinverse solution. So ridge provides a continuous, well-defined extension of OLS into the singular regime, selecting the most parsimonious solution when multiple solutions exist.</p>
+
+        <p><strong>What happens as \(\lambda \to \infty\)?</strong> Every shrinkage factor \(\frac{d_j}{d_j + \lambda} \to 0\), so \(\hat{\boldsymbol{\beta}}_{\text{ridge}} \to \mathbf{0}\). The model collapses to predicting the mean of \(y\) (or zero, if centered) for every input. This is the maximum-bias, minimum-variance extreme. No finite dataset requires \(\lambda = \infty\), but very large \(\lambda\) values effectively discard all features.</p>
+
+        <h2>Where we go next</h2>
+
+        <p>Ridge regression keeps all features and shrinks their coefficients continuously. But sometimes we want a model that selects a sparse subset of features — setting irrelevant coefficients exactly to zero. Ridge never achieves this because the \(\ell_2\) penalty shrinks smoothly without ever reaching exactly zero. The \(\ell_1\) penalty (Lasso regression) does achieve sparsity, but its non-differentiability requires different optimization techniques. While Lasso is not explicitly on the GATE DA syllabus, understanding ridge deeply prepares you for the bias-variance framework in Chapter 10 and the neural network regularization concepts in Chapter 11, where weight decay is precisely ridge regression applied to network parameters.</p>
+
+      </article>
+
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch2/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">2. Multiple Linear Regression</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch4/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">4. Logistic Regression</span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
 </body>
 </html>
