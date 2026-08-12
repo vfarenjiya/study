@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>2. Probability Axioms, Sample Spaces, and Events — Probability &amp; Statistics — iTube</title>
+  <meta name="description" content="What does it mean to assign a number to uncertainty? We build probability theory from three axioms by asking what properties any reasonable measure of belief must satisfy, deriving consequences like complementarity and additivity step by step, and testing them against concrete sample spaces.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Probability &amp; Statistics</a><span class="sep">/</span>
+        <span>Ch. 2</span>
+      </div>
+      <div class="eyebrow">Probability &amp; Statistics</div>
+      <h1>2. Probability Axioms, Sample Spaces, and Events</h1>
+      <div class="chapter-meta">
+        <span>Chapter 2 of 12</span>
+        <span class="read-badge">20 min read</span>
+      </div>
+      <article>
+
+        <h2>What should a probability function actually do?</h2>
+        <p>In Chapter 1, we learned how to count outcomes. But counting alone doesn't tell us how likely something is — it only tells us how many ways it can happen. To turn counts into degrees of belief, we need a function that assigns a number to each event. The question is: what rules must that function obey to be useful, consistent, and honest about uncertainty?</p>
+        <p>We could try to define probability as "long-run frequency" or "degree of subjective belief," but both definitions lead to circular arguments when pressed. Instead, Kolmogorov's insight was to sidestep the philosophical debate entirely: specify a small set of mathematical properties that any reasonable notion of probability must satisfy, and derive everything else from those properties alone. These are the <strong>axioms of probability</strong>. They don't tell you what probability <em>is</em>; they tell you what probability <em>does</em>.</p>
+
+        <h2>The sample space and events</h2>
+        <p>Before we can assign probabilities, we need to know what we're assigning them to. Every probabilistic model begins with a <strong>sample space</strong>, denoted \(S\) (or sometimes \(\Omega\)): the set of all possible outcomes of some experiment or random process.</p>
+        <p>For a single coin flip, \(S = \{H, T\}\). For two coin flips, \(S = \{HH, HT, TH, TT\}\). For rolling a six-sided die, \(S = \{1, 2, 3, 4, 5, 6\}\). For measuring the lifetime of a lightbulb in hours, \(S = [0, \infty)\). Notice that sample spaces can be finite, countably infinite, or uncountably infinite — the axioms we'll state apply to all three cases.</p>
+        <p>An <strong>event</strong> is simply a subset of the sample space: \(A \subseteq S\). The event "the die shows an even number" is the set \(\{2, 4, 6\}\). The event "at least one head in two flips" is \(\{HH, HT, TH\}\). When we say "event \(A\) occurred," we mean the actual outcome drawn from \(S\) belongs to the set \(A\).</p>
+        <p>A natural follow-up question: do we need to assign probabilities to <em>every</em> conceivable subset of \(S\)? For finite sample spaces, yes — every subset is an event. For uncountable sample spaces like \([0, \infty)\), technical complications arise (not every subset can be assigned a consistent probability without contradiction), and we restrict attention to a collection of subsets called a \(\sigma\)-algebra. For this book's purposes, whenever \(S\) is finite or countable, assume every subset is an event; when \(S\) is continuous, assume the usual Borel sets suffice. The axioms below apply regardless.</p>
+
+        <h2>The three axioms</h2>
+        <p>A probability function \(P\) is a mapping from events to real numbers that satisfies exactly three properties:</p>
+
+        <h3>Axiom 1: Non-negativity</h3>
+        <p>For every event \(A\),</p>
+        \[
+        P(A) \geq 0
+        \]
+        <p>Probabilities cannot be negative. This isn't a deep theorem — it's a sanity condition. If your "probability" function assigned \(-0.3\) to some event, it would cease to represent any coherent notion of likelihood or frequency. Any candidate function that violates this axiom is disqualified immediately.</p>
+
+        <h3>Axiom 2: Normalization</h3>
+        <p>The probability of the entire sample space is one:</p>
+        \[
+        P(S) = 1
+        \]
+        <p>This encodes the assumption that <em>something</em> in the sample space will definitely happen. The sample space is exhaustive by definition — it contains every possible outcome. So the total probability mass must sum (or integrate) to exactly 1. If you find yourself with a function where \(P(S) \neq 1\), either your function isn't a valid probability measure, or your sample space is missing outcomes.</p>
+
+        <h3>Axiom 3: Countable additivity</h3>
+        <p>If \(A_1, A_2, A_3, \ldots\) is a countable sequence of <strong>mutually exclusive</strong> (pairwise disjoint) events — meaning \(A_i \cap A_j = \emptyset\) for all \(i \neq j\) — then:</p>
+        \[
+        P\!\left(\bigcup_{i=1}^{\infty} A_i\right) = \sum_{i=1}^{\infty} P(A_i)
+        \]
+        <p>This is the workhorse axiom. It says that if events cannot overlap, the probability of their union is just the sum of their individual probabilities. For finite collections, this reduces to finite additivity: if \(A \cap B = \emptyset\), then \(P(A \cup B) = P(A) + P(B)\). The countable version extends this to infinite sequences, which becomes essential when dealing with limits, convergence, and continuous distributions later in the book.</p>
+        <p>Why require mutual exclusivity? Because if events overlap, their intersection gets counted twice in the naive sum. We'll handle overlapping events properly in a moment, but the axiom itself only guarantees additivity when there's no double-counting risk.</p>
+
+        <h2>Immediate consequences derived from the axioms</h2>
+        <p>Everything else in probability theory follows from these three axioms. Let's derive the most important consequences right now, showing every step.</p>
+
+        <h3>Consequence 1: Probability of the empty set</h3>
+        <p>What is \(P(\emptyset)\)? The empty set represents an impossible event — no outcome belongs to it. Intuitively, its probability should be zero. Can we prove this from the axioms alone?</p>
+        <p>Yes. Note that \(S\) and \(\emptyset\) are disjoint (they share no elements), and \(S \cup \emptyset = S\). By Axiom 3 (finite additivity, since we have only two sets):</p>
+        \[
+        P(S \cup \emptyset) = P(S) + P(\emptyset)
+        \]
+        <p>But \(S \cup \emptyset = S\), so the left side is just \(P(S)\). By Axiom 2, \(P(S) = 1\). Substituting:</p>
+        \[
+        1 = 1 + P(\emptyset)
+        \]
+        <p>Subtracting 1 from both sides:</p>
+        \[
+        P(\emptyset) = 0
+        \]
+        <p>This required only Axioms 2 and 3. No intuition, no frequency interpretation — pure logic from the axioms.</p>
+
+        <h3>Consequence 2: Complement rule</h3>
+        <p>For any event \(A\), what is the probability that \(A\) does <em>not</em> occur? The complement of \(A\), denoted \(A^c\) (or sometimes \(A'\) or \(\bar{A}\)), is the set of all outcomes in \(S\) that are not in \(A\). By definition, \(A\) and \(A^c\) are disjoint, and \(A \cup A^c = S\).</p>
+        <p>Applying Axiom 3 to these two disjoint sets:</p>
+        \[
+        P(A \cup A^c) = P(A) + P(A^c)
+        \]
+        <p>Since \(A \cup A^c = S\), the left side equals \(P(S) = 1\) by Axiom 2. Therefore:</p>
+        \[
+        1 = P(A) + P(A^c)
+        \]
+        <p>Rearranging:</p>
+        \[
+        P(A^c) = 1 - P(A)
+        \]
+        <p>This is one of the most frequently used identities in all of probability. It lets you compute hard probabilities via easy complements: "what's the probability of at least one success?" is often easier as \(1 - P(\text{no successes})\). We'll use this repeatedly in Chapters 3, 4, and 7.</p>
+
+        <h3>Consequence 3: Monotonicity</h3>
+        <p>If \(A \subseteq B\) (every outcome in \(A\) is also in \(B\)), must \(P(A) \leq P(B)\)? Yes. Write \(B\) as the union of two disjoint sets: \(B = A \cup (B \setminus A)\), where \(B \setminus A\) is the part of \(B\) not in \(A\). Since \(A\) and \(B \setminus A\) are disjoint, Axiom 3 gives:</p>
+        \[
+        P(B) = P(A) + P(B \setminus A)
+        \]
+        <p>By Axiom 1, \(P(B \setminus A) \geq 0\). Therefore:</p>
+        \[
+        P(B) \geq P(A)
+        \]
+        <p>Bigger events (in the set-inclusion sense) always have greater or equal probability. This seems obvious, but it's worth noting that it's a <em>theorem</em>, not an axiom — it follows from non-negativity and additivity.</p>
+
+        <h3>Consequence 4: General addition rule (overlapping events)</h3>
+        <p>Axiom 3 only applies to disjoint events. What if \(A\) and \(B\) overlap? We want \(P(A \cup B)\) in terms of \(P(A)\), \(P(B)\), and whatever correction accounts for the overlap.</p>
+        <p>Decompose \(A \cup B\) into three mutually exclusive pieces: the part of \(A\) not in \(B\), the part of \(B\) not in \(A\), and the intersection:</p>
+        \[
+        A \cup B = (A \setminus B) \cup (B \setminus A) \cup (A \cap B)
+        \]
+        <p>These three sets are pairwise disjoint, so by Axiom 3:</p>
+        \[
+        P(A \cup B) = P(A \setminus B) + P(B \setminus A) + P(A \cap B)
+        \]
+        <p>Now notice that \(A = (A \setminus B) \cup (A \cap B)\), and these two pieces are disjoint, so \(P(A) = P(A \setminus B) + P(A \cap B)\). Rearranging: \(P(A \setminus B) = P(A) - P(A \cap B)\). Similarly, \(P(B \setminus A) = P(B) - P(A \cap B)\). Substitute both into the expression above:</p>
+        \[
+        P(A \cup B) = \big[P(A) - P(A \cap B)\big] + \big[P(B) - P(A \cap B)\big] + P(A \cap B)
+        \]
+        <p>Simplifying:</p>
+        \[
+        P(A \cup B) = P(A) + P(B) - P(A \cap B)
+        \]
+        <p>This is the <strong>inclusion-exclusion principle</strong> for two events. The subtraction of \(P(A \cap B)\) corrects for the double-counting that occurs when you naively add \(P(A) + P(B)\). If \(A\) and \(B\) happen to be disjoint, then \(P(A \cap B) = P(\emptyset) = 0\), and we recover Axiom 3 as a special case.</p>
+
+        <h3>Worked example: drawing cards</h3>
+        <p>From a standard 52-card deck, what is the probability of drawing a card that is either a heart or a face card (Jack, Queen, King)?</p>
+        <p>Let \(A\) = "heart" and \(B\) = "face card." We want \(P(A \cup B)\). First, identify the individual probabilities and the intersection:</p>
+        \[
+        P(A) = \frac{13}{52}, \quad P(B) = \frac{12}{52}, \quad P(A \cap B) = \frac{3}{52}
+        \]
+        <p>(There are 13 hearts, 12 face cards total across all suits, and 3 cards that are both hearts and face cards: J♥, Q♥, K♥.)</p>
+        <p>Apply the addition rule:</p>
+        \[
+        P(A \cup B) = \frac{13}{52} + \frac{12}{52} - \frac{3}{52}
+        \]
+        <p>Compute step by step: \(13 + 12 = 25\), then \(25 - 3 = 22\). So:</p>
+        \[
+        P(A \cup B) = \frac{22}{52} = \frac{11}{26} \approx 0.423
+        \]
+        <p>The probability of drawing a heart or a face card is \(11/26\). Notice that if we had naively added \(13/52 + 12/52 = 25/52\), we would have overcounted by exactly \(3/52\) — the three cards belonging to both categories. The inclusion-exclusion correction is not optional; it's forced by the axioms.</p>
+
+        <p><strong>Common mistake:</strong> applying \(P(A \cup B) = P(A) + P(B)\) without checking whether \(A\) and \(B\) are disjoint. This formula is only valid when \(A \cap B = \emptyset\). In practice, always ask: "can both events happen simultaneously?" If yes, subtract the intersection. Students lose points on exams more often from forgetting this correction than from any other single error in basic probability.</p>
+
+        <h2>Equally likely outcomes: bridging counting and axioms</h2>
+        <p>When the sample space \(S\) is finite and every outcome is equally likely, the axioms force a very specific probability assignment. If \(|S| = n\) and each singleton outcome has the same probability, then by Axiom 2 and finite additivity:</p>
+        \[
+        1 = P(S) = \sum_{s \in S} P(\{s\}) = n \cdot P(\{s\})
+        \]
+        <p>Solving: \(P(\{s\}) = 1/n\) for every outcome \(s\). For any event \(A \subseteq S\), finite additivity then gives:</p>
+        \[
+        P(A) = \sum_{s \in A} P(\{s\}) = |A| \cdot \frac{1}{n} = \frac{|A|}{|S|}
+        \]
+        <p>This is exactly the classical probability formula from Chapter 1: favorable outcomes divided by total outcomes. But now we see it's not a separate definition — it's a <em>special case</em> of the axioms, valid only under the assumption of equally likely outcomes. When outcomes are not equally likely (loaded dice, biased coins, real-world data), this formula fails, but the three axioms still hold. The axioms are universal; the counting formula is conditional.</p>
+
+        <p><strong>Edge case:</strong> what if \(S\) is infinite? The equally-likely assumption breaks down entirely — you cannot assign equal positive probability to infinitely many outcomes and still have the total sum to 1 (the sum would diverge). For countably infinite sample spaces, probabilities must decrease toward zero fast enough to be summable. For uncountable sample spaces, individual outcomes typically have probability zero, and we assign probabilities to intervals or regions instead. The axioms handle all of these cases uniformly; the classical \(|A|/|S|\) formula handles none of them.</p>
+
+        <h2>Connecting forward</h2>
+        <p>The axioms give us the grammar of probability, but they don't yet tell us how to update beliefs when new information arrives. That requires conditional probability, which is the subject of Chapter 4. Before we get there, Chapter 3 explores two special structural relationships between events — independence and mutual exclusivity — that students frequently confuse but which have radically different implications under these axioms.</p>
+
+      </article>
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch1/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">1. Counting — Permutations and Combinations</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch3/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">3. Independence and Mutually Exclusive Events</span>
+        </a>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
+</body>
+</html>
