@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>1. Vector Spaces and Subspaces — Linear Algebra (GATE DA) — iTube</title>
+  <meta name="description" content="What do arrows, lists of numbers, polynomials, and sound waves have in common? This chapter builds the definition of a vector space from that question, then derives the subspace test and the span construction.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Linear Algebra (GATE DA)</a><span class="sep">/</span>
+        <span>Ch. 1</span>
+      </div>
+      <div class="eyebrow">Linear Algebra (GATE DA)</div>
+      <h1>1. Vector Spaces and Subspaces</h1>
+      <div class="chapter-meta">
+        <span>Chapter 1 of 11</span>
+        <span class="read-badge">28 min read</span>
+      </div>
+      <article>
+
+        <h2>The question that starts everything</h2>
+        <p>Ask three different courses what a vector is, and you get three different answers. Physics says: an arrow with a length and a direction. Data science says: a list of numbers, like \((3.2,\ 7.1,\ -0.4)\). Analysis says: a function, say a sound wave varying in time. Three completely different-looking objects — and yet this subject proves theorems that apply to all three at once, with identical proofs. Why?</p>
+        <p>The naive answer is “they are all lists of numbers in the end.” That is unsatisfying: function-space results we will use in the chapters on projections and the singular value decomposition never convert anything into a finite list. A different naive answer, “they all have length and direction,” dies immediately — a polynomial has neither. So let us flip the question the way linear algebra does: instead of asking what vectors <em>are</em>, ask what we need to be able to <em>do</em> with them.</p>
+        <p>Look ahead at any computation this book performs — Gaussian elimination in Chapter 4, eigenvalue computation in Chapter 6, the SVD in Chapter 11. Strip away the notation and every single one of them uses only two operations: <strong>add two vectors</strong>, and <strong>multiply a vector by a number</strong>. Everything else — inner products, determinants, decompositions — is built on top of those two. So the honest starting question is:</p>
+        <p><em>What must a set satisfy so that adding its elements and scaling them never leads out of the set, and never leads to nonsense?</em></p>
+        <p>The answer to that question is the definition of a <strong>vector space</strong>, and it is the first thing this chapter builds. Every concept after it — subspace, span, null space, column space — is the answer to a refinement of the same question.</p>
+
+        <h2>Vector spaces: earning the definition</h2>
+        <p>Let \(V\) be a set whose elements we want to call vectors. We impose requirements on it one at a time, and for each one we ask what would break without it.</p>
+        <p>First, the two operations must exist and stay inside the set:</p>
+        <ul>
+          <li><strong>Closure under addition.</strong> For every \(u, v \in V\), the sum \(u + v\) is defined and is again in \(V\). Without this, “add two vectors” could produce something that is not a vector — the set would leak.</li>
+          <li><strong>Closure under scalar multiplication.</strong> For every real number \(c\) and every \(v \in V\), the scaled vector \(cv\) is in \(V\). Without this, doubling a vector could throw us out of the set.</li>
+        </ul>
+        <p>Second, addition must behave the way addition should:</p>
+        <ul>
+          <li><strong>Commutativity:</strong> \(u + v = v + u\).</li>
+          <li><strong>Associativity:</strong> \((u + v) + w = u + (v + w)\). Together with commutativity, this is what lets us write a sum like \(c_1 v_1 + c_2 v_2 + c_3 v_3\) without parentheses and without an order — the entire notation of this subject rests on it.</li>
+          <li><strong>A zero vector:</strong> there exists \(\mathbf{0} \in V\) such that \(v + \mathbf{0} = v\) for every \(v\). An additive “do nothing” element, so that an equation like \(x + v = w\) can still have a solution when \(w = v\).</li>
+          <li><strong>Additive inverses:</strong> for every \(v\) there exists \(-v \in V\) with \(v + (-v) = \mathbf{0}\). Subtraction must always be possible — moving a term to the other side never leaves the set.</li>
+        </ul>
+        <p>Third, scalar multiplication must agree with ordinary arithmetic of the scalars, and the two operations must talk to each other:</p>
+        <ul>
+          <li><strong>Scalar identity:</strong> \(1v = v\). Scaling by \(1\) does nothing — the axiom that catches a broken scalar multiplication instantly.</li>
+          <li><strong>Compatibility:</strong> \((ab)v = a(bv)\). Scaling by \(a\), then by \(b\), is the same as scaling by \(ab\).</li>
+          <li><strong>Distributivity over vector sums:</strong> \(a(u + v) = au + av\).</li>
+          <li><strong>Distributivity over scalar sums:</strong> \((a + b)v = av + bv\).</li>
+        </ul>
+        <p>The two distributive laws are the heart of the subject: they say exactly that scaling respects addition, which is what the word <em>linear</em> means. The rest is plumbing.</p>
+        <p>That is the whole definition. A <strong>vector space over \(\mathbb{R}\)</strong> is a set \(V\) together with an addition and a scalar multiplication satisfying the ten requirements above. (Some textbooks fold the two closure requirements into the statement “the operations are functions \(V \times V \to V\) and \(\mathbb{R} \times V \to V\)” and list eight axioms; same content, different bookkeeping.)</p>
+
+        <h3>A set that fails</h3>
+        <p>Before examples that work, one that does not, because the failure is more instructive. Take \(V = \mathbb{R}^2\) with ordinary addition \((a, b) + (c, d) = (a + c,\ b + d)\), but a tampered scalar multiplication:</p>
+        \[
+        c \odot (a, b) = (ca,\ cb + c)
+        \]
+        <p>Does it satisfy the scalar identity axiom? Test it on a concrete vector, say \((3, 4)\):</p>
+        \[
+        1 \odot (3, 4) = (1 \cdot 3,\ 1 \cdot 4 + 1) = (3, 5) \neq (3, 4)
+        \]
+        <p>One axiom, one counterexample, verdict delivered: this is not a vector space, and it does not matter how nicely the other nine requirements behave. (For the curious: compatibility fails too — \(2 \odot (3 \odot (1, 1)) = 2 \odot (3, 6) = (6, 14)\), but \((2 \cdot 3) \odot (1, 1) = 6 \odot (1, 1) = (6, 12)\), and \(14 \neq 12\).) Exams love exactly this genre of question: a familiar set with one tampered operation. The strategy is always the same — walk down the axiom list with concrete numbers until one breaks.</p>
+
+        <h3>Where vector spaces live</h3>
+        <p>The examples worth carrying around:</p>
+        <ul>
+          <li>\(\mathbb{R}^n\) with componentwise addition and scaling — the prototype; every picture in this book is drawn here first.</li>
+          <li>\(\mathbb{R}^{m \times n}\), the set of all \(m \times n\) matrices, with entrywise operations — matrices are themselves vectors in a vector space. Chapter 3 exploits this directly.</li>
+          <li>\(\mathcal{P}_n\), the polynomials in one variable of degree at most \(n\), with ordinary polynomial addition and scaling.</li>
+          <li>The set of all real-valued functions on a fixed domain, added and scaled pointwise — this is the vector space sound waves live in, and it is why every theorem we prove applies to signals as well as to arrows.</li>
+        </ul>
+        <p>And two quick non-examples to sharpen the boundary. The positive reals \(\{x : x > 0\}\) are not a vector space under the usual operations, because scaling \(2\) by \(-1\) leaves the set. And “polynomials of degree <em>exactly</em> \(2\)” are not closed under addition: \(x^2\) and \(-x^2 + x\) both have degree exactly \(2\), but their sum \(x\) does not. Hold on to both; the second returns as a worked example below.</p>
+
+        <h2>Three free theorems</h2>
+        <p>The axioms look modest. Let us watch them work: three small results, each derived line by line, and each one gets reused later in this very chapter.</p>
+
+        <h3>Theorem 1: the zero vector is unique</h3>
+        <p>Suppose \(V\) had two candidates \(\mathbf{0}\) and \(\mathbf{0}'\), each satisfying “adding me to anything changes nothing.” Consider the single expression \(\mathbf{0} + \mathbf{0}'\) and read it two ways. Because \(\mathbf{0}'\) is a zero, adding it to \(\mathbf{0}\) changes nothing:</p>
+        \[
+        \mathbf{0} + \mathbf{0}' = \mathbf{0}
+        \]
+        <p>Because \(\mathbf{0}\) is a zero, adding it to \(\mathbf{0}'\) changes nothing:</p>
+        \[
+        \mathbf{0} + \mathbf{0}' = \mathbf{0}'
+        \]
+        <p>The same expression equals two things, so \(\mathbf{0} = \mathbf{0}'\). Two lines, no machinery — and the very same trick proves additive inverses are unique too. We need that fact in Theorem 3.</p>
+
+        <h3>Theorem 2: scaling by zero gives the zero vector</h3>
+        <p>Claim: for every \(v \in V\), \(0v = \mathbf{0}\) — the scalar \(0\) times any vector is the zero <em>vector</em>. Start from the fact that \(0 = 0 + 0\) as scalars:</p>
+        \[
+        0v = (0 + 0)v
+        \]
+        <p>Apply distributivity over scalar sums to the right side:</p>
+        \[
+        (0 + 0)v = 0v + 0v
+        \]
+        <p>Chaining the two: \(0v = 0v + 0v\). To peel off one copy of \(0v\), add its additive inverse \(-(0v)\) — which exists by the inverse axiom — to both sides:</p>
+        \[
+        0v + \big(-(0v)\big) = \big(0v + 0v\big) + \big(-(0v)\big)
+        \]
+        <p>The left side is \(\mathbf{0}\) by definition of an inverse. On the right, regroup using associativity, then apply the inverse axiom and the zero axiom in turn:</p>
+        \[
+        0v + \Big(0v + \big(-(0v)\big)\Big) = 0v + \mathbf{0} = 0v
+        \]
+        <p>Reading the whole chain from ends to middle: \(\mathbf{0} = 0v\). Notice what we never used — no coordinates, no dimension, no particular \(V\). This is a fact about the axioms themselves.</p>
+
+        <h3>Theorem 3: multiplying by −1 gives the additive inverse</h3>
+        <p>Claim: \((-1)v = -v\). The strategy is to show that \((-1)v\) does the job that <em>defines</em> \(-v\), namely adding to \(v\) to give zero:</p>
+        \[
+        \begin{aligned}
+        v + (-1)v &= 1v + (-1)v && \text{(since } 1v = v \text{)} \\
+        &= \big(1 + (-1)\big)v && \text{(distributivity over scalar sums)} \\
+        &= 0v && \text{(since } 1 + (-1) = 0 \text{ as scalars)} \\
+        &= \mathbf{0} && \text{(by Theorem 2)}
+        \end{aligned}
+        \]
+        <p>So \((-1)v\) behaves exactly like the additive inverse of \(v\). Since inverses are unique (the same two-reading argument as Theorem 1), \((-1)v = -v\).</p>
+        <p>Why spend a section on such trivial-looking facts? Because Theorems 2 and 3 do real work in the next section: they say that any set closed under scalar multiplication <em>automatically</em> contains the zero vector (scale anything by \(0\)) and additive inverses (scale by \(-1\)). That is what shrinks “is this subset a vector space?” from ten checks to three.</p>
+
+        <h2>Subspaces: which subsets are vector spaces?</h2>
+        <p>New question. We have a vector space \(V\) and a subset \(W \subseteq V\) — maybe a line inside \(\mathbb{R}^2\), maybe the symmetric matrices inside all matrices. When is \(W\) itself a vector space, using the same addition and scaling as \(V\)?</p>
+        <p>The naive procedure is to check all ten requirements. But think about what those checks would involve. Commutativity says \(u + v = v + u\) — an <em>equation</em>, true for every pair of elements of \(V\). Elements of \(W\) are elements of \(V\), so the equation is automatically true in \(W\); it cannot possibly fail there. The same goes for associativity, both distributive laws, \(1v = v\), and compatibility: every axiom that is an unconditional equation is <em>inherited for free</em>. The only requirements that can fail are the ones asserting that something <em>exists inside \(W\)</em>: the zero vector, sums staying inside, scalar multiples staying inside, inverses staying inside.</p>
+        <p>And inverses are already covered: if \(W\) is closed under scalar multiplication and \(v \in W\), then \((-1)v = -v \in W\) by Theorem 3. So the entire checklist collapses to three items:</p>
+        \[
+        W \text{ is a subspace of } V
+        \quad\Longleftrightarrow\quad
+        \begin{cases}
+        \mathbf{0} \in W \\
+        u \in W,\ v \in W \implies u + v \in W \\
+        v \in W,\ c \in \mathbb{R} \implies c v \in W
+        \end{cases}
+        \]
+        <p>This is the <strong>subspace test</strong>, the single most-used fact of this chapter. Read the three lines as: <em>contains zero, closed under addition, closed under scaling</em>.</p>
+        <p>A natural follow-up: can we drop the zero check? Almost. If we know \(W\) is nonempty, it contains some \(v\), and closure under scaling gives \(0v \in W\) — which is \(\mathbf{0}\) by Theorem 2. So an equivalent version is: <em>\(W\) is a subspace if and only if \(W\) is nonempty and closed under addition and scaling</em>. What we must never do is drop the check entirely: the empty set is vacuously closed under both operations (there are no elements to test on) yet is not a subspace, precisely because it lacks \(\mathbf{0}\).</p>
+        <p>Second follow-up: can we fuse the two closure checks into one? Yes — and this form connects to everything later in the book, because scaling and then adding is the same as taking a linear combination:</p>
+        \[
+        W \neq \varnothing \quad \text{and} \quad u, v \in W,\ a, b \in \mathbb{R} \implies a u + b v \in W
+        \]
+        <p>Why is this equivalent? If \(W\) passes the three-check test, then \(au \in W\) and \(bv \in W\) by closure under scaling, and their sum is in \(W\) by closure under addition. Conversely, if the one-line condition holds: taking \(a = b = 1\) gives closure under addition; taking \(a = c\), \(b = 0\) gives closure under scaling; and \(W \neq \varnothing\) supplies the zero vector via the argument of the previous paragraph. Three checks, one line. Phrased this way, the subspace test says: <em>a subspace is a nonempty set closed under linear combinations</em> — which is exactly the shape of the span construction coming next.</p>
+
+        <h2>Worked examples: subspace or not?</h2>
+        <p>The test is mechanical, and the machinery is worth practicing until it is boring. The same shape every time: state \(W\), check zero, check addition, check scaling, deliver the verdict.</p>
+
+        <h3>Example 1 — a line through the origin</h3>
+        <p>Let \(W = \{(x, y) \in \mathbb{R}^2 : y = 3x\}\), the line of slope \(3\) through the origin.</p>
+        <p><em>Zero:</em> does \((0, 0)\) satisfy the condition? \(0 = 3 \cdot 0\) — yes.</p>
+        <p><em>Addition:</em> take two generic elements \((x_1, y_1)\) and \((x_2, y_2)\) of \(W\), so \(y_1 = 3x_1\) and \(y_2 = 3x_2\). Their sum is</p>
+        \[
+        (x_1, y_1) + (x_2, y_2) = (x_1 + x_2,\ y_1 + y_2) = (x_1 + x_2,\ 3x_1 + 3x_2) = \big(x_1 + x_2,\ 3(x_1 + x_2)\big)
+        \]
+        <p>and the final pair has second coordinate equal to \(3\) times its first coordinate, so it lies in \(W\).</p>
+        <p><em>Scaling:</em> for any \(c \in \mathbb{R}\),</p>
+        \[
+        c(x_1, y_1) = (cx_1, cy_1) = (cx_1, c \cdot 3x_1) = \big(cx_1, 3(cx_1)\big) \in W
+        \]
+        <p>Verdict: subspace. The identical argument works for any line through the origin in \(\mathbb{R}^2\), at any slope — keep the picture: <em>a line in \(\mathbb{R}^2\) is a subspace exactly when it passes through the origin</em>.</p>
+
+        <h3>Example 2 — a line missing the origin</h3>
+        <p>Let \(W = \{(x, y) : y = 3x + 2\}\). The zero check fails instantly: membership would require \(0 = 3 \cdot 0 + 2 = 2\), which is false. So \(W\) is not a subspace, and we could stop. But watch the addition check fail too, because the failure has a shape. Both \((0, 2)\) and \((1, 5)\) lie in \(W\) (check: \(2 = 3 \cdot 0 + 2\), and \(5 = 3 \cdot 1 + 2\)). Their sum is \((1, 7)\) — but membership would require \(7 = 3 \cdot 1 + 2 = 5\), which is false. Geometrically: adding two points on a shifted line generally jumps off the line. A line that misses the origin is a <em>translate</em> of a subspace — an affine set, not a vector space. Keep that word; Example 5 shows it is no coincidence.</p>
+
+        <h3>Example 3 — the first quadrant</h3>
+        <p>Let \(W = \{(x, y) : x \geq 0,\ y \geq 0\}\). Zero: \((0, 0)\) qualifies. Addition: the sum of two vectors with nonnegative components is nonnegative — passes. Scaling: take \(v = (1, 1) \in W\) and \(c = -1\):</p>
+        \[
+        (-1)(1, 1) = (-1, -1) \notin W
+        \]
+        <p>Verdict: not a subspace. The lesson, which exams test constantly: closure under addition alone never suffices; the scaling check is where “cone-shaped” sets die.</p>
+
+        <h3>Example 4 — the null space of a matrix</h3>
+        <p>Let \(A\) be any \(m \times n\) matrix, and let \(W = \{x \in \mathbb{R}^n : Ax = \mathbf{0}\}\) — the solution set of the homogeneous system \(Ax = \mathbf{0}\), called the <strong>null space</strong> of \(A\), written \(\operatorname{Nul}(A)\).</p>
+        <p><em>Zero:</em> \(A\mathbf{0} = \mathbf{0}\) — the zero vector always solves a homogeneous system.</p>
+        <p><em>Addition:</em> if \(Au = \mathbf{0}\) and \(Av = \mathbf{0}\), then</p>
+        \[
+        A(u + v) = Au + Av = \mathbf{0} + \mathbf{0} = \mathbf{0}
+        \]
+        <p>so \(u + v \in W\). The first equality is distributivity of matrix multiplication over addition — we prove it properly in Chapter 3 and compute with it here.</p>
+        <p><em>Scaling:</em> if \(Av = \mathbf{0}\), then \(A(cv) = c(Av) = c\mathbf{0} = \mathbf{0}\), so \(cv \in W\).</p>
+        <p>Verdict: subspace of \(\mathbb{R}^n\). This is the most important source of subspaces in the whole subject — solving \(Ax = \mathbf{0}\) always produces one.</p>
+
+        <h3>Example 5 — a non-homogeneous solution set</h3>
+        <p>What changes when the right-hand side is nonzero? Take \(W = \{x \in \mathbb{R}^n : Ax = b\}\) with \(b \neq \mathbf{0}\). Zero check: \(A\mathbf{0} = \mathbf{0} \neq b\), so \(\mathbf{0} \notin W\) — not a subspace. And addition fails with the same shape as Example 2: if \(Ax_1 = b\) and \(Ax_2 = b\), then \(A(x_1 + x_2) = b + b = 2b \neq b\).</p>
+        <p>Now look back at Example 2 — the line \(y = 3x + 2\) is exactly such a set. Rewrite its condition as \(-3x + y = 2\), which is \(Ax = b\) with \(A = \begin{pmatrix} -3 & 1 \end{pmatrix}\) and \(b = 2\). The shifted line was a non-homogeneous solution set all along. This is the pattern Chapter 4 makes precise: <em>homogeneous solution sets are subspaces; non-homogeneous ones are translates of subspaces</em>.</p>
+
+        <h3>Example 6 — symmetric matrices</h3>
+        <p>Inside the vector space \(\mathbb{R}^{2 \times 2}\) of all \(2 \times 2\) matrices, let \(W = \{A : A^\top = A\}\), the symmetric matrices. (The transpose and its rules get a full treatment in Chapter 3; we use them here as a preview.)</p>
+        <p><em>Zero:</em> \(\mathbf{0}^\top = \mathbf{0}\), so the zero matrix is symmetric.</p>
+        <p><em>Addition:</em> if \(A^\top = A\) and \(B^\top = B\), then \((A + B)^\top = A^\top + B^\top = A + B\), so \(A + B \in W\).</p>
+        <p><em>Scaling:</em> \((cA)^\top = cA^\top = cA\), so \(cA \in W\).</p>
+        <p>Verdict: subspace. Concretely, \(W = \left\{ \begin{pmatrix} a & b \\ b & d \end{pmatrix} : a, b, d \in \mathbb{R} \right\}\) — three free parameters. Symmetric matrices are the protagonists of the quadratic forms chapter (Chapter 9) and of the spectral theory in Chapter 6, so it matters that they form a subspace: sums and scalar multiples of symmetric matrices stay symmetric.</p>
+
+        <h3>Example 7 — polynomials: “at most” versus “exactly”</h3>
+        <p>Inside the vector space \(\mathcal{P}\) of all real polynomials, let \(\mathcal{P}_n = \{p : \deg p \leq n\}\). Zero: the zero polynomial counts (its degree is conventionally \(-\infty\), certainly at most \(n\)). Addition: the sum of two polynomials of degree at most \(n\) has degree at most \(n\) — leading terms may cancel, but cancellation only <em>lowers</em> the degree, which is allowed. Scaling: likewise. Verdict: subspace.</p>
+        <p>But the set \(\{p : \deg p = n\}\) — degree <em>exactly</em> \(n\) — is not. It misses the zero polynomial, and it is not closed under addition: for \(n = 2\), both \(p(x) = x^2\) and \(q(x) = -x^2 + x\) have degree exactly \(2\), yet \(p + q = x\) has degree \(1\). This is the same failure as the positive reals and the shifted line: a condition defined by a <em>bound</em> (degree at most, passes through the origin, right-hand side zero) tends to give a subspace; a condition pinned to an <em>exact value</em> (degree exactly, misses the origin, right-hand side nonzero) tends not to.</p>
+
+        <h2>Span: the smallest subspace containing a set of vectors</h2>
+        <p>One more question, and it is the last one this chapter needs. Suppose someone hands us a few vectors \(v_1, \dots, v_k\) inside a vector space \(V\), and we want the <em>smallest</em> subspace of \(V\) containing all of them. Why would we want that? Because subspaces are the closed universes of linear computation — if we are only allowed to use linear operations, the vectors we can ever reach from \(v_1, \dots, v_k\) are exactly the vectors in that smallest subspace.</p>
+        <p>Naive attempt: the set \(\{v_1, \dots, v_k\}\) itself? Almost never a subspace — no zero, no sums. So what <em>must</em> any subspace containing \(v_1, \dots, v_k\) contain? By closure under scaling: every multiple \(c_i v_i\). By closure under addition: every sum of such multiples. In short, every vector of the form</p>
+        \[
+        c_1 v_1 + c_2 v_2 + \cdots + c_k v_k, \qquad c_1, \dots, c_k \in \mathbb{R}
+        \]
+        <p>Such a vector is called a <strong>linear combination</strong> of \(v_1, \dots, v_k\). So there is only one candidate for the smallest subspace: the set of <em>all</em> linear combinations. It has a name:</p>
+        \[
+        \operatorname{span}(v_1, \dots, v_k) \;=\; \left\{ \sum_{i=1}^{k} c_i v_i \;:\; c_1, \dots, c_k \in \mathbb{R} \right\}
+        \]
+        <p>But we have to verify the candidate actually works — “obvious” is not a proof.</p>
+
+        <h3>The span is a subspace</h3>
+        <p>Write \(S = \operatorname{span}(v_1, \dots, v_k)\) and run the three-check test.</p>
+        <p><em>Zero:</em> choose every coefficient equal to \(0\). Then \(0v_1 + \cdots + 0v_k = \mathbf{0} + \cdots + \mathbf{0} = \mathbf{0}\) by Theorem 2, so \(\mathbf{0} \in S\).</p>
+        <p><em>Addition:</em> take two generic elements of \(S\), say \(u = \sum_{i=1}^k c_i v_i\) and \(w = \sum_{i=1}^k d_i v_i\). Then</p>
+        \[
+        u + w = \sum_{i=1}^{k} c_i v_i + \sum_{i=1}^{k} d_i v_i = \sum_{i=1}^{k} (c_i + d_i) v_i
+        \]
+        <p>The second equality is associativity and commutativity letting us regroup, plus distributivity collecting the two coefficients of each \(v_i\). The result is a linear combination of the \(v_i\) — with coefficients \(c_i + d_i\) — so \(u + w \in S\).</p>
+        <p><em>Scaling:</em> for any \(a \in \mathbb{R}\),</p>
+        \[
+        a u = a \sum_{i=1}^{k} c_i v_i = \sum_{i=1}^{k} (a c_i) v_i \in S
+        \]
+        <p>again by distributivity. Three checks pass: \(S\) is a subspace.</p>
+
+        <h3>…and the smallest one</h3>
+        <p>Now let \(U\) be <em>any</em> subspace of \(V\) containing \(v_1, \dots, v_k\). Closure under scaling forces \(c_i v_i \in U\) for each \(i\); closure under addition, applied \(k - 1\) times, forces \(c_1 v_1 + \cdots + c_k v_k \in U\). So every linear combination lives in \(U\): \(\operatorname{span}(v_1, \dots, v_k) \subseteq U\). Since \(U\) was arbitrary, the span sits inside every subspace that contains the vectors — it is literally the smallest one. The span of a set of vectors is just that set closed under the two operations of a vector space: nothing more is added, and nothing less would be closed.</p>
+
+        <h3>Worked examples — spans in \(\mathbb{R}^2\)</h3>
+        <p><em>(a) One vector.</em> \(\operatorname{span}\{(1, 2)\}\): the generic element is \(c(1, 2) = (c, 2c)\). Writing \(x = c\) and \(y = 2c\), every such point satisfies \(y = 2x\), and every point of the line \(y = 2x\) arises (take \(c = x\)). So \(\operatorname{span}\{(1, 2)\}\) is the line through the origin of slope \(2\). One nonzero vector spans a line.</p>
+        <p><em>(b) Two vectors — with a surprise.</em> \(\operatorname{span}\{(1, 2),\ (2, 4)\}\): the generic element is</p>
+        \[
+        c_1 (1, 2) + c_2 (2, 4) = (c_1 + 2c_2,\ 2c_1 + 4c_2)
+        \]
+        <p>Set \(t = c_1 + 2c_2\); the second coordinate is \(2(c_1 + 2c_2) = 2t\), so the generic element is \((t, 2t)\) — a point on the <em>same</em> line \(y = 2x\) as in part (a). Conversely, every point \((t, 2t)\) is achieved (take \(c_1 = t\), \(c_2 = 0\)). So</p>
+        \[
+        \operatorname{span}\{(1, 2), (2, 4)\} = \operatorname{span}\{(1, 2)\}
+        \]
+        <p>The second vector added nothing — it was already a multiple of the first, \((2, 4) = 2(1, 2)\). Sit with this: <em>when does adding a vector enlarge the span, and when does it change nothing?</em> That question has a name — linear dependence — and Chapter 2 is devoted to answering it.</p>
+        <p><em>(c) Two vectors that do suffice.</em> With \(e_1 = (1, 0)\) and \(e_2 = (0, 1)\): for any \((a, b) \in \mathbb{R}^2\), take \(c_1 = a\), \(c_2 = b\):</p>
+        \[
+        a(1, 0) + b(0, 1) = (a, 0) + (0, b) = (a, b)
+        \]
+        <p>So \(\operatorname{span}\{e_1, e_2\} = \mathbb{R}^2\). Same number of vectors as part (b), completely different outcome — again, that is Chapter 2's question.</p>
+
+        <h2>Two subspaces attached to every matrix</h2>
+        <p>Subspaces now start coming in bulk, because every matrix carries two of them, and most of Chapters 4–8 can be phrased in terms of those two.</p>
+        <p>Let \(A\) be \(m \times n\) with columns \(a_1, \dots, a_n \in \mathbb{R}^m\). The <strong>column space</strong> of \(A\) is</p>
+        \[
+        \operatorname{Col}(A) = \{Ax : x \in \mathbb{R}^n\} \;\subseteq\; \mathbb{R}^m
+        \]
+        <p>the set of all vectors that can be written as \(Ax\) for some input \(x\). Why is this a subspace? The cleanest way is to see what \(Ax\) actually is: multiplying \(A\) by \(x\) takes a linear combination of the columns of \(A\), with the entries of \(x\) as coefficients:</p>
+        \[
+        Ax = x_1 a_1 + x_2 a_2 + \cdots + x_n a_n
+        \]
+        <p>(This identity is the very definition of matrix–vector multiplication; Chapter 3 proves its properties.) So \(\operatorname{Col}(A) = \operatorname{span}(a_1, \dots, a_n)\) — a span, hence a subspace by the previous section, living in \(\mathbb{R}^m\). Alternatively, run the three-check test directly: \(A\mathbf{0} = \mathbf{0}\); if \(p = Ax\) and \(q = Ay\), then \(p + q = Ax + Ay = A(x + y)\), again of the form “\(A\) times something”; and \(cp = cAx = A(cx)\). Same conclusion.</p>
+        <p>The second subspace we already met in Example 4: the <strong>null space</strong></p>
+        \[
+        \operatorname{Nul}(A) = \{x \in \mathbb{R}^n : Ax = \mathbf{0}\} \;\subseteq\; \mathbb{R}^n
+        \]
+        <p>Notice the ambient spaces: \(\operatorname{Col}(A)\) lives in \(\mathbb{R}^m\) (where outputs live), while \(\operatorname{Nul}(A)\) lives in \(\mathbb{R}^n\) (where inputs live). Confusing those two is a classic exam error — check which way \(A\) points before writing either one down.</p>
+        <p>Here is why we care, one chapter early. Asking “does \(Ax = b\) have a solution?” is exactly asking “is \(b \in \operatorname{Col}(A)\)?” — a computational question rephrased as a geometric one. Chapter 4 turns that rephrasing into an algorithm (Gaussian elimination), and Chapter 5 proves the single most elegant fact about these two subspaces: their dimensions always add up,</p>
+        \[
+        \dim \operatorname{Col}(A) + \dim \operatorname{Nul}(A) = n
+        \]
+        <p>the rank–nullity theorem. Every concept in this chapter — subspace, span, null space, column space — exists to make that sentence mean something.</p>
+
+        <h2>Common mistakes and edge cases</h2>
+        <p><strong>Is the union of two subspaces a subspace?</strong> Almost never — and this is a favorite exam trap, because “combining two subspaces” feels like it should stay safe. Take the x-axis \(X = \{(x, 0) : x \in \mathbb{R}\}\) and the y-axis \(Y = \{(0, y) : y \in \mathbb{R}\}\) in \(\mathbb{R}^2\), both subspaces. Then \((1, 0) \in X \cup Y\) and \((0, 1) \in X \cup Y\), but their sum \((1, 1)\) lies on neither axis, so \((1, 1) \notin X \cup Y\). The union fails closure under addition. In fact, the union of two subspaces is a subspace <em>only if one contains the other</em>. Quick proof of the hard direction: suppose neither of the subspaces \(A\), \(B\) contains the other, and pick \(a \in A\) with \(a \notin B\), and \(b \in B\) with \(b \notin A\). If \(A \cup B\) were a subspace, then \(a + b\) would lie in it — say in \(A\). But then \(b = (a + b) - a = (a + b) + (-1)a\) is a sum of elements of \(A\), so \(b \in A\) by closure — a contradiction. The case \(a + b \in B\) is symmetric and gives \(a \in B\), also a contradiction. Either way the union is not closed. The operation that combines subspaces safely is the <em>sum</em> \(A + B = \{a + b : a \in A,\ b \in B\}\) — which is a span in disguise, hence a subspace.</p>
+        <p><strong>Subset versus subspace, and why the ambient space matters.</strong> Every subspace is a subset, but most subsets are not subspaces — the entire worked-example section above is that story. One precision point worth an exam mark: \(\mathbb{R}^2\) is <em>not</em> a subspace of \(\mathbb{R}^3\). A subspace must be a subset, and elements of \(\mathbb{R}^2\) are pairs while elements of \(\mathbb{R}^3\) are triples, so \(\mathbb{R}^2 \not\subseteq \mathbb{R}^3\). What <em>is</em> a subspace of \(\mathbb{R}^3\) is the copy \(\{(x, y, 0) : x, y \in \mathbb{R}\}\) — a plane through the origin. When a problem says “view \(\mathbb{R}^2\) inside \(\mathbb{R}^3\),” this embedded copy is what it means.</p>
+        <p><strong>The empty set and the trivial subspace.</strong> \(\varnothing\) is not a subspace — it fails \(\mathbf{0} \in W\), and its two closure checks pass only vacuously. At the other extreme, \(\{\mathbf{0}\}\) is always a subspace of any \(V\): zero is in it, \(\mathbf{0} + \mathbf{0} = \mathbf{0}\), and \(c\mathbf{0} = \mathbf{0}\). It is the smallest possible subspace, called the <em>trivial subspace</em>; a problem that asks to “find all subspaces” or “give an example of a subspace” always has \(\{\mathbf{0}\}\) and \(V\) itself among its answers. One edge worth remembering: a set closed under scalar multiplication that contains even a single vector already contains \(\mathbf{0}\) — so the only set that is “closed but not a subspace” for lack of zero is the empty set.</p>
+
+        <h2>What we built, and where it goes</h2>
+        <ul>
+          <li>A <strong>vector space</strong> is a set with an addition and a scalar multiplication satisfying ten requirements — two closures, four laws for addition, two laws for scaling, two distributive laws. The axioms exist so that linear computation never leaves the set.</li>
+          <li>A <strong>subspace</strong> is a subset that passes the three-check test: contains \(\mathbf{0}\), closed under addition, closed under scaling — equivalently, a nonempty set closed under linear combinations.</li>
+          <li>The <strong>span</strong> of a set of vectors is the set of all their linear combinations — the smallest subspace containing them.</li>
+          <li>Every matrix carries two subspaces: its <strong>column space</strong> in the output space and its <strong>null space</strong> in the input space; solving \(Ax = b\) means asking whether \(b\) is in the column space.</li>
+        </ul>
+        <p>Before moving on, check with pencil and paper that you can do what this chapter did: state the ten requirements and the question that motivates each one; derive \(0v = \mathbf{0}\) and \((-1)v = -v\) without looking; prove the subspace test from the axioms; and decide, for any subset defined by equations or inequalities, subspace or not — with all three checks written out.</p>
+        <p>The next chapter takes the surprise of span example (b) — a vector that added nothing — and turns it into a theory: <strong>linear dependence and independence</strong>, the question of when a spanning set has redundancy, and how to measure the true number of directions in a subspace. After that, Chapter 3 builds the full machinery of matrices and partitioned matrices, and Chapter 4 uses Gaussian elimination to compute everything this chapter defined.</p>
+
+      </article>
+      <div class="chapter-nav">
+        <div class="chapter-nav-empty"></div>
+        <a class="chapter-nav-link next" href="../ch2/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">2. Linear Dependence and Independence of Vectors</span>
+        </a>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
+</body>
+</html>
