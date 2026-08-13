@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>2. Linear Dependence and Independence of Vectors — Linear Algebra (GATE DA) — iTube</title>
+  <meta name="description" content="When does adding a vector enlarge a span? This chapter derives linear dependence and independence from that question, then builds bases and dimension with full worked examples.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Linear Algebra (GATE DA)</a><span class="sep">/</span>
+        <span>Ch. 2</span>
+      </div>
+      <div class="eyebrow">Linear Algebra (GATE DA)</div>
+      <h1>2. Linear Dependence and Independence of Vectors</h1>
+      <div class="chapter-meta">
+        <span>Chapter 2 of 11</span>
+        <span class="read-badge">25 min read</span>
+      </div>
+      <article>
+
+        <h2>The question left over from Chapter 1</h2>
+        <p>In Chapter 1 we computed two spans in \(\mathbb{R}^2\) that looked different but were identical:</p>
+        \[
+        \operatorname{span}\{(1,2)\} = \operatorname{span}\{(1,2),\,(2,4)\}
+        \]
+        <p>Adding the second vector \((2,4)\) changed nothing — it was already a scalar multiple of the first. But with \(e_1 = (1,0)\) and \(e_2 = (0,1)\), adding the second vector <em>did</em> enlarge the span from a line to all of \(\mathbb{R}^2\). So there is a real, structural difference between these two situations, and it has nothing to do with how many vectors we started with. The question this chapter answers is precise:</p>
+        <p><em>Given vectors \(v_1, \dots, v_k\), when does adding one more vector \(v_{k+1}\) strictly enlarge their span, and when does it leave the span unchanged?</em></p>
+        <p>The answer will give us two of the most important words in linear algebra — <strong>linearly dependent</strong> and <strong>linearly independent</strong> — and from them, the concepts of <strong>basis</strong> and <strong>dimension</strong>. Every computational tool in later chapters (Gaussian elimination in Chapter 4, rank in Chapter 5, eigenvalues in Chapter 6) exists to answer variations of this single question.</p>
+
+        <h2>Dependence: when a vector adds nothing</h2>
+        <p>Let us start with the easier half of the question: when does adding \(v_{k+1}\) to \(\{v_1, \dots, v_k\}\) <em>not</em> enlarge the span? By definition of span (Chapter 1), this happens exactly when \(v_{k+1}\) is already a linear combination of \(v_1, \dots, v_k\):</p>
+        \[
+        v_{k+1} = c_1 v_1 + c_2 v_2 + \cdots + c_k v_k \quad \text{for some } c_1, \dots, c_k \in \mathbb{R}
+        \]
+        <p>Rearranging — moving everything to one side using additive inverses (which exist in any vector space):</p>
+        \[
+        c_1 v_1 + c_2 v_2 + \cdots + c_k v_k + (-1) v_{k+1} = \mathbf{0}
+        \]
+        <p>This is a linear combination of <em>all</em> \(k+1\) vectors that equals zero, and crucially, the coefficient of \(v_{k+1}\) is \(-1\), which is <em>not zero</em>. So we have found a <strong>nontrivial</strong> linear relation among the vectors — "nontrivial" meaning at least one coefficient is nonzero.</p>
+        <p>This observation motivates the definition. We say vectors \(v_1, \dots, v_k\) are <strong>linearly dependent</strong> if there exist scalars \(c_1, \dots, c_k\), <em>not all zero</em>, such that</p>
+        \[
+        c_1 v_1 + c_2 v_2 + \cdots + c_k v_k = \mathbf{0}
+        \]
+        <p>The phrase "not all zero" is the entire content of the definition. If all coefficients were zero, the equation would read \(\mathbf{0} = \mathbf{0}\), which is always true and tells us nothing. Dependence means there is a <em>non-obvious</em> way to combine the vectors to get zero.</p>
+
+        <h3>Why this definition captures "redundancy"</h3>
+        <p>We motivated dependence via "adding a vector doesn't enlarge the span," but the definition is symmetric in all \(k\) vectors — it doesn't single out a "last" one. Is that a problem? No, because of the following equivalence, which is worth deriving carefully:</p>
+        <p><strong>Claim:</strong> \(v_1, \dots, v_k\) are linearly dependent if and only if at least one \(v_j\) can be written as a linear combination of the <em>others</em>.</p>
+        <p><em>Proof (\(\Rightarrow\)):</em> Suppose \(c_1 v_1 + \cdots + c_k v_k = \mathbf{0}\) with not all \(c_i = 0\). Pick any index \(j\) with \(c_j \neq 0\) (such an index exists by assumption). Then isolate \(v_j\):</p>
+        \[
+        c_j v_j = -c_1 v_1 - \cdots - c_{j-1} v_{j-1} - c_{j+1} v_{j+1} - \cdots - c_k v_k
+        \]
+        <p>Since \(c_j \neq 0\), divide both sides by \(c_j\) (scalar multiplication by \(1/c_j\), valid in \(\mathbb{R}\)):</p>
+        \[
+        v_j = \left(-\frac{c_1}{c_j}\right) v_1 + \cdots + \left(-\frac{c_{j-1}}{c_j}\right) v_{j-1} + \left(-\frac{c_{j+1}}{c_j}\right) v_{j+1} + \cdots + \left(-\frac{c_k}{c_j}\right) v_k
+        \]
+        <p>So \(v_j\) is a linear combination of the other vectors. Each step used only vector space axioms (additive inverse, scalar multiplication, distributivity).</p>
+        <p><em>Proof (\(\Leftarrow\)):</em> Suppose \(v_j = d_1 v_1 + \cdots + d_{j-1} v_{j-1} + d_{j+1} v_{j+1} + \cdots + d_k v_k\). Move everything to one side:</p>
+        \[
+        d_1 v_1 + \cdots + d_{j-1} v_{j-1} + (-1) v_j + d_{j+1} v_{j+1} + \cdots + d_k v_k = \mathbf{0}
+        \]
+        <p>The coefficient of \(v_j\) is \(-1 \neq 0\), so this is a nontrivial linear relation. The vectors are dependent.</p>
+        <p>This equivalence is what makes the definition useful: dependence means <em>redundancy</em>. At least one vector in a dependent set is "already there" — it lives in the span of the others and contributes no new direction.</p>
+
+        <h3>Worked example: detecting dependence by inspection</h3>
+        <p>Are the vectors \(v_1 = (1, 2, 3)\), \(v_2 = (2, 4, 6)\), \(v_3 = (0, 1, -1)\) in \(\mathbb{R}^3\) linearly dependent?</p>
+        <p><em>Step 1: Look before computing.</em> Notice \(v_2 = 2 v_1\) — every component of \(v_2\) is exactly twice the corresponding component of \(v_1\). So \(v_2\) is a scalar multiple of \(v_1\), which means \(v_2\) is a linear combination of the others (trivially, of just \(v_1\)). By the equivalence above, the set is dependent.</p>
+        <p><em>Step 2: Write the explicit relation.</em> From \(v_2 = 2v_1\), rearrange:</p>
+        \[
+        2 v_1 + (-1) v_2 + 0 v_3 = \mathbf{0}
+        \]
+        <p>The coefficients are \((2, -1, 0)\), not all zero. This is a concrete nontrivial relation witnessing dependence.</p>
+        <p><em>Step 3: Verify arithmetically.</em> Compute the left side component by component:</p>
+        \[
+        2(1, 2, 3) + (-1)(2, 4, 6) + 0(0, 1, -1) = (2, 4, 6) + (-2, -4, -6) + (0, 0, 0) = (0, 0, 0)
+        \]
+        <p>Confirmed. The key lesson: <em>always inspect for obvious scalar multiples before setting up equations</em>. In exams, many dependence questions are designed to be spotted this way, saving you from unnecessary computation.</p>
+
+        <h2>Independence: when every vector earns its place</h2>
+        <p>The negation of dependence gives us the other half of the story. Vectors \(v_1, \dots, v_k\) are <strong>linearly independent</strong> if the <em>only</em> way to get</p>
+        \[
+        c_1 v_1 + c_2 v_2 + \cdots + c_k v_k = \mathbf{0}
+        \]
+        <p>is to take <em>all</em> coefficients equal to zero: \(c_1 = c_2 = \cdots = c_k = 0\). This is called the <strong>trivial</strong> linear relation. Independence means there are <em>no</em> nontrivial relations — no hidden redundancies, no vector that can be expressed in terms of the others.</p>
+        <p>Equivalently (by negating the equivalence we proved above): \(v_1, \dots, v_k\) are independent if and only if <em>no</em> \(v_j\) lies in the span of the others. Every vector contributes a genuinely new direction. Adding any one of them to the span of the rest strictly enlarges that span.</p>
+
+        <h3>The fundamental test: solving a homogeneous system</h3>
+        <p>The definition of independence asks whether a certain equation has only the trivial solution. That equation is a <em>homogeneous linear system</em>, and we can write it in matrix form. Stack the vectors as columns of a matrix \(A = \begin{pmatrix} | & | & & | \\ v_1 & v_2 & \cdots & v_k \\ | & | & & | \end{pmatrix}\). Then</p>
+        \[
+        c_1 v_1 + c_2 v_2 + \cdots + c_k v_k = A \begin{pmatrix} c_1 \\ c_2 \\ \vdots \\ c_k \end{pmatrix} = A c
+        \]
+        <p>So the vectors are independent if and only if the homogeneous system \(Ac = \mathbf{0}\) has <em>only</em> the trivial solution \(c = \mathbf{0}\). They are dependent if and only if \(Ac = \mathbf{0}\) has a <em>nontrivial</em> solution.</p>
+        <p>This rephrasing is the bridge to computation: Chapter 4 will teach Gaussian elimination to solve \(Ac = \mathbf{0}\) systematically. For now, in small examples, we can solve directly.</p>
+
+        <h3>Worked example: proving independence from scratch</h3>
+        <p>Are \(v_1 = (1, 0, 1)\), \(v_2 = (0, 1, 1)\), \(v_3 = (1, 1, 0)\) in \(\mathbb{R}^3\) linearly independent?</p>
+        <p><em>Step 1: Set up the defining equation.</em> We need to determine whether</p>
+        \[
+        c_1 (1, 0, 1) + c_2 (0, 1, 1) + c_3 (1, 1, 0) = (0, 0, 0)
+        \]
+        <p>forces \(c_1 = c_2 = c_3 = 0\).</p>
+        <p><em>Step 2: Expand component by component.</em> The left side is</p>
+        \[
+        (c_1 + c_3,\ c_2 + c_3,\ c_1 + c_2)
+        \]
+        <p>Setting each component equal to zero gives the system:</p>
+        \[
+        \begin{cases}
+        c_1 + c_3 = 0 \\
+        c_2 + c_3 = 0 \\
+        c_1 + c_2 = 0
+        \end{cases}
+        \]
+        <p><em>Step 3: Solve systematically.</em> From equation (1): \(c_3 = -c_1\). From equation (2): \(c_3 = -c_2\). Therefore \(-c_1 = -c_2\), so \(c_1 = c_2\). Substitute into equation (3): \(c_1 + c_1 = 0\), so \(2c_1 = 0\), hence \(c_1 = 0\). Back-substitute: \(c_2 = c_1 = 0\), and \(c_3 = -c_1 = 0\).</p>
+        <p><em>Step 4: State the conclusion.</em> The only solution is \(c_1 = c_2 = c_3 = 0\). Therefore \(v_1, v_2, v_3\) are linearly independent.</p>
+        <p><em>Verification mini-example:</em> What if we change \(v_3\) to \((1, 1, 2)\)? Then the third equation becomes \(c_1 + c_2 = 2c_3\) (wait — let's recompute properly). Actually, \(v_3' = (1,1,2)\) gives the system \(c_1 + c_3 = 0\), \(c_2 + c_3 = 0\), \(c_1 + c_2 + 2c_3 = 0\). From the first two: \(c_1 = c_2 = -c_3\). Third equation: \((-c_3) + (-c_3) + 2c_3 = 0\), which is \(0 = 0\) — always satisfied. So \(c_3\) is free; taking \(c_3 = 1\) gives \(c_1 = c_2 = -1\), and indeed \(-(1,0,1) - (0,1,1) + (1,1,2) = (0,0,0)\). The modified set is dependent. Changing one component flipped independence to dependence — this sensitivity is why we need a systematic test (Chapter 4) rather than ad-hoc inspection.</p>
+
+        <h2>Special cases worth memorizing</h2>
+        <p>Before moving to bases, several edge cases deserve explicit treatment. These appear constantly on exams and in proofs.</p>
+
+        <h3>A single vector</h3>
+        <p>A set containing one vector \(\{v\}\) is linearly dependent if and only if \(v = \mathbf{0}\). Why? The defining equation is \(c v = \mathbf{0}\). If \(v = \mathbf{0}\), then <em>any</em> \(c\) works (take \(c = 1\)), so there is a nontrivial solution. If \(v \neq \mathbf{0}\), then \(cv = \mathbf{0}\) forces \(c = 0\) (this follows from the vector space axioms: if \(c \neq 0\), multiply both sides by \(1/c\) to get \(v = \mathbf{0}\), contradiction). So: <em>a single nonzero vector is always independent; the zero vector alone is dependent</em>.</p>
+
+        <h3>Any set containing the zero vector</h3>
+        <p>If \(\mathbf{0}\) is among \(v_1, \dots, v_k\), the set is automatically dependent. Take the coefficient of \(\mathbf{0}\) to be \(1\) and all other coefficients to be \(0\):</p>
+        \[
+        0 \cdot v_1 + \cdots + 1 \cdot \mathbf{0} + \cdots + 0 \cdot v_k = \mathbf{0}
+        \]
+        <p>This is nontrivial (the coefficient of \(\mathbf{0}\) is \(1 \neq 0\)). So <em>no linearly independent set ever contains the zero vector</em>. This is one of the most frequently tested facts in the subject.</p>
+
+        <h3>Two vectors</h3>
+        <p>Two vectors \(v_1, v_2\) are linearly dependent if and only if one is a scalar multiple of the other. Proof: if dependent, \(c_1 v_1 + c_2 v_2 = \mathbf{0}\) with not both zero. If \(c_1 \neq 0\), then \(v_1 = (-c_2/c_1) v_2\). If \(c_2 \neq 0\), then \(v_2 = (-c_1/c_2) v_1\). Conversely, if \(v_2 = \lambda v_1\), then \(\lambda v_1 + (-1) v_2 = \mathbf{0}\) is nontrivial. Geometrically in \(\mathbb{R}^2\) or \(\mathbb{R}^3\): two vectors are dependent exactly when they lie on the same line through the origin.</p>
+
+        <h3>More vectors than dimensions</h3>
+        <p>In \(\mathbb{R}^n\), any set of more than \(n\) vectors is linearly dependent. This is a consequence of the fact that a homogeneous system with more unknowns than equations always has a nontrivial solution (we'll prove this rigorously via rank in Chapter 5). For now, accept it as a powerful shortcut: <em>in \(\mathbb{R}^3\), any four or more vectors are automatically dependent</em> — no computation needed. Exams love this as a quick-check question.</p>
+
+        <h2>Bases: independent spanning sets</h2>
+        <p>We now have two properties a set of vectors can have: it can <em>span</em> a subspace (Chapter 1), and it can be <em>independent</em>. A set that does <em>both</em> deserves a name.</p>
+        <p>A <strong>basis</strong> of a vector space \(V\) (or of a subspace \(W \subseteq V\)) is a set of vectors that is:</p>
+        <ol>
+          <li>Linearly independent, <em>and</em></li>
+          <li>Spans \(V\) (or \(W\)).</li>
+        </ol>
+        <p>Why is this combination special? Because it means the set is <em>minimally sufficient</em>: independent means no vector is redundant (you can't remove any without losing span), and spanning means no vector is missing (you can't add any without creating dependence). A basis is the "just right" set — no more, no less.</p>
+
+        <h3>Uniqueness of representation</h3>
+        <p>There is an equivalent characterization of bases that explains why they matter computationally. Let \(B = \{b_1, \dots, b_k\}\) be a basis of \(V\). Then <em>every</em> vector \(v \in V\) can be written as a linear combination of the \(b_i\) in <em>exactly one way</em>.</p>
+        <p><em>Proof:</em> Existence follows from spanning. For uniqueness, suppose \(v = c_1 b_1 + \cdots + c_k b_k\) and also \(v = d_1 b_1 + \cdots + d_k b_k\). Subtract:</p>
+        \[
+        \mathbf{0} = (c_1 - d_1) b_1 + \cdots + (c_k - d_k) b_k
+        \]
+        <p>Since the \(b_i\) are independent, every coefficient must be zero: \(c_i - d_i = 0\) for all \(i\), so \(c_i = d_i\). The representation is unique.</p>
+        <p>Conversely, if every \(v \in V\) has a <em>unique</em> representation as a linear combination of \(\{b_1, \dots, b_k\}\), then the set is a basis. Uniqueness for \(v = \mathbf{0}\) gives independence (the only representation of zero is the trivial one), and existence for all \(v\) gives spanning. So "basis" and "unique representation" are equivalent definitions. The coefficients \(c_1, \dots, c_k\) in the unique representation are called the <strong>coordinates</strong> of \(v\) with respect to the basis \(B\) — this is the foundation of coordinate systems in abstract vector spaces, and it's what makes computation possible in spaces like polynomials or function spaces where there are no "natural" coordinates.</p>
+
+        <h3>Worked example: verifying a basis of \(\mathbb{R}^3\)</h3>
+        <p>Show that \(B = \{(1, 0, 1),\ (0, 1, 1),\ (1, 1, 0)\}\) is a basis of \(\mathbb{R}^3\).</p>
+        <p><em>Step 1: Check independence.</em> We already did this in the worked example above — the only solution to \(c_1 v_1 + c_2 v_2 + c_3 v_3 = \mathbf{0}\) is \(c_1 = c_2 = c_3 = 0\). ✓</p>
+        <p><em>Step 2: Check spanning.</em> We need to show that for any \((a, b, c) \in \mathbb{R}^3\), there exist scalars \(x, y, z\) with</p>
+        \[
+        x(1, 0, 1) + y(0, 1, 1) + z(1, 1, 0) = (a, b, c)
+        \]
+        <p>Expanding: \((x + z,\ y + z,\ x + y) = (a, b, c)\). This gives the system:</p>
+        \[
+        \begin{cases}
+        x + z = a \\
+        y + z = b \\
+        x + y = c
+        \end{cases}
+        \]
+        <p>Solve: from (1), \(z = a - x\). From (2), \(y = b - z = b - a + x\). Substitute into (3): \(x + (b - a + x) = c\), so \(2x = c - b + a\), hence \(x = (a - b + c)/2\). Then \(z = a - x = (a + b - c)/2\) and \(y = b - z = (-a + b + c)/2\). Since \(a, b, c\) were arbitrary, a solution exists for every target vector. ✓</p>
+        <p><em>Conclusion:</em> \(B\) is independent and spans \(\mathbb{R}^3\), so it is a basis. Notice we solved essentially the same system as in the independence check, but with a general right-hand side \((a,b,c)\) instead of \((0,0,0)\). This is not a coincidence — Chapter 4 will show that Gaussian elimination handles both tasks simultaneously.</p>
+
+        <h2>Dimension: counting directions</h2>
+        <p>Different bases of the same space can look very different. The standard basis \(\{e_1, e_2, e_3\}\) of \(\mathbb{R}^3\) looks nothing like the basis \(B\) from the previous example. But they share a crucial invariant: both have exactly three vectors. This is not accidental.</p>
+        <p><strong>Theorem (Dimension is well-defined):</strong> If \(V\) has a finite basis, then <em>every</em> basis of \(V\) has the same number of elements.</p>
+        <p>The proof uses the <strong>replacement theorem</strong> (also called Steinitz exchange): if \(\{u_1, \dots, u_m\}\) spans \(V\) and \(\{v_1, \dots, v_n\}\) is independent, then \(n \leq m\). Applying this twice — once with the first basis as spanner and the second as independent set, then vice versa — gives \(n \leq m\) and \(m \leq n\), so \(m = n\). We won't prove the replacement theorem here (it requires careful induction and is covered in most rigorous treatments), but we will use its consequence freely.</p>
+        <p>The common number of elements in every basis of \(V\) is called the <strong>dimension</strong> of \(V\), written \(\dim V\). By convention, \(\dim \{\mathbf{0}\} = 0\) (the trivial subspace has the empty set as its basis).</p>
+
+        <h3>Dimensions of familiar spaces</h3>
+        <ul>
+          <li>\(\dim \mathbb{R}^n = n\). The standard basis \(\{e_1, \dots, e_n\}\) has \(n\) elements.</li>
+          <li>\(\dim \mathcal{P}_n = n + 1\). The basis \(\{1, x, x^2, \dots, x^n\}\) has \(n + 1\) elements. Note: \(\mathcal{P}_n\) is polynomials of degree <em>at most</em> \(n\), so the constant polynomial counts.</li>
+          <li>\(\dim \mathbb{R}^{m \times n} = mn\). The matrices \(E_{ij}\) (with a 1 in position \((i,j)\) and zeros elsewhere) form a basis with \(mn\) elements.</li>
+          <li>The space of symmetric \(2 \times 2\) matrices (Example 6 of Chapter 1) has dimension 3: the basis \(\left\{ \begin{pmatrix} 1 & 0 \\ 0 & 0 \end{pmatrix}, \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}, \begin{pmatrix} 0 & 0 \\ 0 & 1 \end{pmatrix} \right\}\) has three elements, matching the three free parameters \(a, b, d\) we identified there.</li>
+        </ul>
+
+        <h3>Dimension as a diagnostic tool</h3>
+        <p>Once you know \(\dim V = n\), checking whether a set of \(n\) vectors is a basis simplifies dramatically: <em>in an \(n\)-dimensional space, a set of \(n\) vectors is a basis if and only if it is independent, if and only if it spans</em>. You only need to verify <em>one</em> of the two properties; the other follows automatically from the dimension count. This is one of the most practically useful facts in the subject, and it's why computing dimension (via rank, in Chapter 5) is so central.</p>
+        <p><strong>Common mistake:</strong> Students often assume that any set of \(n\) vectors in an \(n\)-dimensional space is a basis. This is false — the set must be either independent <em>or</em> spanning. For example, \(\{(1, 0), (2, 0)\}\) has two vectors in \(\mathbb{R}^2\) (dimension 2), but it is dependent (second is twice the first) and does not span (only reaches the x-axis). The dimension shortcut only applies when you've already verified one of the two basis properties.</p>
+
+        <h2>Connecting back: dependence, span, and systems</h2>
+        <p>Let us tie this chapter's concepts back to the language of Chapter 1 and forward to Chapters 4–5. Given vectors \(v_1, \dots, v_k\) in \(\mathbb{R}^n\), form the matrix \(A\) whose columns are these vectors. Then:</p>
+        <ul>
+          <li>\(v_1, \dots, v_k\) are <strong>independent</strong> \(\iff\) \(\operatorname{Nul}(A) = \{\mathbf{0}\}\) \(\iff\) the system \(Ax = \mathbf{0}\) has only the trivial solution.</li>
+          <li>\(v_1, \dots, v_k\) are <strong>dependent</strong> \(\iff\) \(\operatorname{Nul}(A) \neq \{\mathbf{0}\}\) \(\iff\) the system \(Ax = \mathbf{0}\) has a nontrivial solution.</li>
+          <li>\(\operatorname{span}(v_1, \dots, v_k) = \operatorname{Col}(A)\), and \(\dim \operatorname{span}(v_1, \dots, v_k) = \dim \operatorname{Col}(A)\).</li>
+          <li>The <strong>rank</strong> of \(A\) (defined precisely in Chapter 5) equals \(\dim \operatorname{Col}(A)\), which equals the maximum number of independent columns, which equals the dimension of the span.</li>
+        </ul>
+        <p>Every question about dependence, independence, span, and dimension reduces to a question about the null space and column space of a matrix — and those are exactly what Gaussian elimination (Chapter 4) and rank-nullity (Chapter 5) compute. This chapter gave you the <em>language</em>; the next two chapters give you the <em>machinery</em>.</p>
+
+        <h2>Edge cases and boundary behavior</h2>
+        <p><strong>What happens when the set is empty?</strong> The empty set \(\varnothing\) is linearly independent (vacuously: there is no nontrivial relation because there are no vectors to form one). Its span is \(\{\mathbf{0}\}\) (the only linear combination of no vectors is the empty sum, which is defined to be \(\mathbf{0}\)). So \(\varnothing\) is a basis of the trivial subspace \(\{\mathbf{0}\}\), and \(\dim \{\mathbf{0}\} = 0\). This convention is consistent and necessary for theorems like rank-nullity to hold without special cases.</p>
+        <p><strong>What about infinite-dimensional spaces?</strong> The space of all polynomials \(\mathcal{P}\) (no degree bound) has no finite basis — for any finite set of polynomials, there is a polynomial of higher degree not in their span. Such spaces are called <em>infinite-dimensional</em>. Everything in this chapter assumes finite-dimensionality; infinite-dimensional spaces require additional tools (Hamel bases, Zorn's lemma) beyond this book's scope. But the finite-dimensional intuition transfers: in functional analysis, "basis" gets generalized to Schauder bases, and dimension gets replaced by separability and other topological invariants.</p>
+        <p><strong>Numerical sensitivity:</strong> In exact arithmetic, independence is a yes/no property. In floating-point computation, it becomes a matter of degree: vectors that are <em>nearly</em> dependent (e.g., \(v_2 = (1 + 10^{-15}) v_1\)) are technically independent but numerically indistinguishable from dependent ones. This is why numerical linear algebra uses the <strong>singular value decomposition</strong> (Chapter 11) rather than exact Gaussian elimination to assess "effective rank" — the SVD measures <em>how close</em> a set is to being dependent, not just whether it is.</p>
+
+        <h2>What we built, and where it goes</h2>
+        <ul>
+          <li><strong>Linear dependence</strong> means a nontrivial linear combination equals zero — equivalently, at least one vector is redundant (in the span of the others).</li>
+          <li><strong>Linear independence</strong> means only the trivial combination gives zero — every vector contributes a new direction.</li>
+          <li>A <strong>basis</strong> is an independent spanning set — minimally sufficient, giving unique coordinates for every vector.</li>
+          <li><strong>Dimension</strong> is the number of vectors in any basis — a well-defined invariant measuring the "number of directions" in a space.</li>
+        </ul>
+        <p>Pencil-and-paper checkpoint: given any set of vectors, can you (a) write down the dependence/independence test as a homogeneous system, (b) solve it completely, (c) extract an explicit dependence relation if one exists, and (d) state the dimension of the span? If yes, you're ready for what comes next.</p>
+        <p>Chapter 3 builds the full algebra of matrices and partitioned matrices — the language in which all of this gets computed. Chapter 4 introduces Gaussian elimination, the algorithm that turns the theoretical tests of this chapter into concrete, mechanical procedures. Chapter 5 proves rank-nullity, the theorem that ties dimension of column space and null space together into a single equation. Everything from here on is computation built on the foundations laid in Chapters 1 and 2.</p>
+
+      </article>
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch1/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">1. Vector Spaces and Subspaces</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch3/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">3. Matrices and Partitioned Matrices</span>
+        </a>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
+</body>
+</html>
