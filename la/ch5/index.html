@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>5. Determinants, Rank, and Nullity — Linear Algebra (GATE DA) — iTube</title>
+  <meta name="description" content="Determinants derived from axioms, rank-nullity theorem proved from RREF structure, and the equivalence of row rank, column rank, and determinantal rank established with full worked examples.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Linear Algebra (GATE DA)</a><span class="sep">/</span>
+        <span>Ch. 5</span>
+      </div>
+      <div class="eyebrow">Linear Algebra (GATE DA)</div>
+      <h1>5. Determinants, Rank, and Nullity</h1>
+      <div class="chapter-meta">
+        <span>Chapter 5 of 11</span>
+        <span class="read-badge">27 min read</span>
+      </div>
+      <article>
+
+        <h2>Three numbers that tell the whole story</h2>
+        <p>Chapter 4 gave us an algorithm: reduce to RREF, read off pivots, solve the system. But algorithms answer <em>specific</em> questions (“does this particular \(Ax = b\) have a solution?”). This chapter asks <em>structural</em> questions that apply to any matrix, independent of any specific right-hand side:</p>
+        <ul>
+          <li>Is \(A\) invertible? (Can we solve \(Ax = b\) for <em>every</em> \(b\)?)</li>
+          <li>How many independent directions does \(A\) preserve? (What is the dimension of its column space?)</li>
+          <li>How many directions does \(A\) collapse? (What is the dimension of its null space?)</li>
+        </ul>
+        <p>Three invariants answer these questions completely: the <strong>determinant</strong>, the <strong>rank</strong>, and the <strong>nullity</strong>. The determinant is a single scalar that tests invertibility. Rank and nullity are nonnegative integers whose sum equals the number of columns — the <strong>rank-nullity theorem</strong>, the single most important structural result in linear algebra. This chapter derives all three from first principles, connects them to the RREF machinery of Chapter 4, and proves their fundamental relationships.</p>
+
+        <h2>The determinant: defined by what it does</h2>
+        <p>The determinant is often introduced as a formula (cofactor expansion, Leibniz sum), but formulas obscure <em>why</em> the determinant exists. Instead, we define it by the properties that make it useful, then show those properties determine it uniquely.</p>
+
+        <h3>Three axioms</h3>
+        <p>A function \(D : \mathbb{R}^{n \times n} \to \mathbb{R}\) is called a <strong>determinant function</strong> if it satisfies:</p>
+        <ol>
+          <li><strong>Multilinearity in rows:</strong> \(D\) is linear in each row when the other rows are held fixed. That is, for any row index \(i\), scalars \(a, b\), and row vectors \(r, s\):
+            \[ D(\dots, ar + bs, \dots) = a\,D(\dots, r, \dots) + b\,D(\dots, s, \dots) \]
+            where the ellipses indicate identical rows in all other positions.</li>
+          <li><strong>Alternating:</strong> Swapping two rows changes the sign: \(D(\dots, r_i, \dots, r_j, \dots) = -D(\dots, r_j, \dots, r_i, \dots)\). Equivalently (and this is worth verifying), if two rows are identical, \(D = 0\). (Proof: swap the identical rows; the value must both stay the same and flip sign, so it must be zero.)</li>
+          <li><strong>Normalization:</strong> \(D(I_n) = 1\).</li>
+        </ol>
+        <p>These three axioms capture exactly what we want a “volume-like” invariant to do: scale linearly when you stretch one direction, flip sign when you reverse orientation (swap), and assign unit volume to the unit cube. Everything else follows.</p>
+
+        <h3>Uniqueness: why there is only one determinant</h3>
+        <p><strong>Theorem:</strong> There is exactly one function satisfying the three axioms above.</p>
+        <p><em>Proof sketch (constructive):</em> Apply Gaussian elimination to \(A\). Each row operation affects \(D\) in a known way: row replacement (adding a multiple of one row to another) doesn’t change \(D\) (multilinearity + alternating: \(D(\dots, r_i + cr_j, \dots) = D(\dots, r_i, \dots) + c\,D(\dots, r_j, \dots)\), and the second term is zero because rows \(i\) and \(j\) would be identical after factoring). Row scaling by \(c\) multiplies \(D\) by \(c\). Row swap multiplies \(D\) by \(-1\). So if elimination reduces \(A\) to RREF \(R\) via operations with cumulative scaling factor \(\alpha\) and \(s\) swaps, then \(D(A) = \alpha^{-1} (-1)^s D(R)\). But \(R\) is either \(I_n\) (if \(A\) is invertible) or has a zero row (if not). If \(R\) has a zero row, multilinearity gives \(D(R) = 0\). If \(R = I_n\), normalization gives \(D(R) = 1\). So \(D(A)\) is completely determined by the elimination process and the three axioms. Since elimination always terminates, \(D\) is uniquely defined.</p>
+        <p>This proof also gives us a <em>computation method</em>: reduce to upper triangular form using row operations, tracking the scaling factors and swaps, then multiply the diagonal entries. This is far more efficient than cofactor expansion for large matrices.</p>
+
+        <h3>Consequences derived from the axioms</h3>
+        <p>From the three axioms alone, we can derive every property of the determinant without ever writing a formula:</p>
+        <ul>
+          <li><strong>\(\det(AB) = \det(A)\det(B)\):</strong> Fix \(B\) and consider \(f(A) = \det(AB)/\det(B)\) (for \(\det(B) \neq 0\)). Check that \(f\) satisfies all three axioms as a function of \(A\). By uniqueness, \(f(A) = \det(A)\). Rearrange. (When \(\det(B) = 0\), \(B\) is singular, so \(AB\) is singular, and both sides are zero.)</li>
+          <li><strong>\(\det(A^\top) = \det(A)\):</strong> The axioms are stated for rows, but since row operations on \(A\) correspond to column operations on \(A^\top\), and the axioms are symmetric between rows and columns (the proof of uniqueness works identically for columns), the determinant is also the unique alternating multilinear function on <em>columns</em> normalized on \(I\). Hence \(\det(A^\top) = \det(A)\).</li>
+          <li><strong>\(A\) is invertible \(\iff \det(A) \neq 0\):</strong> If \(A\) is invertible, \(AA^{-1} = I\), so \(\det(A)\det(A^{-1}) = \det(I) = 1\), hence \(\det(A) \neq 0\). Conversely, if \(\det(A) \neq 0\), elimination produces no zero row, so RREF is \(I\), so \(A\) is invertible (Chapter 4).</li>
+          <li><strong>\(\det(A^{-1}) = 1/\det(A)\):</strong> Immediate from \(\det(A)\det(A^{-1}) = \det(I) = 1\).</li>
+          <li><strong>\(\det(cA) = c^n \det(A)\) for \(n \times n\) matrices:</strong> Scaling \(A\) by \(c\) scales each of the \(n\) rows by \(c\); multilinearity pulls out one factor of \(c\) per row.</li>
+        </ul>
+        <p>Notice: we never wrote a single explicit formula. Every property followed from the axioms and uniqueness. This is the power of defining objects by what they <em>do</em> rather than how they’re computed.</p>
+
+        <h3>Worked example: computing a \(3 \times 3\) determinant via elimination</h3>
+        <p>Compute \(\det(A)\) for \(A = \begin{pmatrix} 2 & 1 & 3 \\ 4 & 3 & 7 \\ 6 & 5 & 11 \end{pmatrix}\).</p>
+        <p><em>Step 1: Eliminate below pivot in column 1.</em> \(R_2 \leftarrow R_2 - 2R_1\): new \(R_2 = (0, 1, 1)\). \(R_3 \leftarrow R_3 - 3R_1\): new \(R_3 = (0, 2, 2)\). These are row replacements, which don’t change the determinant.</p>
+        \[
+        A' = \begin{pmatrix} 2 & 1 & 3 \\ 0 & 1 & 1 \\ 0 & 2 & 2 \end{pmatrix}, \quad \det(A') = \det(A)
+        \]
+        <p><em>Step 2: Eliminate below pivot in column 2.</em> \(R_3 \leftarrow R_3 - 2R_2\): new \(R_3 = (0, 0, 0)\). Again a row replacement.</p>
+        \[
+        U = \begin{pmatrix} 2 & 1 & 3 \\ 0 & 1 & 1 \\ 0 & 0 & 0 \end{pmatrix}, \quad \det(U) = \det(A)
+        \]
+        <p><em>Step 3: Read off.</em> \(U\) is upper triangular with a zero on the diagonal. By multilinearity (expand along the zero row), \(\det(U) = 0\). Therefore \(\det(A) = 0\).</p>
+        <p><em>Verification via dependence:</em> Notice \(R_3 = R_1 + R_2\) in the original matrix: \((6,5,11) = (2,1,3) + (4,3,7)\). Dependent rows → zero determinant. ✓ This confirms our computation and illustrates the connection: \(\det(A) = 0\) iff the rows (equivalently, columns) are linearly dependent.</p>
+
+        <h3>Cofactor expansion: useful for theory, expensive for computation</h3>
+        <p>For theoretical proofs (e.g., showing \(\det\) is a polynomial in the entries), the <strong>Laplace expansion</strong> along row \(i\) is indispensable:</p>
+        \[
+        \det(A) = \sum_{j=1}^{n} (-1)^{i+j} a_{ij} \det(M_{ij})
+        \]
+        <p>where \(M_{ij}\) is the \((n-1) \times (n-1)\) submatrix obtained by deleting row \(i\) and column \(j\). This is a recursive definition, reducing an \(n \times n\) determinant to \(n\) determinants of size \((n-1)\). For hand computation of small matrices (\(2 \times 2\), \(3 \times 3\)), it’s fine. For \(n \geq 4\), it requires \(O(n!)\) operations — use elimination instead. But keep cofactor expansion in your toolkit for proofs and for understanding the adjugate formula \(A^{-1} = \frac{1}{\det(A)} \operatorname{adj}(A)\).</p>
+
+        <h2>Rank: the dimension of the image</h2>
+        <p>In Chapter 4, we defined the rank of \(A\) as the number of pivots in its RREF. Now we formalize this and prove it equals several other natural quantities.</p>
+
+        <h3>Equivalent definitions of rank</h3>
+        <p>For an \(m \times n\) matrix \(A\), the following are all equal:</p>
+        <ol>
+          <li><strong>Column rank:</strong> \(\dim \operatorname{Col}(A)\) — the dimension of the span of the columns.</li>
+          <li><strong>Row rank:</strong> \(\dim \operatorname{Row}(A)\) — the dimension of the span of the rows.</li>
+          <li><strong>Pivot rank:</strong> the number of pivot positions in the RREF of \(A\).</li>
+          <li><strong>Determinantal rank:</strong> the size of the largest square submatrix of \(A\) with nonzero determinant.</li>
+        </ol>
+        <p>We prove the equivalences step by step.</p>
+
+        <h3>Column rank = pivot rank</h3>
+        <p>From Chapter 4: the pivot columns of \(A\) (not of RREF!) form a basis for \(\operatorname{Col}(A)\). There are exactly as many pivot columns as there are pivots. So \(\dim \operatorname{Col}(A) = \text{(number of pivots)}\).</p>
+
+        <h3>Row rank = pivot rank</h3>
+        <p>Elementary row operations preserve the row space (each new row is a linear combination of old rows, and the operations are invertible). The nonzero rows of RREF are linearly independent (each has a leading 1 in a distinct column where all other rows have 0). So the nonzero rows of RREF form a basis for \(\operatorname{Row}(A)\), and there are exactly as many as there are pivots.</p>
+
+        <h3>Column rank = row rank</h3>
+        <p>Both equal the pivot rank, so they equal each other. This is remarkable: a priori, the column space lives in \(\mathbb{R}^m\) and the row space in \(\mathbb{R}^n\) — completely different ambient spaces. Yet their dimensions are always equal. We denote this common value simply as \(\operatorname{rank}(A)\).</p>
+
+        <h3>Determinantal rank = pivot rank</h3>
+        <p>If \(A\) has \(r\) pivots, then RREF has an \(r \times r\) identity block in the top-left (after permutation), so \(A\) has an \(r \times r\) submatrix with nonzero determinant (the corresponding submatrix of \(A\) is invertible because elimination restricted to those rows/columns is invertible). Conversely, if \(A\) has a \(k \times k\) invertible submatrix, then those \(k\) rows are independent and those \(k\) columns are independent, so rank \(\geq k\). The largest such \(k\) equals the rank.</p>
+
+        <h3>Worked example: computing rank three ways</h3>
+        <p>Let \(A = \begin{pmatrix} 1 & 2 & 3 \\ 2 & 4 & 6 \\ 1 & 3 & 5 \end{pmatrix}\).</p>
+        <p><em>Method 1 (RREF):</em> \(R_2 \leftarrow R_2 - 2R_1 = (0,0,0)\); \(R_3 \leftarrow R_3 - R_1 = (0,1,2)\). Swap \(R_2 \leftrightarrow R_3\): \(\begin{pmatrix} 1 & 2 & 3 \\ 0 & 1 & 2 \\ 0 & 0 & 0 \end{pmatrix}\). Two pivots → rank = 2.</p>
+        <p><em>Method 2 (column inspection):</em> Column 2 = \(2 \times\) column 1, so columns are dependent. Columns 1 and 3: are they independent? \(c_1(1,2,1) + c_3(3,6,5) = 0\) gives \(c_1 + 3c_3 = 0\), \(2c_1 + 6c_3 = 0\), \(c_1 + 5c_3 = 0\). First and third: subtracting gives \(2c_3 = 0\) → \(c_3 = 0\) → \(c_1 = 0\). Independent. So column space has dimension 2 → rank = 2. ✓</p>
+        <p><em>Method 3 (determinantal):</em> \(\det(A) = 0\) (rows dependent: \(R_2 = 2R_1\)). Check \(2 \times 2\) submatrices: top-left \(\begin{pmatrix} 1 & 2 \\ 2 & 4 \end{pmatrix}\) has det 0. But \(\begin{pmatrix} 1 & 3 \\ 1 & 5 \end{pmatrix}\) has det \(5 - 3 = 2 \neq 0\). Largest invertible submatrix is \(2 \times 2\) → rank = 2. ✓</p>
+        <p>All three methods agree. In practice, RREF is fastest for hand computation; determinantal rank is useful for theoretical bounds; column/row inspection works for small structured matrices.</p>
+
+        <h2>Nullity and the rank-nullity theorem</h2>
+        <p>The <strong>nullity</strong> of \(A\) is \(\dim \operatorname{Nul}(A)\). From Chapter 4, we know how to compute it: reduce to RREF, count the free variables. If \(A\) is \(m \times n\) with rank \(r\), then there are \(n - r\) free variables, and the null-space basis vectors constructed from them are linearly independent and spanning. So:</p>
+        \[
+        \operatorname{nullity}(A) = n - r = n - \operatorname{rank}(A)
+        \]
+        <p>Rearranging gives the central theorem:</p>
+        \[
+        \boxed{\operatorname{rank}(A) + \operatorname{nullity}(A) = n}
+        \]
+        <p>where \(n\) is the number of columns of \(A\). This is the <strong>rank-nullity theorem</strong> (also called the dimension theorem).</p>
+
+        <h3>Why this theorem matters</h3>
+        <p>Rank-nullity says that the dimensions of the image and kernel of a linear map always add up to the dimension of the domain. It is the linear-algebraic version of the pigeonhole principle: if you map an \(n\)-dimensional space into some target, the amount of information preserved (rank) plus the amount lost (nullity) must equal \(n\). Consequences include:</p>
+        <ul>
+          <li>An \(n \times n\) matrix is invertible iff its nullity is 0 iff its rank is \(n\).</li>
+          <li>If \(m < n\) (more columns than rows), then \(\operatorname{rank}(A) \leq m < n\), so \(\operatorname{nullity}(A) \geq n - m > 0\): wide matrices always have nontrivial null spaces. Systems \(Ax = b\) with \(m < n\) are never uniquely solvable.</li>
+          <li>If \(m > n\) (more rows than columns), then \(\operatorname{rank}(A) \leq n\), so \(\operatorname{nullity}(A) \geq 0\) (always true), but \(\operatorname{Col}(A)\) is a proper subspace of \(\mathbb{R}^m\) whenever \(\operatorname{rank}(A) < m\): tall matrices cannot be surjective. Systems \(Ax = b\) may be inconsistent.</li>
+          <li>For a linear map \(T : V \to W\) between finite-dimensional spaces, \(\dim V = \dim \ker T + \dim \operatorname{im} T\). The matrix version is the special case \(V = \mathbb{R}^n\), \(W = \mathbb{R}^m\).</li>
+        </ul>
+
+        <h3>Worked example: rank-nullity in action</h3>
+        <p>Let \(A = \begin{pmatrix} 1 & 2 & 3 & 4 \\ 2 & 4 & 6 & 8 \\ 1 & 2 & 4 & 6 \end{pmatrix}\) (the same matrix from Chapter 4’s worked example). From Chapter 4, RREF has pivots in columns 1 and 3, so \(\operatorname{rank}(A) = 2\). The matrix has \(n = 4\) columns, so rank-nullity predicts \(\operatorname{nullity}(A) = 4 - 2 = 2\). Indeed, Chapter 4 found a null-space basis with two vectors: \(\{(-2,1,0,0)^\top, (2,0,-2,1)^\top\}\). Dimension 2. ✓</p>
+        <p><em>Follow-up question:</em> What is \(\dim \operatorname{Col}(A)\)? Answer: 2 (equal to rank). What is \(\dim \operatorname{Row}(A)\)? Also 2. What ambient space does each live in? \(\operatorname{Col}(A) \subseteq \mathbb{R}^3\), \(\operatorname{Row}(A) \subseteq \mathbb{R}^4\). Different ambient spaces, same dimension — rank-nullity doesn’t say anything about the ambient spaces, only about the domain dimension \(n = 4\).</p>
+
+        <h2>Properties of rank under operations</h2>
+        <p>Rank behaves predictably under common matrix operations. These inequalities are used constantly in later chapters (especially Chapters 6, 10, 11):</p>
+        <ul>
+          <li><strong>\(\operatorname{rank}(AB) \leq \min(\operatorname{rank}(A), \operatorname{rank}(B))\):</strong> \(\operatorname{Col}(AB) \subseteq \operatorname{Col}(A)\) (every column of \(AB\) is \(A\) times something), so \(\operatorname{rank}(AB) \leq \operatorname{rank}(A)\). Also \(\operatorname{rank}(AB) = \operatorname{rank}((AB)^\top) = \operatorname{rank}(B^\top A^\top) \leq \operatorname{rank}(B^\top) = \operatorname{rank}(B)\).</li>
+          <li><strong>\(\operatorname{rank}(A + B) \leq \operatorname{rank}(A) + \operatorname{rank}(B)\):</strong> \(\operatorname{Col}(A + B) \subseteq \operatorname{Col}(A) + \operatorname{Col}(B)\), and \(\dim(U + V) \leq \dim U + \dim V\).</li>
+          <li><strong>Sylvester’s inequality:</strong> \(\operatorname{rank}(A) + \operatorname{rank}(B) - n \leq \operatorname{rank}(AB)\) for \(A\) (\(m \times n\)) and \(B\) (\(n \times p\)). This lower bound complements the upper bound above.</li>
+          <li><strong>Rank is invariant under multiplication by invertible matrices:</strong> If \(P\) and \(Q\) are invertible, \(\operatorname{rank}(PAQ) = \operatorname{rank}(A)\). Multiplication by invertible matrices corresponds to change of basis in domain and codomain; rank is a basis-independent property.</li>
+        </ul>
+
+        <h2>Edge cases and common mistakes</h2>
+        <p><strong>Mistake: confusing rank with the number of nonzero rows in REF (not RREF).</strong> In REF (non-reduced), a row may be nonzero but still dependent on earlier rows. Only RREF guarantees that nonzero rows are independent. Always reduce fully, or verify independence explicitly.</p>
+        <p><strong>Mistake: assuming \(\det(A + B) = \det(A) + \det(B)\).</strong> The determinant is multilinear in <em>rows</em>, not additive over matrices. For example, \(\det(I + I) = \det(2I) = 2^n \neq 2 = \det(I) + \det(I)\) for \(n \geq 2\). Determinant is multiplicative (\(\det(AB) = \det(A)\det(B)\)), not additive.</p>
+        <p><strong>Edge case: rank of the zero matrix.</strong> \(\operatorname{rank}(\mathbf{0}_{m \times n}) = 0\), \(\operatorname{nullity} = n\). Rank-nullity: \(0 + n = n\). ✓ The zero matrix collapses everything.</p>
+        <p><strong>Edge case: full-rank matrices.</strong> An \(m \times n\) matrix has <em>full column rank</em> if \(\operatorname{rank}(A) = n\) (requires \(m \geq n\)); <em>full row rank</em> if \(\operatorname{rank}(A) = m\) (requires \(n \geq m\)); <em>full rank</em> if square and \(\operatorname{rank}(A) = n = m\) (invertible). Full column rank ⟺ columns independent ⟺ \(Ax = \mathbf{0}\) has only trivial solution ⟺ \(A^\top A\) is invertible. Full row rank ⟺ rows independent ⟺ \(Ax = b\) is consistent for every \(b\) ⟺ \(AA^\top\) is invertible. These characterizations return in Chapters 7–8 (least squares, projections).</p>
+        <p><strong>Numerical caution:</strong> In floating-point arithmetic, rank determination via RREF or determinant is unreliable. Tiny perturbations can turn a rank-deficient matrix into a full-rank one (or vice versa). The numerically stable approach uses the SVD (Chapter 11): the numerical rank is the number of singular values exceeding a tolerance. Never trust a determinant near machine epsilon as evidence of singularity or nonsingularity.</p>
+
+        <h2>What we built, and where it goes</h2>
+        <ul>
+          <li>The <strong>determinant</strong> is the unique alternating multilinear function on rows normalized on \(I\); it tests invertibility and satisfies \(\det(AB) = \det(A)\det(B)\).</li>
+          <li><strong>Rank</strong> is the common value of column rank, row rank, pivot rank, and determinantal rank — the dimension of the image of \(A\).</li>
+          <li><strong>Nullity</strong> is the dimension of the kernel of \(A\), and \(\operatorname{rank}(A) + \operatorname{nullity}(A) = n\) (rank-nullity theorem).</li>
+          <li>Rank inequalities govern how rank behaves under products, sums, and changes of basis.</li>
+        </ul>
+        <p>Pencil-and-paper checkpoint: can you derive \(\det(AB) = \det(A)\det(B)\) from the three axioms without invoking a formula? Can you compute rank via RREF, column inspection, and determinantal rank for a given matrix and verify agreement? Can you state rank-nullity and explain why it implies that wide matrices always have nontrivial null spaces?</p>
+        <p>Chapter 6 uses the determinant to define the characteristic polynomial \(\det(A - \lambda I)\), whose roots are the eigenvalues. Chapter 7 introduces orthogonality, which gives us bases that make rank and nullity geometrically visible. Chapter 10 factors \(A = LU\), making the determinant a product of diagonal entries of \(U\). Chapter 11 generalizes rank to the SVD, where singular values measure “effective rank” in noisy settings. Everything rests on the foundations laid here.</p>
+
+      </article>
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch4/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">4. Systems of Linear Equations and Gaussian Elimination</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch6/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">6. Eigenvalues and Eigenvectors</span>
+        </a>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
+</body>
+</html>
