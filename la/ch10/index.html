@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>10. LU Decomposition — Linear Algebra (GATE DA) — iTube</title>
+  <meta name="description" content="LU decomposition derived from Gaussian elimination as matrix factorization, pivoting strategies for stability, computational cost analysis, and applications to solving linear systems efficiently.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Linear Algebra (GATE DA)</a><span class="sep">/</span>
+        <span>Ch. 10</span>
+      </div>
+      <div class="eyebrow">Linear Algebra (GATE DA)</div>
+      <h1>10. LU Decomposition</h1>
+      <div class="chapter-meta">
+        <span>Chapter 10 of 11</span>
+        <span class="read-badge">22 min read</span>
+      </div>
+      <article>
+
+        <h2>From algorithm to factorization</h2>
+        <p>In Chapter 4, we performed Gaussian elimination as a sequence of row operations on the augmented matrix \([A \mid b]\). Each operation was equivalent to left-multiplication by an elementary matrix (Chapter 3), but we never wrote those matrices down explicitly. This chapter makes them explicit, packaging the entire elimination process into a single matrix factorization:</p>
+        \[
+        A = LU
+        \]
+        <p>where \(L\) is lower triangular with 1s on the diagonal (unit lower triangular) and \(U\) is upper triangular. This is not merely notation — it is a <em>reorganization of computation</em> that separates the expensive part (factorization, done once) from the cheap part (solving with \(L\) and \(U\), done many times). When you need to solve \(Ax = b\) for hundreds of different right-hand sides \(b\) (as in time-stepping PDEs, optimization iterations, or Monte Carlo simulations), LU decomposition reduces the per-solve cost from \(O(n^3)\) to \(O(n^2)\).</p>
+        <p>This chapter derives \(A = LU\) constructively from elimination, explains when it exists and when it fails, introduces pivoting for numerical stability, and analyzes the computational cost that makes LU the default solver in scientific computing.</p>
+
+        <h2>Deriving \(A = LU\) from elimination without row swaps</h2>
+        <p>Assume for now that Gaussian elimination on \(A\) proceeds without row swaps and without encountering zero pivots. At step \(k\), we eliminate entries below the pivot \(a_{kk}^{(k)}\) by subtracting multiples of row \(k\) from rows \(k+1, \dots, n\). The multiplier for row \(i\) is</p>
+        \[
+        \ell_{ik} = \frac{a_{ik}^{(k)}}{a_{kk}^{(k)}}
+        \]
+        <p>This row operation is left-multiplication by the elementary matrix \(E_k = I - \ell_k e_k^\top\), where \(\ell_k = (0, \dots, 0, \ell_{k+1,k}, \dots, \ell_{n,k})^\top\) has the multipliers below position \(k\). After \(n-1\) steps:</p>
+        \[
+        E_{n-1} \cdots E_2 E_1 A = U
+        \]
+        <p>where \(U\) is upper triangular. Since each \(E_k\) is invertible with inverse \(E_k^{-1} = I + \ell_k e_k^\top\) (just flip the sign of the multipliers), we get</p>
+        \[
+        A = E_1^{-1} E_2^{-1} \cdots E_{n-1}^{-1} U
+        \]
+        <p>The key insight: the product \(L = E_1^{-1} E_2^{-1} \cdots E_{n-1}^{-1}\) is <em>unit lower triangular</em>, with the multipliers \(\ell_{ik}\) appearing directly in positions \((i,k)\) below the diagonal. No multiplication needed — the factors assemble themselves.</p>
+
+        <h3>Why \(L\) has this simple structure</h3>
+        <p>Each \(E_k^{-1} = I + \ell_k e_k^\top\) differs from identity only in column \(k\) below the diagonal. When multiplying such matrices left-to-right, the nontrivial columns don't interfere: column \(j\) of \(E_j^{-1}\) is untouched by subsequent \(E_k^{-1}\) for \(k > j\) (since those only modify columns \(k > j\)). So the product \(L\) simply collects all the multiplier columns side by side:</p>
+        \[
+        L = \begin{pmatrix}
+        1 & 0 & 0 & \cdots \\
+        \ell_{21} & 1 & 0 & \cdots \\
+        \ell_{31} & \ell_{32} & 1 & \cdots \\
+        \vdots & \vdots & \vdots & \ddots
+        \end{pmatrix}
+        \]
+        <p>This is why LU decomposition is so elegant: the multipliers computed during elimination <em>are</em> the entries of \(L\). You don't compute \(L\) separately; you record it as you go.</p>
+
+        <h3>Worked example: LU of a \(3 \times 3\) matrix</h3>
+        <p>Factor \(A = \begin{pmatrix} 2 & 1 & 1 \\ 4 & 3 & 3 \\ 8 & 7 & 9 \end{pmatrix}\).</p>
+        <p><em>Step 1:</em> Pivot \(a_{11} = 2\). Multipliers: \(\ell_{21} = 4/2 = 2\), \(\ell_{31} = 8/2 = 4\). Eliminate:</p>
+        \[
+        A^{(2)} = \begin{pmatrix} 2 & 1 & 1 \\ 0 & 1 & 1 \\ 0 & 3 & 5 \end{pmatrix}
+        \]
+        <p><em>Step 2:</em> Pivot \(a_{22}^{(2)} = 1\). Multiplier: \(\ell_{32} = 3/1 = 3\). Eliminate:</p>
+        \[
+        U = \begin{pmatrix} 2 & 1 & 1 \\ 0 & 1 & 1 \\ 0 & 0 & 2 \end{pmatrix}
+        \]
+        <p><em>Assemble \(L\):</em> Place multipliers in their positions:</p>
+        \[
+        L = \begin{pmatrix} 1 & 0 & 0 \\ 2 & 1 & 0 \\ 4 & 3 & 1 \end{pmatrix}
+        \]
+        <p><em>Verify:</em> \(LU = \begin{pmatrix} 1 & 0 & 0 \\ 2 & 1 & 0 \\ 4 & 3 & 1 \end{pmatrix}\begin{pmatrix} 2 & 1 & 1 \\ 0 & 1 & 1 \\ 0 & 0 & 2 \end{pmatrix} = \begin{pmatrix} 2 & 1 & 1 \\ 4 & 3 & 3 \\ 8 & 7 & 9 \end{pmatrix} = A\). ✓</p>
+
+        <h2>Solving \(Ax = b\) via LU</h2>
+        <p>Once \(A = LU\) is computed, solving \(Ax = b\) becomes two triangular solves:</p>
+        \[
+        LUx = b \implies \text{let } y = Ux, \text{ solve } Ly = b \text{ (forward substitution)}, \text{ then solve } Ux = y \text{ (back substitution)}
+        \]
+        <p>Forward substitution exploits the lower-triangular structure of \(L\): \(y_1 = b_1\) (since \(\ell_{11}=1\)), then \(y_2 = b_2 - \ell_{21}y_1\), etc. Back substitution exploits upper-triangular \(U\): \(x_n = y_n / u_{nn}\), then \(x_{n-1} = (y_{n-1} - u_{n-1,n}x_n)/u_{n-1,n-1}\), etc. Both are \(O(n^2)\) — dramatically cheaper than the \(O(n^3)\) factorization.</p>
+
+        <h3>Worked example: solving with the LU above</h3>
+        <p>Solve \(Ax = b\) with \(b = (1, 1, 1)^\top\), using the \(L, U\) from above.</p>
+        <p><em>Forward solve \(Ly = b\):</em></p>
+        \[
+        y_1 = 1; \quad y_2 = 1 - 2(1) = -1; \quad y_3 = 1 - 4(1) - 3(-1) = 0
+        \]
+        <p>So \(y = (1, -1, 0)^\top\).</p>
+        <p><em>Back solve \(Ux = y\):</em></p>
+        \[
+        x_3 = 0/2 = 0; \quad x_2 = (-1 - 1 \cdot 0)/1 = -1; \quad x_1 = (1 - 1 \cdot (-1) - 1 \cdot 0)/2 = 1
+        \]
+        <p>Solution: \(x = (1, -1, 0)^\top\). Verify: \(Ax = (2-1+0, 4-3+0, 8-7+0)^\top = (1,1,1)^\top = b\). ✓</p>
+
+        <h2>When LU fails: zero pivots and the need for permutations</h2>
+        <p>LU decomposition without row swaps exists if and only if all leading principal minors of \(A\) are nonzero (equivalently, all pivots encountered during elimination are nonzero). When a zero pivot appears, elimination stalls — but the matrix may still be invertible. The fix is <strong>partial pivoting</strong>: at each step, swap the current row with a row below that has the largest absolute value in the pivot column.</p>
+
+        <h3>PA = LU: factorization with pivoting</h3>
+        <p>Row swaps are encoded by a permutation matrix \(P\) (orthogonal, with exactly one 1 per row/column). With partial pivoting, elimination produces:</p>
+        \[
+        PA = LU
+        \]
+        <p>where \(P\) records all row swaps performed during elimination. This factorization exists for <em>every</em> invertible matrix (and more generally, for every matrix with full rank). Solving proceeds as before: \(PAx = Pb \implies LUx = Pb\), forward/back substitute with the permuted right-hand side.</p>
+
+        <h3>Why partial pivoting matters numerically</h3>
+        <p>Even when no exact zero pivot occurs, small pivots cause catastrophic numerical instability. If \(|a_{kk}^{(k)}|\) is tiny, the multipliers \(\ell_{ik}\) become huge, amplifying rounding errors. Partial pivoting ensures \(|\ell_{ik}| \leq 1\) for all \(i, k\), bounding error growth. Complete pivoting (swapping both rows and columns) gives even better stability but is rarely worth the overhead; partial pivoting suffices for virtually all practical problems.</p>
+
+        <h3>Worked example: LU with pivoting</h3>
+        <p>Factor \(A = \begin{pmatrix} 0 & 1 \\ 1 & 1 \end{pmatrix}\). Without pivoting, the first pivot is 0 — failure. With partial pivoting: swap rows 1 and 2 (largest entry in column 1 is 1, in row 2). Permutation: \(P = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}\).</p>
+        \[
+        PA = \begin{pmatrix} 1 & 1 \\ 0 & 1 \end{pmatrix}
+        \]
+        <p>This is already upper triangular, so \(U = PA\) and \(L = I\). Factorization: \(PA = LU\) with \(L = I\), \(U = \begin{pmatrix} 1 & 1 \\ 0 & 1 \end{pmatrix}\). ✓</p>
+
+        <h2>Computational cost: why LU dominates</h2>
+        <p>The LU factorization of an \(n \times n\) matrix requires approximately \(\frac{2}{3}n^3\) floating-point operations (flops). Forward/back substitution each require \(n^2\) flops. For large \(n\), the factorization dominates: solving for 100 right-hand sides costs \(\frac{2}{3}n^3 + 100 \cdot 2n^2 \approx \frac{2}{3}n^3\) for large \(n\) — essentially the same as a single solve. This is why LU is the standard direct solver: factor once, solve many times cheaply.</p>
+        <p>Compare to computing \(A^{-1}\) explicitly: forming \(A^{-1}\) costs \(\sim 2n^3\) flops (via LU + \(n\) back-substitutions for columns of \(I\)), and then each solve \(A^{-1}b\) costs \(n^2\) — same asymptotic cost per solve, but with larger constant and worse numerical stability. <em>Never compute \(A^{-1}\) explicitly to solve linear systems.</em> Use LU (or Cholesky for symmetric positive definite, or QR for least squares).</p>
+
+        <h2>Variants and special structures</h2>
+        <ul>
+          <li><strong>Cholesky decomposition:</strong> If \(A\) is symmetric positive definite (Chapter 9), then \(A = LL^\top\) where \(L\) is lower triangular with positive diagonal. Cost: \(\frac{1}{3}n^3\) flops (half of LU). Stability: unconditional (no pivoting needed). This is the preferred solver for covariance matrices, normal equations, and energy minimization.</li>
+          <li><strong>LDL\(^\top\) decomposition:</strong> For symmetric indefinite matrices, \(A = LDL^\top\) where \(D\) is block-diagonal with \(1 \times 1\) and \(2 \times 2\) blocks. Avoids square roots (unlike Cholesky) while preserving symmetry. Used in optimization (KKT systems) and structural mechanics.</li>
+          <li><strong>Banded and sparse LU:</strong> When \(A\) has structure (banded, sparse), specialized orderings (minimum degree, nested dissection) reduce fill-in during factorization. Sparse LU is the engine behind finite element solvers, circuit simulation, and network analysis.</li>
+          <li><strong>Block LU:</strong> Partition \(A\) into blocks and apply the same formulas at the block level (Chapter 3). Enables cache-efficient implementations on modern hardware by maximizing BLAS-3 operations (matrix-matrix multiplies).</li>
+        </ul>
+
+        <h2>Connection to other chapters</h2>
+        <ul>
+          <li><strong>Chapter 4 (Gaussian elimination):</strong> LU is elimination packaged as a factorization. RREF is for theoretical analysis; LU is for computation.</li>
+          <li><strong>Chapter 5 (Determinants):</strong> \(\det(A) = \det(L)\det(U) = \prod u_{ii}\) (since \(\det(L)=1\)). Determinant from LU is \(O(n^3)\) vs. \(O(n!)\) for cofactor expansion.</li>
+          <li><strong>Chapter 9 (Quadratic forms):</strong> Cholesky (\(A=LL^\top\)) exists iff \(A\) is positive definite — a computational test for definiteness that avoids eigenvalue computation.</li>
+          <li><strong>Chapter 11 (SVD):</strong> SVD is more stable than LU for rank-deficient or ill-conditioned problems, but costs \(\sim 21n^3\) flops. Use LU for well-conditioned square systems; SVD for least squares, rank estimation, and pseudoinverses.</li>
+        </ul>
+
+        <h2>Edge cases and common mistakes</h2>
+        <p><strong>Mistake: computing \(A^{-1}\) to solve \(Ax=b\).</strong> As noted above, this is slower and less stable than LU. The only legitimate use of \(A^{-1}\) is theoretical; computationally, always factor.</p>
+        <p><strong>Mistake: forgetting the permutation in \(PA=LU\).</strong> When solving with pivoted LU, you must permute \(b\) first: solve \(LUx = Pb\), not \(LUx = b\). Forgetting \(P\) gives wrong answers. Always store \(P\) alongside \(L, U\).</p>
+        <p><strong>Mistake: assuming LU exists without pivoting.</strong> Many invertible matrices require pivoting (e.g., any matrix with \(a_{11}=0\)). Always use partial pivoting in practice. The unpivoted \(A=LU\) is primarily pedagogical.</p>
+        <p><strong>Edge case: singular matrices.</strong> If \(A\) is singular, elimination produces a zero row in \(U\). LU factorization still exists (with \(U\) singular), but the system \(Ax=b\) may be inconsistent or have infinitely many solutions. Rank-revealing variants (RRQR, SVD) handle this robustly.</p>
+        <p><strong>Numerical caution:</strong> Even with partial pivoting, LU can fail for extremely ill-conditioned matrices. Growth factor \(\rho = \max |u_{ij}| / \max |a_{ij}|\) measures instability; for random matrices \(\rho\) is modest, but pathological examples exist (Wilkinson matrix). In practice, check the condition number estimate after factorization; if too large, switch to QR or SVD.</p>
+
+        <h2>What we built, and where it goes</h2>
+        <ul>
+          <li><strong>LU decomposition</strong> packages Gaussian elimination as \(A = LU\) (or \(PA = LU\) with pivoting), separating expensive factorization from cheap solves.</li>
+          <li><strong>\(L\)</strong> stores elimination multipliers; <strong>\(U\)</strong> is the row echelon form. Both are triangular, enabling \(O(n^2)\) forward/back substitution.</li>
+          <li><strong>Partial pivoting</strong> ensures numerical stability by bounding multiplier growth; it is mandatory in practice.</li>
+          <li><strong>Cholesky</strong> exploits symmetry and positive definiteness for half-cost, unconditionally stable factorization.</li>
+          <li>LU is the computational backbone connecting elimination (Ch. 4), determinants (Ch. 5), quadratic forms (Ch. 9), and serving as baseline for SVD (Ch. 11).</li>
+        </ul>
+        <p>Pencil-and-paper checkpoint: given a \(3 \times 3\) matrix, can you compute its LU factorization by hand, recording multipliers as you eliminate? Can you solve \(Ax=b\) using forward/back substitution without recomputing the factorization? Can you explain why partial pivoting is necessary and how \(P\) modifies the solve?</p>
+        <p>Chapter 11, the final chapter, unifies everything: the <strong>singular value decomposition</strong> generalizes eigen-decomposition to arbitrary (non-square, non-symmetric) matrices, provides optimal low-rank approximation, defines the pseudoinverse for least squares, and reveals the true numerical rank. LU solves well-conditioned square systems; SVD solves everything else. Together, they complete the computational toolkit of linear algebra.</p>
+
+      </article>
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch9/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">9. Quadratic Forms</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch11/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">11. Singular Value Decomposition</span>
+        </a>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
+</body>
+</html>
