@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>4. Systems of Linear Equations and Gaussian Elimination — Linear Algebra (GATE DA) — iTube</title>
+  <meta name="description" content="Gaussian elimination derived as matrix multiplication by elementary matrices, with full worked examples of solving Ax=b, finding null spaces, and determining consistency.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Linear Algebra (GATE DA)</a><span class="sep">/</span>
+        <span>Ch. 4</span>
+      </div>
+      <div class="eyebrow">Linear Algebra (GATE DA)</div>
+      <h1>4. Systems of Linear Equations and Gaussian Elimination</h1>
+      <div class="chapter-meta">
+        <span>Chapter 4 of 11</span>
+        <span class="read-badge">28 min read</span>
+      </div>
+      <article>
+
+        <h2>The central question, made computational</h2>
+        <p>Chapters 1 through 3 built the language: vector spaces, subspaces, span, dependence, matrix multiplication. But they left one question unanswered in practice: <em>given a specific matrix \(A\) and vector \(b\), how do we actually determine whether \(Ax = b\) has a solution, and if so, how do we find all solutions?</em> The theoretical answer — “check whether \(b \in \operatorname{Col}(A)\)” — is correct but not computable without further machinery.</p>
+        <p>This chapter provides that machinery: <strong>Gaussian elimination</strong>. The algorithm transforms \(A\) (or the augmented matrix \([A \mid b]\)) into a simpler form using three elementary row operations, each of which is equivalent to left-multiplication by an invertible matrix. Because these multiplications are invertible, the transformed system has exactly the same solution set as the original. From the simplified form, we can read off:</p>
+        <ul>
+          <li>Whether the system is consistent (has any solution at all).</li>
+          <li>If consistent, a particular solution \(x_p\).</li>
+          <li>A basis for \(\operatorname{Nul}(A)\), giving the complete solution as \(x = x_p + x_h\) where \(x_h \in \operatorname{Nul}(A)\).</li>
+          <li>The pivot columns, which identify a basis for \(\operatorname{Col}(A)\) and determine the rank.</li>
+        </ul>
+        <p>Every subsequent chapter depends on this one. Rank-nullity (Chapter 5), eigenvalues (Chapter 6), LU decomposition (Chapter 10), and SVD (Chapter 11) all either use elimination directly or build on the structural insights it reveals.</p>
+
+        <h2>Elementary row operations as matrix multiplication</h2>
+        <p>Gaussian elimination uses three operations on the rows of a matrix:</p>
+        <ol>
+          <li><strong>Row swap:</strong> interchange rows \(i\) and \(j\).</li>
+          <li><strong>Row scaling:</strong> multiply row \(i\) by a nonzero scalar \(c\).</li>
+          <li><strong>Row replacement:</strong> add \(c\) times row \(j\) to row \(i\) (\(i \neq j\)).</li>
+        </ol>
+        <p>The critical insight is that each operation is equivalent to <strong>left-multiplication by an elementary matrix</strong>. An elementary matrix is obtained by applying the corresponding operation to the identity matrix \(I\). For example, in \(\mathbb{R}^{3 \times 3}\):</p>
+        <ul>
+          <li>Swapping rows 1 and 2: \(E_{\text{swap}} = \begin{pmatrix} 0 & 1 & 0 \\ 1 & 0 & 0 \\ 0 & 0 & 1 \end{pmatrix}\)</li>
+          <li>Scaling row 2 by 3: \(E_{\text{scale}} = \begin{pmatrix} 1 & 0 & 0 \\ 0 & 3 & 0 \\ 0 & 0 & 1 \end{pmatrix}\)</li>
+          <li>Adding 5 times row 1 to row 3: \(E_{\text{rep}} = \begin{pmatrix} 1 & 0 & 0 \\ 0 & 1 & 0 \\ 5 & 0 & 1 \end{pmatrix}\)</li>
+        </ul>
+        <p><strong>Why does this work?</strong> Recall from Chapter 3 that left-multiplication by a matrix acts on rows: the \(i\)-th row of \(EA\) is a linear combination of the rows of \(A\), with coefficients given by the \(i\)-th row of \(E\). When \(E\) differs from \(I\) only in a structured way (one swapped pair, one scaled diagonal entry, one off-diagonal entry), the resulting row operation is exactly the one we intended. Verify with a concrete multiplication if this feels abstract — it is the foundation of everything that follows.</p>
+
+        <h3>Elementary matrices are invertible</h3>
+        <p>Each elementary matrix is invertible, and its inverse is the elementary matrix of the reverse operation:</p>
+        <ul>
+          <li>Swap inverse: swap the same rows back. \(E_{\text{swap}}^{-1} = E_{\text{swap}}\) (swaps are self-inverse).</li>
+          <li>Scale inverse: scale the same row by \(1/c\). \(E_{\text{scale}}^{-1} = \operatorname{diag}(1, \dots, 1/c, \dots, 1)\).</li>
+          <li>Replacement inverse: subtract \(c\) times row \(j\) from row \(i\). \(E_{\text{rep}}^{-1}\) has \(-c\) in position \((i,j)\).</li>
+        </ul>
+        <p>This invertibility is what makes elimination <em>safe</em>: if \(E_k \cdots E_2 E_1 A = U\), then \(A = E_1^{-1} E_2^{-1} \cdots E_k^{-1} U\), so no information is lost. The solution set of \(Ax = b\) is identical to the solution set of \(Ux = E_k \cdots E_1 b\), because each step is reversible.</p>
+
+        <h2>Row echelon form and reduced row echelon form</h2>
+        <p>Gaussian elimination produces a matrix in <strong>row echelon form (REF)</strong>, characterized by:</p>
+        <ol>
+          <li>All zero rows (if any) are at the bottom.</li>
+          <li>The first nonzero entry of each nonzero row (called a <strong>pivot</strong>) is strictly to the right of the pivot in the row above.</li>
+          <li>All entries below a pivot are zero.</li>
+        </ol>
+        <p><strong>Reduced row echelon form (RREF)</strong> adds two more conditions:</p>
+        <ol start="4">
+          <li>Every pivot equals 1.</li>
+          <li>Every pivot is the only nonzero entry in its column.</li>
+        </ol>
+        <p>RREF is <strong>unique</strong> for any given matrix — a deep fact we state without proof here (the proof uses the uniqueness of solutions to certain subsystems). REF is not unique (different pivot choices during elimination can yield different REFs), but the <em>positions</em> of the pivots are invariant. Those positions carry all the structural information we need.</p>
+
+        <h3>Pivot columns and free columns</h3>
+        <p>Columns containing pivots are <strong>pivot columns</strong>; the rest are <strong>free columns</strong>. In RREF, each free column is a linear combination of the pivot columns to its left, with the coefficients visible directly in the entries above the pivots. This is not accidental — it encodes the dependence relations among the original columns of \(A\). Specifically:</p>
+        <ul>
+          <li>The pivot columns of \(A\) (not of RREF!) form a basis for \(\operatorname{Col}(A)\).</li>
+          <li>Each free column of \(A\) is a linear combination of the preceding pivot columns, with the same coefficients as in the RREF.</li>
+        </ul>
+        <p>This is why we care about pivot positions: they tell us which original columns are independent and which are redundant.</p>
+
+        <h2>Solving \(Ax = b\): the complete algorithm</h2>
+        <p>We now assemble the full procedure for solving a linear system. Let \(A\) be \(m \times n\) and \(b \in \mathbb{R}^m\).</p>
+
+        <h3>Step 1: Form the augmented matrix and reduce to RREF</h3>
+        <p>Form \([A \mid b]\) and apply Gaussian elimination to obtain \([R \mid d]\), where \(R\) is the RREF of \(A\) and \(d\) is the transformed right-hand side. Track the operations implicitly (you don’t need to write down the elementary matrices unless you’re computing \(LU\) in Chapter 10).</p>
+
+        <h3>Step 2: Check consistency</h3>
+        <p>The system is <strong>consistent</strong> if and only if no row of \([R \mid d]\) has the form \([0 \ 0 \ \cdots \ 0 \mid c]\) with \(c \neq 0\). Such a row represents the equation \(0 = c\), which is impossible. If such a row exists, the system has no solution; stop here.</p>
+        <p><em>Why does this work?</em> Row operations preserve the solution set (each is invertible left-multiplication). So \(Ax = b\) has a solution iff \(Rx = d\) has a solution. A row \([0 \cdots 0 \mid c]\) with \(c \neq 0\) makes \(Rx = d\) obviously unsolvable.</p>
+
+        <h3>Step 3: Identify pivot and free variables</h3>
+        <p>In \(R\), identify the pivot columns (say columns \(j_1, j_2, \dots, j_r\)) and the free columns. The variables corresponding to pivot columns are <strong>pivot variables</strong>; the rest are <strong>free variables</strong>. There are \(r\) pivot variables and \(n - r\) free variables, where \(r\) is the number of pivots (the <strong>rank</strong> of \(A\)).</p>
+
+        <h3>Step 4: Write the general solution</h3>
+        <p>Express each pivot variable in terms of the free variables by reading the equations from \(Rx = d\). Assign parameters \(t_1, \dots, t_{n-r}\) to the free variables. The general solution takes the form:</p>
+        \[
+        x = x_p + t_1 v_1 + t_2 v_2 + \cdots + t_{n-r} v_{n-r}
+        \]
+        <p>where \(x_p\) is a <strong>particular solution</strong> (obtained by setting all free variables to zero) and \(v_1, \dots, v_{n-r}\) are vectors that span \(\operatorname{Nul}(A)\). Each \(v_i\) corresponds to setting one free variable to 1 and the others to 0, then solving for the pivot variables.</p>
+
+        <h3>Worked example: complete solution of a \(3 \times 4\) system</h3>
+        <p>Solve \(Ax = b\) where</p>
+        \[
+        A = \begin{pmatrix} 1 & 2 & 3 & 4 \\ 2 & 4 & 6 & 8 \\ 1 & 2 & 4 & 6 \end{pmatrix}, \quad b = \begin{pmatrix} 1 \\ 2 \\ 3 \end{pmatrix}
+        \]
+        <p><em>Step 1: Augment and reduce.</em></p>
+        \[
+        [A \mid b] = \left(\begin{array}{cccc|c} 1 & 2 & 3 & 4 & 1 \\ 2 & 4 & 6 & 8 & 2 \\ 1 & 2 & 4 & 6 & 3 \end{array}\right)
+        \]
+        <p>\(R_2 \leftarrow R_2 - 2R_1\): \(\left(\begin{array}{cccc|c} 1 & 2 & 3 & 4 & 1 \\ 0 & 0 & 0 & 0 & 0 \\ 1 & 2 & 4 & 6 & 3 \end{array}\right)\)</p>
+        <p>\(R_3 \leftarrow R_3 - R_1\): \(\left(\begin{array}{cccc|c} 1 & 2 & 3 & 4 & 1 \\ 0 & 0 & 0 & 0 & 0 \\ 0 & 0 & 1 & 2 & 2 \end{array}\right)\)</p>
+        <p>Swap \(R_2 \leftrightarrow R_3\): \(\left(\begin{array}{cccc|c} 1 & 2 & 3 & 4 & 1 \\ 0 & 0 & 1 & 2 & 2 \\ 0 & 0 & 0 & 0 & 0 \end{array}\right)\)</p>
+        <p>\(R_1 \leftarrow R_1 - 3R_2\): \(\left(\begin{array}{cccc|c} 1 & 2 & 0 & -2 & -5 \\ 0 & 0 & 1 & 2 & 2 \\ 0 & 0 & 0 & 0 & 0 \end{array}\right)\)</p>
+        <p>This is RREF. Pivots are in columns 1 and 3; free columns are 2 and 4.</p>
+        <p><em>Step 2: Consistency.</em> No row of the form \([0 \ 0 \ 0 \ 0 \mid c]\) with \(c \neq 0\). System is consistent.</p>
+        <p><em>Step 3: Variables.</em> Pivot variables: \(x_1, x_3\). Free variables: \(x_2 = s\), \(x_4 = t\).</p>
+        <p><em>Step 4: General solution.</em> From RREF:</p>
+        \[
+        \begin{cases} x_1 + 2x_2 - 2x_4 = -5 \\ x_3 + 2x_4 = 2 \end{cases}
+        \implies
+        \begin{cases} x_1 = -5 - 2s + 2t \\ x_3 = 2 - 2t \end{cases}
+        \]
+        <p>In vector form:</p>
+        \[
+        x = \begin{pmatrix} -5 \\ 0 \\ 2 \\ 0 \end{pmatrix} + s \begin{pmatrix} -2 \\ 1 \\ 0 \\ 0 \end{pmatrix} + t \begin{pmatrix} 2 \\ 0 \\ -2 \\ 1 \end{pmatrix}
+        \]
+        <p>The first vector is \(x_p\) (set \(s = t = 0\)). The other two span \(\operatorname{Nul}(A)\). Verify: \(A \begin{pmatrix} -2 \\ 1 \\ 0 \\ 0 \end{pmatrix} = \begin{pmatrix} -2+2 \\ -4+4 \\ -2+2 \end{pmatrix} = \mathbf{0}\) ✓, and similarly for the second null-space vector. The solution set is an affine plane in \(\mathbb{R}^4\): a translate of the 2-dimensional null space by \(x_p\).</p>
+
+        <h2>The homogeneous case: finding a null-space basis</h2>
+        <p>When \(b = \mathbf{0}\), the system is always consistent (zero is always a solution), and \(x_p = \mathbf{0}\). The general solution is simply \(x = t_1 v_1 + \cdots + t_{n-r} v_{n-r}\), where the \(v_i\) are constructed exactly as above: for each free variable, set it to 1 and the others to 0, solve for the pivot variables, and record the resulting vector. These vectors are:</p>
+        <ul>
+          <li>In \(\operatorname{Nul}(A)\) by construction.</li>
+          <li>Linearly independent (each has a 1 in a distinct free-variable position where all others have 0).</li>
+          <li>Spanning \(\operatorname{Nul}(A)\) (every null-space vector arises from some choice of free variables).</li>
+        </ul>
+        <p>So they form a <strong>basis</strong> for \(\operatorname{Nul}(A)\), and \(\dim \operatorname{Nul}(A) = n - r\). This is half of the rank-nullity theorem; Chapter 5 completes it by showing \(\dim \operatorname{Col}(A) = r\).</p>
+
+        <h3>Worked example: null-space basis from RREF</h3>
+        <p>Using the RREF from the previous example (with \(b = \mathbf{0}\)): pivots in columns 1, 3; free in columns 2, 4. Set \(x_2 = 1, x_4 = 0\): then \(x_1 = -2\), \(x_3 = 0\) → \(v_1 = (-2, 1, 0, 0)^\top\). Set \(x_2 = 0, x_4 = 1\): then \(x_1 = 2\), \(x_3 = -2\) → \(v_2 = (2, 0, -2, 1)^\top\). Basis: \(\{v_1, v_2\}\). Dimension of null space: \(4 - 2 = 2\). ✓</p>
+
+        <h2>Consistency revisited: when does \(Ax = b\) have a solution?</h2>
+        <p>We stated the consistency test above (no contradictory row in RREF). Here is the geometric interpretation, connecting back to Chapter 1: \(Ax = b\) is consistent if and only if \(b \in \operatorname{Col}(A)\). The elimination test is the computational version of this membership check. When elimination produces a row \([0 \cdots 0 \mid c]\) with \(c \neq 0\), it has discovered that \(b\) has a component orthogonal to \(\operatorname{Col}(A)\) — specifically, the corresponding row of the elimination matrix gives a vector \(y\) such that \(y^\top A = \mathbf{0}\) but \(y^\top b = c \neq 0\). This is the <strong>Fredholm alternative</strong> in finite dimensions: either \(Ax = b\) has a solution, or there exists \(y\) with \(A^\top y = \mathbf{0}\) and \(y^\top b \neq 0\), but not both. We revisit this in Chapter 7 (orthogonality) and Chapter 8 (projections).</p>
+
+        <h2>Rank from elimination</h2>
+        <p>The <strong>rank</strong> of \(A\) is the number of pivots in its RREF (equivalently, in any REF). From the worked example, \(\operatorname{rank}(A) = 2\). Key facts (proved formally in Chapter 5, but visible now):</p>
+        <ul>
+          <li>\(\operatorname{rank}(A) = \dim \operatorname{Col}(A)\): the pivot columns of \(A\) form a basis for the column space.</li>
+          <li>\(\operatorname{rank}(A) = \dim \operatorname{Row}(A)\): row operations preserve the row space, and the nonzero rows of RREF are a basis for it.</li>
+          <li>\(\operatorname{rank}(A) = \operatorname{rank}(A^\top)\): column rank equals row rank. (This is non-obvious from the definition; Chapter 5 proves it via rank-nullity.)</li>
+        </ul>
+        <p><strong>Important:</strong> The pivot columns of <em>RREF</em> are standard basis vectors and do <em>not</em> form a basis for \(\operatorname{Col}(A)\). To get a column-space basis, take the <strong>corresponding columns of the original matrix \(A\)</strong>. In our example, pivots are in columns 1 and 3 of RREF, so \(\{(1,2,1)^\top, (3,6,4)^\top\}\) is a basis for \(\operatorname{Col}(A)\). Never extract the column-space basis from RREF itself.</p>
+
+        <h2>Edge cases and common mistakes</h2>
+        <p><strong>Mistake: extracting column-space basis from RREF.</strong> As noted above, the pivot columns of RREF are \(\{e_1, e_2, \dots\}\) and span a coordinate subspace, not \(\operatorname{Col}(A)\). Always go back to the original \(A\). This is the single most common error in applied linear algebra exams.</p>
+        <p><strong>Mistake: confusing pivot variables with pivot columns.</strong> Pivot variables correspond to pivot columns, but the terms refer to different objects (variables vs. matrix columns). Be precise: “column 3 is a pivot column” and “\(x_3\) is a pivot variable.”</p>
+        <p><strong>Edge case: no free variables.</strong> If every column is a pivot column (\(r = n\)), then \(\operatorname{Nul}(A) = \{\mathbf{0}\}\), and the system has at most one solution. If also consistent, the solution is unique. This is the case of full column rank.</p>
+        <p><strong>Edge case: no pivot variables.</strong> If \(A = \mathbf{0}\), then \(r = 0\), all variables are free, and \(\operatorname{Nul}(A) = \mathbb{R}^n\). The system \(0x = b\) is consistent only if \(b = \mathbf{0}\), in which case every \(x \in \mathbb{R}^n\) is a solution.</p>
+        <p><strong>Numerical caution:</strong> In exact arithmetic, a pivot is either zero or nonzero. In floating-point, tiny nonzero values may be numerical noise rather than true pivots. Practical implementations use <strong>pivoting</strong> (partial or complete) to choose the largest available entry as pivot, improving numerical stability. Chapter 10 (LU decomposition) formalizes this; Chapter 11 (SVD) provides the gold standard for rank determination in noisy settings.</p>
+        <p><strong>Underdetermined vs. overdetermined.</strong> “More unknowns than equations” (\(n > m\)) guarantees either no solution or infinitely many (never a unique solution, since \(r \leq m < n\) implies at least \(n - r \geq 1\) free variables). “More equations than unknowns” (\(m > n\)) may be inconsistent or have a unique solution, but never infinitely many (unless rows are dependent). These are consequences of \(r \leq \min(m, n)\), not independent rules.</p>
+
+        <h2>What we built, and where it goes</h2>
+        <ul>
+          <li><strong>Gaussian elimination</strong> reduces any matrix to RREF via invertible row operations, preserving the solution set of \(Ax = b\).</li>
+          <li><strong>Consistency</strong> is determined by the absence of contradictory rows in the augmented RREF.</li>
+          <li>The <strong>complete solution</strong> is \(x = x_p + x_h\), where \(x_p\) is particular and \(x_h \in \operatorname{Nul}(A)\) is a linear combination of null-space basis vectors extracted from free variables.</li>
+          <li><strong>Rank</strong> is the number of pivots; pivot columns of \(A\) (not RREF) give a column-space basis.</li>
+          <li>Every row operation is left-multiplication by an invertible elementary matrix — the bridge to LU decomposition in Chapter 10.</li>
+        </ul>
+        <p>Pencil-and-paper checkpoint: given a \(3 \times 5\) matrix, can you reduce it to RREF by hand, identify pivot/free columns, write the general solution of \(Ax = b\) for a given \(b\), and extract bases for both \(\operatorname{Col}(A)\) and \(\operatorname{Nul}(A)\)? Can you explain why the pivot columns of RREF are not a basis for \(\operatorname{Col}(A)\)? If yes, you have internalized the algorithm.</p>
+        <p>Chapter 5 extracts the theoretical payload from this computational machinery: determinants (a scalar test for invertibility), rank (formalized and proven equal for rows and columns), and the rank-nullity theorem (the dimension equation tying everything together). Chapter 6 then uses elimination to compute eigenvalues via the characteristic polynomial. Everything flows from the algorithm built here.</p>
+
+      </article>
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch3/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">3. Matrices and Partitioned Matrices</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch5/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">5. Determinants, Rank, and Nullity</span>
+        </a>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
+</body>
+</html>
