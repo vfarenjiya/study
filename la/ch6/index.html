@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>6. Eigenvalues and Eigenvectors — Linear Algebra (GATE DA) — iTube</title>
+  <meta name="description" content="Eigenvalues and eigenvectors derived from the scaling question, characteristic polynomial built from determinants, diagonalization criteria proved, and the spectral theorem for symmetric matrices introduced.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Linear Algebra (GATE DA)</a><span class="sep">/</span>
+        <span>Ch. 6</span>
+      </div>
+      <div class="eyebrow">Linear Algebra (GATE DA)</div>
+      <h1>6. Eigenvalues and Eigenvectors</h1>
+      <div class="chapter-meta">
+        <span>Chapter 6 of 11</span>
+        <span class="read-badge">26 min read</span>
+      </div>
+      <article>
+
+        <h2>The question that defines eigen-theory</h2>
+        <p>A general \(n \times n\) matrix \(A\) mixes directions: it takes a vector \(x\), stretches it, rotates it, shears it, and outputs something pointing in a completely different direction. But some special vectors escape this mixing. For certain nonzero vectors \(v\), the matrix \(A\) merely <em>scales</em> them:</p>
+        \[
+        Av = \lambda v
+        \]
+        <p>The output points in the same direction as the input (or exactly opposite, if \(\lambda < 0\)); only the magnitude changes. These vectors are the <strong>eigenvectors</strong> of \(A\), and the scaling factors \(\lambda\) are the <strong>eigenvalues</strong>. The word “eigen” (German for “own”) captures the idea: these are the matrix’s <em>own</em> directions, the axes along which it acts simply.</p>
+        <p>Why do we care? Because if we can find enough independent eigenvectors to form a basis of \(\mathbb{R}^n\), then \(A\) becomes <em>diagonal</em> in that basis — all the complexity of rotation and shear disappears, leaving only scaling along coordinate axes. Powers of \(A\), exponentials of \(A\), differential equations involving \(A\), and stability analysis all reduce to scalar operations on eigenvalues. This chapter builds the entire theory from the single equation \(Av = \lambda v\).</p>
+
+        <h2>Finding eigenvalues: the characteristic polynomial</h2>
+        <p>Rewrite \(Av = \lambda v\) as \((A - \lambda I)v = \mathbf{0}\). For a nonzero solution \(v\) to exist, the matrix \(A - \lambda I\) must be singular — its null space must be nontrivial. By Chapter 5, this happens exactly when:</p>
+        \[
+        \det(A - \lambda I) = 0
+        \]
+        <p>The left side is a polynomial in \(\lambda\) of degree \(n\), called the <strong>characteristic polynomial</strong> of \(A\), denoted \(p_A(\lambda)\). Its roots are precisely the eigenvalues of \(A\).</p>
+
+        <h3>Why the characteristic polynomial has degree \(n\)</h3>
+        <p>The determinant of an \(n \times n\) matrix is a sum of products of \(n\) entries, one from each row and column (Leibniz formula, or cofactor expansion). In \(A - \lambda I\), the diagonal entries are \(a_{ii} - \lambda\), and the off-diagonal entries are constants. The term of highest degree in \(\lambda\) comes from the product of all diagonal entries: \((a_{11} - \lambda)(a_{22} - \lambda)\cdots(a_{nn} - \lambda)\), which expands to \((-1)^n \lambda^n + \text{(lower-degree terms)}\). No other product in the determinant expansion can produce \(\lambda^n\) (any off-diagonal entry contributes no \(\lambda\)). So \(p_A(\lambda)\) is monic up to sign, with degree exactly \(n\).</p>
+
+        <h3>Worked example: computing eigenvalues of a \(2 \times 2\) matrix</h3>
+        <p>Let \(A = \begin{pmatrix} 4 & 1 \\ 2 & 3 \end{pmatrix}\). Compute \(p_A(\lambda)\):</p>
+        \[
+        \det(A - \lambda I) = \det\begin{pmatrix} 4 - \lambda & 1 \\ 2 & 3 - \lambda \end{pmatrix} = (4 - \lambda)(3 - \lambda) - 2 \cdot 1
+        \]
+        \[
+        = 12 - 4\lambda - 3\lambda + \lambda^2 - 2 = \lambda^2 - 7\lambda + 10
+        \]
+        <p>Factor: \(\lambda^2 - 7\lambda + 10 = (\lambda - 5)(\lambda - 2)\). Roots: \(\lambda_1 = 5\), \(\lambda_2 = 2\). These are the eigenvalues.</p>
+        <p><em>Verification shortcut:</em> For any \(2 \times 2\) matrix, \(p_A(\lambda) = \lambda^2 - \operatorname{tr}(A)\lambda + \det(A)\), where \(\operatorname{tr}(A) = a_{11} + a_{22}\) is the trace. Here \(\operatorname{tr}(A) = 7\), \(\det(A) = 12 - 2 = 10\), matching our computation. This trace-determinant formula holds for all \(2 \times 2\) matrices and is worth memorizing for exams.</p>
+
+        <h3>Algebraic vs. geometric multiplicity</h3>
+        <p>An eigenvalue \(\lambda\) may appear as a repeated root of \(p_A(\lambda)\). The <strong>algebraic multiplicity</strong> of \(\lambda\) is its multiplicity as a root of the characteristic polynomial. The <strong>geometric multiplicity</strong> is \(\dim \operatorname{Nul}(A - \lambda I)\) — the dimension of the eigenspace, i.e., the number of independent eigenvectors for \(\lambda\).</p>
+        <p><strong>Theorem:</strong> For every eigenvalue \(\lambda\), \(1 \leq \text{geometric multiplicity} \leq \text{algebraic multiplicity}\).</p>
+        <p><em>Proof:</em> Geometric multiplicity \(\geq 1\) because \(\lambda\) being an eigenvalue means \(\operatorname{Nul}(A - \lambda I) \neq \{\mathbf{0}\}\). For the upper bound: if the geometric multiplicity is \(g\), there are \(g\) independent eigenvectors for \(\lambda\). Extend them to a basis of \(\mathbb{R}^n\); in that basis, \(A\) has a block form with \(\lambda I_g\) in the top-left corner. The characteristic polynomial then has \((\lambda - t)^g\) as a factor, so algebraic multiplicity \(\geq g\).</p>
+        <p>This inequality is crucial: when algebraic and geometric multiplicities disagree, diagonalization fails. We return to this below.</p>
+
+        <h2>Finding eigenvectors: null spaces of \(A - \lambda I\)</h2>
+        <p>Once \(\lambda\) is known, finding eigenvectors reduces to solving \((A - \lambda I)v = \mathbf{0}\) — a homogeneous linear system, solved by Gaussian elimination (Chapter 4). The solution set is \(\operatorname{Nul}(A - \lambda I)\), the <strong>eigenspace</strong> corresponding to \(\lambda\). Any nonzero vector in this null space is an eigenvector.</p>
+
+        <h3>Worked example: eigenvectors for the \(2 \times 2\) matrix above</h3>
+        <p>For \(\lambda_1 = 5\): solve \((A - 5I)v = \mathbf{0}\):</p>
+        \[
+        A - 5I = \begin{pmatrix} -1 & 1 \\ 2 & -2 \end{pmatrix} \xrightarrow{\text{RREF}} \begin{pmatrix} 1 & -1 \\ 0 & 0 \end{pmatrix}
+        \]
+        <p>Equation: \(v_1 - v_2 = 0\), so \(v_1 = v_2\). Eigenspace: \(\operatorname{span}\{(1, 1)^\top\}\). Geometric multiplicity = 1.</p>
+        <p>For \(\lambda_2 = 2\): solve \((A - 2I)v = \mathbf{0}\):</p>
+        \[
+        A - 2I = \begin{pmatrix} 2 & 1 \\ 2 & 1 \end{pmatrix} \xrightarrow{\text{RREF}} \begin{pmatrix} 2 & 1 \\ 0 & 0 \end{pmatrix}
+        \]
+        <p>Equation: \(2v_1 + v_2 = 0\), so \(v_2 = -2v_1\). Eigenspace: \(\operatorname{span}\{(1, -2)^\top\}\). Geometric multiplicity = 1.</p>
+        <p>Both eigenvalues have algebraic multiplicity 1 (distinct roots) and geometric multiplicity 1. Total independent eigenvectors: 2 = \(n\). This matrix is diagonalizable (see next section).</p>
+
+        <h2>Diagonalization: when a matrix becomes simple</h2>
+        <p>An \(n \times n\) matrix \(A\) is <strong>diagonalizable</strong> if there exists an invertible matrix \(P\) and a diagonal matrix \(D\) such that \(A = PDP^{-1}\). Equivalently, \(P^{-1}AP = D\). The columns of \(P\) are eigenvectors of \(A\), and the diagonal entries of \(D\) are the corresponding eigenvalues.</p>
+
+        <h3>The diagonalization criterion</h3>
+        <p><strong>Theorem:</strong> \(A\) is diagonalizable if and only if \(\mathbb{R}^n\) has a basis consisting entirely of eigenvectors of \(A\). Equivalently, the sum of the geometric multiplicities of all eigenvalues equals \(n\). Equivalently, for every eigenvalue, algebraic multiplicity = geometric multiplicity.</p>
+        <p><em>Proof (\(\Rightarrow\)): </em>If \(A = PDP^{-1}\), then \(AP = PD\). Column-by-column: \(Ap_j = d_j p_j\), so each column \(p_j\) of \(P\) is an eigenvector with eigenvalue \(d_j\). Since \(P\) is invertible, its columns are independent and form a basis.</p>
+        <p><em>Proof (\(\Leftarrow\)): </em>If \(\{v_1, \dots, v_n\}\) is a basis of eigenvectors with eigenvalues \(\lambda_1, \dots, \lambda_n\), let \(P = [v_1 \ \cdots \ v_n]\) and \(D = \operatorname{diag}(\lambda_1, \dots, \lambda_n)\). Then \(AP = PD\) by construction, and \(P\) is invertible (basis vectors are independent), so \(A = PDP^{-1}\).</p>
+        <p>The equivalence with “algebraic = geometric for every eigenvalue” follows from the fact that the sum of algebraic multiplicities is always \(n\) (degree of \(p_A\)), and the sum of geometric multiplicities is at most \(n\) (independent eigenvectors from distinct eigenspaces are independent — proved below).</p>
+
+        <h3>Independence of eigenvectors from distinct eigenvalues</h3>
+        <p><strong>Theorem:</strong> If \(v_1, \dots, v_k\) are eigenvectors corresponding to <em>distinct</em> eigenvalues \(\lambda_1, \dots, \lambda_k\), then they are linearly independent.</p>
+        <p><em>Proof (by induction on \(k\)):</em> Base case \(k = 1\): a single eigenvector is nonzero, hence independent. Inductive step: assume true for \(k - 1\). Suppose \(c_1 v_1 + \cdots + c_k v_k = \mathbf{0}\). Apply \(A\):</p>
+        \[
+        c_1 \lambda_1 v_1 + \cdots + c_k \lambda_k v_k = \mathbf{0}
+        \]
+        <p>Multiply the original equation by \(\lambda_k\):</p>
+        \[
+        c_1 \lambda_k v_1 + \cdots + c_k \lambda_k v_k = \mathbf{0}
+        \]
+        <p>Subtract: \(c_1(\lambda_1 - \lambda_k)v_1 + \cdots + c_{k-1}(\lambda_{k-1} - \lambda_k)v_{k-1} = \mathbf{0}\). Since the \(\lambda_i\) are distinct, \(\lambda_i - \lambda_k \neq 0\). By the inductive hypothesis, \(v_1, \dots, v_{k-1}\) are independent, so \(c_i(\lambda_i - \lambda_k) = 0\) for all \(i < k\), hence \(c_i = 0\). Substituting back into the original equation gives \(c_k v_k = \mathbf{0}\), so \(c_k = 0\). All coefficients zero. ✓</p>
+        <p>This theorem is why distinct eigenvalues guarantee diagonalizability when there are \(n\) of them: \(n\) distinct eigenvalues → \(n\) independent eigenvectors → basis of eigenvectors → diagonalizable.</p>
+
+        <h3>When diagonalization fails: defective matrices</h3>
+        <p>Not every matrix is diagonalizable. The classic counterexample:</p>
+        \[
+        A = \begin{pmatrix} 2 & 1 \\ 0 & 2 \end{pmatrix}
+        \]
+        <p>Characteristic polynomial: \((2 - \lambda)^2\), so \(\lambda = 2\) with algebraic multiplicity 2. Eigenspace: \(\operatorname{Nul}(A - 2I) = \operatorname{Nul}\begin{pmatrix} 0 & 1 \\ 0 & 0 \end{pmatrix} = \operatorname{span}\{(1, 0)^\top\}\). Geometric multiplicity = 1 &lt; 2. Only one independent eigenvector, not enough for a basis. \(A\) is <strong>defective</strong>.</p>
+        <p>Defective matrices still have a canonical form: the <strong>Jordan normal form</strong>, which replaces missing eigenvectors with generalized eigenvectors. Jordan form is beyond this book’s scope (it requires additional machinery), but knowing that diagonalization can fail is essential. In applications (differential equations, Markov chains), defective matrices correspond to degenerate behavior (resonance, non-exponential decay).</p>
+
+        <h2>The spectral theorem: symmetric matrices are always diagonalizable</h2>
+        <p>For general matrices, diagonalization is conditional. For <strong>symmetric</strong> matrices (\(A^\top = A\)), it is <em>guaranteed</em>, and more: the eigenvectors can be chosen <em>orthonormal</em>. This is the <strong>spectral theorem</strong>, arguably the most important result in applied linear algebra.</p>
+
+        <h3>Statement</h3>
+        <p><strong>Spectral Theorem (Real Symmetric Case):</strong> Let \(A\) be a real symmetric \(n \times n\) matrix. Then:</p>
+        <ol>
+          <li>All eigenvalues of \(A\) are real.</li>
+          <li>Eigenvectors corresponding to distinct eigenvalues are orthogonal.</li>
+          <li>There exists an orthonormal basis of \(\mathbb{R}^n\) consisting of eigenvectors of \(A\).</li>
+          <li>Equivalently, \(A = Q\Lambda Q^\top\) where \(Q\) is orthogonal (\(Q^\top Q = I\)) and \(\Lambda = \operatorname{diag}(\lambda_1, \dots, \lambda_n)\).</li>
+        </ol>
+        <p>We prove parts (1) and (2) here; part (3) follows by induction using orthogonality and the fact that symmetric matrices restricted to invariant subspaces remain symmetric. Part (4) is just the diagonalization \(A = PDP^{-1}\) with \(P = Q\) orthogonal, so \(P^{-1} = Q^\top\).</p>
+
+        <h3>Proof that eigenvalues are real</h3>
+        <p>Suppose \(Av = \lambda v\) with \(v \neq \mathbf{0}\) and possibly complex \(\lambda, v\). Take the conjugate transpose of both sides: \(v^* A^\top = \bar{\lambda} v^*\). Since \(A\) is real symmetric, \(A^\top = A\) and \(A\) is real, so \(v^* A = \bar{\lambda} v^*\). Now compute \(v^* A v\) two ways:</p>
+        \[
+        v^* (Av) = v^* (\lambda v) = \lambda (v^* v)
+        \]
+        \[
+        (v^* A) v = (\bar{\lambda} v^*) v = \bar{\lambda} (v^* v)
+        \]
+        <p>So \(\lambda (v^* v) = \bar{\lambda} (v^* v)\). Since \(v \neq \mathbf{0}\), \(v^* v = \|v\|^2 > 0\). Divide: \(\lambda = \bar{\lambda}\), so \(\lambda\) is real. ✓</p>
+
+        <h3>Proof that eigenvectors for distinct eigenvalues are orthogonal</h3>
+        <p>Let \(Av = \lambda v\) and \(Aw = \mu w\) with \(\lambda \neq \mu\), both real (by part 1). Compute \(w^\top A v\) two ways:</p>
+        \[
+        w^\top (Av) = w^\top (\lambda v) = \lambda (w^\top v)
+        \]
+        \[
+        (w^\top A) v = (A^\top w)^\top v = (Aw)^\top v = (\mu w)^\top v = \mu (w^\top v)
+        \]
+        <p>(We used \(A^\top = A\) in the second line.) So \(\lambda (w^\top v) = \mu (w^\top v)\), hence \((\lambda - \mu)(w^\top v) = 0\). Since \(\lambda \neq \mu\), we must have \(w^\top v = 0\). Orthogonal. ✓</p>
+
+        <h3>Worked example: spectral decomposition of a symmetric matrix</h3>
+        <p>Let \(A = \begin{pmatrix} 2 & 1 \\ 1 & 2 \end{pmatrix}\). Symmetric ✓.</p>
+        <p><em>Eigenvalues:</em> \(p_A(\lambda) = (2-\lambda)^2 - 1 = \lambda^2 - 4\lambda + 3 = (\lambda - 3)(\lambda - 1)\). So \(\lambda_1 = 3\), \(\lambda_2 = 1\). Both real ✓.</p>
+        <p><em>Eigenvectors:</em> For \(\lambda_1 = 3\): \(A - 3I = \begin{pmatrix} -1 & 1 \\ 1 & -1 \end{pmatrix} \to v_1 = (1, 1)^\top\). For \(\lambda_2 = 1\): \(A - I = \begin{pmatrix} 1 & 1 \\ 1 & 1 \end{pmatrix} \to v_2 = (1, -1)^\top\). Check orthogonality: \(v_1^\top v_2 = 1 - 1 = 0\) ✓.</p>
+        <p><em>Normalize:</em> \(q_1 = \frac{1}{\sqrt{2}}(1,1)^\top\), \(q_2 = \frac{1}{\sqrt{2}}(1,-1)^\top\). Form \(Q = \frac{1}{\sqrt{2}}\begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix}\), \(\Lambda = \begin{pmatrix} 3 & 0 \\ 0 & 1 \end{pmatrix}\).</p>
+        <p><em>Verify:</em> \(Q\Lambda Q^\top = \frac{1}{2}\begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix}\begin{pmatrix} 3 & 0 \\ 0 & 1 \end{pmatrix}\begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix} = \frac{1}{2}\begin{pmatrix} 3 & 1 \\ 3 & -1 \end{pmatrix}\begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix} = \frac{1}{2}\begin{pmatrix} 4 & 2 \\ 2 & 4 \end{pmatrix} = A\). ✓</p>
+        <p>This decomposition reveals the geometry of \(A\): it stretches by factor 3 along the direction \((1,1)\) and by factor 1 along \((1,-1)\). Every symmetric matrix admits such a clean geometric interpretation.</p>
+
+        <h2>Applications preview: why eigen-theory matters</h2>
+        <ul>
+          <li><strong>Powers:</strong> If \(A = PDP^{-1}\), then \(A^k = PD^k P^{-1}\). Computing \(D^k\) is trivial (raise each diagonal entry to the \(k\)-th power). This makes Markov chain convergence, recurrence relations, and discrete dynamical systems tractable.</li>
+          <li><strong>Differential equations:</strong> The system \(\dot{x} = Ax\) has solution \(x(t) = e^{At}x(0)\). If \(A\) is diagonalizable, \(e^{At} = Pe^{Dt}P^{-1}\), and \(e^{Dt} = \operatorname{diag}(e^{\lambda_1 t}, \dots, e^{\lambda_n t})\). Stability is determined by the signs of the real parts of eigenvalues.</li>
+          <li><strong>Quadratic forms (Chapter 9):</strong> For symmetric \(A\), the quadratic form \(x^\top A x\) achieves its max/min on the unit sphere at eigenvectors, with values equal to eigenvalues. Optimization reduces to eigenvalue computation.</li>
+          <li><strong>SVD (Chapter 11):</strong> The singular values of any matrix \(A\) are the square roots of the eigenvalues of \(A^\top A\) (which is symmetric). Eigen-theory for symmetric matrices is the foundation of the SVD.</li>
+        </ul>
+
+        <h2>Edge cases and common mistakes</h2>
+        <p><strong>Mistake: confusing algebraic and geometric multiplicity.</strong> Algebraic multiplicity counts roots of the characteristic polynomial; geometric multiplicity counts independent eigenvectors. They are equal for diagonalizable matrices but not in general. Always compute both when assessing diagonalizability.</p>
+        <p><strong>Mistake: assuming every matrix has \(n\) eigenvalues.</strong> Over \(\mathbb{R}\), a degree-\(n\) polynomial may have fewer than \(n\) real roots. Rotation matrices in \(\mathbb{R}^2\) (e.g., \(\begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix}\)) have no real eigenvalues. Over \(\mathbb{C}\), every \(n \times n\) matrix has exactly \(n\) eigenvalues counting multiplicity (Fundamental Theorem of Algebra). This book works over \(\mathbb{R}\) except where noted; remember that real matrices may lack real eigenvalues.</p>
+        <p><strong>Mistake: normalizing eigenvectors before checking orthogonality.</strong> Orthogonality is a direction property, not a length property. Check \(v_i^\top v_j = 0\) first; normalize afterward. For symmetric matrices with distinct eigenvalues, orthogonality is automatic; for repeated eigenvalues, you must apply Gram-Schmidt within the eigenspace (Chapter 7).</p>
+        <p><strong>Edge case: the zero matrix.</strong> Eigenvalue 0 with algebraic multiplicity \(n\). Eigenspace is all of \(\mathbb{R}^n\), geometric multiplicity \(n\). Diagonalizable (already diagonal). Trivial but consistent.</p>
+        <p><strong>Edge case: the identity matrix.</strong> Eigenvalue 1 with algebraic multiplicity \(n\). Every nonzero vector is an eigenvector. Any orthonormal basis works for the spectral decomposition. Highly degenerate but perfectly diagonalizable.</p>
+        <p><strong>Numerical caution:</strong> Computing eigenvalues via the characteristic polynomial is numerically unstable for \(n \geq 5\) (roots of high-degree polynomials are sensitive to coefficient perturbations). Practical algorithms (QR iteration, divide-and-conquer) avoid forming \(p_A\) explicitly. The SVD (Chapter 11) is even more stable for symmetric eigenproblems.</p>
+
+        <h2>What we built, and where it goes</h2>
+        <ul>
+          <li><strong>Eigenvalues</strong> are roots of \(\det(A - \lambda I) = 0\); <strong>eigenvectors</strong> span \(\operatorname{Nul}(A - \lambda I)\).</li>
+          <li><strong>Diagonalization</strong> \(A = PDP^{-1}\) is possible iff there is a basis of eigenvectors, equivalently iff algebraic = geometric multiplicity for every eigenvalue.</li>
+          <li>Eigenvectors for distinct eigenvalues are always independent; for symmetric matrices, they are orthogonal and eigenvalues are real (spectral theorem).</li>
+          <li>The spectral decomposition \(A = Q\Lambda Q^\top\) reveals the geometric action of symmetric matrices as pure scaling along orthogonal axes.</li>
+        </ul>
+        <p>Pencil-and-paper checkpoint: given a \(3 \times 3\) matrix, can you compute its characteristic polynomial, find all eigenvalues and eigenspaces, determine algebraic and geometric multiplicities, and decide whether it is diagonalizable? For a symmetric matrix, can you produce an orthonormal eigenbasis and verify \(A = Q\Lambda Q^\top\)?</p>
+        <p>Chapter 7 introduces orthogonality formally — inner products, norms, orthogonal complements, and the Gram-Schmidt process — providing the geometric language that makes the spectral theorem intuitive. Chapter 8 uses orthogonality to build projection matrices and idempotent operators. Chapter 9 applies the spectral theorem to classify quadratic forms. Chapter 11 generalizes everything to non-square and non-symmetric matrices via the SVD. Eigen-theory is the engine; the remaining chapters build the chassis around it.</p>
+
+      </article>
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch5/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">5. Determinants, Rank, and Nullity</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch7/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">7. Orthogonal Vectors and Orthogonal Matrices</span>
+        </a>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
+</body>
+</html>
