@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>3. Matrices and Partitioned Matrices — Linear Algebra (GATE DA) — iTube</title>
+  <meta name="description" content="Matrix addition, multiplication, transpose, inverse, and partitioned matrices derived from first principles with full proofs of associativity, distributivity, and block operations.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Linear Algebra (GATE DA)</a><span class="sep">/</span>
+        <span>Ch. 3</span>
+      </div>
+      <div class="eyebrow">Linear Algebra (GATE DA)</div>
+      <h1>3. Matrices and Partitioned Matrices</h1>
+      <div class="chapter-meta">
+        <span>Chapter 3 of 11</span>
+        <span class="read-badge">24 min read</span>
+      </div>
+      <article>
+
+        <h2>Why matrices deserve their own chapter</h2>
+        <p>In Chapter 1 we treated \(\mathbb{R}^{m \times n}\) as a vector space — matrices added entrywise, scaled entrywise, satisfying all ten axioms. That was the right abstraction for asking “is this set a subspace?” But it was silent on the operation that makes matrices <em>useful</em>: matrix multiplication. Entrywise addition makes matrices a vector space; matrix multiplication makes them an <em>algebra</em>, and it is multiplication that encodes linear transformations, systems of equations, change of basis, and every decomposition in this book.</p>
+        <p>This chapter does three things. First, it defines matrix multiplication not as a formula to memorize but as the unique operation that makes \(A(Bx) = (AB)x\) hold — composition of linear maps. Second, it proves every algebraic property we will use later (associativity, distributivity, transpose rules, inverse uniqueness) from the definition, line by line. Third, it introduces <strong>partitioned (block) matrices</strong> and shows that block arithmetic obeys the same rules as scalar arithmetic, provided the partitions are conformable — a fact that simplifies proofs and computations throughout the rest of the book.</p>
+
+        <h2>Matrix–vector multiplication: the column picture</h2>
+        <p>Before defining \(AB\), let us understand \(Ax\). Let \(A\) be \(m \times n\) with columns \(a_1, \dots, a_n \in \mathbb{R}^m\), and let \(x = (x_1, \dots, x_n)^\top \in \mathbb{R}^n\). The standard definition is:</p>
+        \[
+        Ax = x_1 a_1 + x_2 a_2 + \cdots + x_n a_n
+        \]
+        <p>Read this carefully: \(Ax\) is a <strong>linear combination of the columns of \(A\)</strong>, with the entries of \(x\) as coefficients. This is not a theorem — it is the <em>definition</em>. Everything else follows from it.</p>
+        <p>Why define it this way? Because it directly encodes what a matrix <em>does</em>: it takes a list of weights \(x\) and produces the corresponding weighted sum of its columns. The span interpretation from Chapter 1 becomes immediate: \(\operatorname{Col}(A) = \{Ax : x \in \mathbb{R}^n\}\) is exactly the set of all linear combinations of the columns. And the system \(Ax = b\) asks: “can \(b\) be expressed as a linear combination of the columns of \(A\)?” — the geometric question behind every linear system.</p>
+
+        <h3>Worked example: computing \(Ax\) two ways</h3>
+        <p>Let \(A = \begin{pmatrix} 1 & 2 \\ 3 & 4 \\ 5 & 6 \end{pmatrix}\) and \(x = \begin{pmatrix} 2 \\ -1 \end{pmatrix}\).</p>
+        <p><em>Column picture:</em> \(Ax = 2 \begin{pmatrix} 1 \\ 3 \\ 5 \end{pmatrix} + (-1) \begin{pmatrix} 2 \\ 4 \\ 6 \end{pmatrix} = \begin{pmatrix} 2 \\ 6 \\ 10 \end{pmatrix} + \begin{pmatrix} -2 \\ -4 \\ -6 \end{pmatrix} = \begin{pmatrix} 0 \\ 2 \\ 4 \end{pmatrix}\).</p>
+        <p><em>Row picture (equivalent):</em> each entry of \(Ax\) is the dot product of a row of \(A\) with \(x\):</p>
+        \[
+        \begin{pmatrix} 1 \cdot 2 + 2 \cdot (-1) \\ 3 \cdot 2 + 4 \cdot (-1) \\ 5 \cdot 2 + 6 \cdot (-1) \end{pmatrix} = \begin{pmatrix} 0 \\ 2 \\ 4 \end{pmatrix}
+        \]
+        <p>Same result. Both pictures are valid; the column picture connects to span and dependence (Chapters 1–2), while the row picture connects to systems of equations (Chapter 4). Hold both in mind.</p>
+
+        <h2>Matrix multiplication: defined by composition</h2>
+        <p>Now let \(A\) be \(m \times n\) and \(B\) be \(n \times p\). What should \(AB\) be? The guiding principle is <strong>composition</strong>: if \(B\) maps \(\mathbb{R}^p \to \mathbb{R}^n\) and \(A\) maps \(\mathbb{R}^n \to \mathbb{R}^m\), then \(AB\) should map \(\mathbb{R}^p \to \mathbb{R}^m\) by applying \(B\) first, then \(A\). That is, we demand:</p>
+        \[
+        (AB)x = A(Bx) \quad \text{for every } x \in \mathbb{R}^p
+        \]
+        <p>This single requirement <em>determines</em> \(AB\) completely. Write \(B\) in terms of its columns: \(B = \begin{pmatrix} b_1 & b_2 & \cdots & b_p \end{pmatrix}\), where each \(b_j \in \mathbb{R}^n\). Then for the standard basis vector \(e_j \in \mathbb{R}^p\), we have \(Be_j = b_j\), so</p>
+        \[
+        (AB)e_j = A(Be_j) = Ab_j
+        \]
+        <p>But \((AB)e_j\) is also the \(j\)-th column of \(AB\). Therefore:</p>
+        \[
+        AB = \begin{pmatrix} Ab_1 & Ab_2 & \cdots & Ab_p \end{pmatrix}
+        \]
+        <p><strong>Definition:</strong> The product \(AB\) is the \(m \times p\) matrix whose \(j\)-th column is \(A\) times the \(j\)-th column of \(B\). Each column \(Ab_j\) is itself a linear combination of the columns of \(A\) (by the column picture above), so every column of \(AB\) lives in \(\operatorname{Col}(A)\). This immediately gives one of the most important inclusions in the subject:</p>
+        \[
+        \operatorname{Col}(AB) \subseteq \operatorname{Col}(A)
+        \]
+        <p>We will return to this in Chapter 5 when proving rank inequalities.</p>
+
+        <h3>The entrywise formula (derived, not asserted)</h3>
+        <p>The column definition is conceptually clean, but sometimes we need the \((i,j)\)-entry of \(AB\). Let \(a_{ik}\) denote the \((i,k)\)-entry of \(A\) and \(b_{kj}\) the \((k,j)\)-entry of \(B\). The \(j\)-th column of \(AB\) is \(Ab_j\), whose \(i\)-th entry is the dot product of row \(i\) of \(A\) with column \(j\) of \(B\):</p>
+        \[
+        (AB)_{ij} = \sum_{k=1}^{n} a_{ik} b_{kj}
+        \]
+        <p>This is the familiar “row-times-column” formula, but now it is a <em>consequence</em> of the composition definition, not the starting point. The composition view explains <em>why</em> the formula looks the way it does: it is computing the action of \(A\) on each column of \(B\).</p>
+
+        <h3>Dimension compatibility</h3>
+        <p>\(AB\) is defined only when the number of columns of \(A\) equals the number of rows of \(B\). If \(A\) is \(m \times n\) and \(B\) is \(n \times p\), then \(AB\) is \(m \times p\). The inner dimensions (\(n\)) must match; the outer dimensions (\(m\) and \(p\)) give the size of the result. This is not arbitrary notation — it reflects the fact that \(B\) outputs vectors in \(\mathbb{R}^n\) and \(A\) expects inputs from \(\mathbb{R}^n\). When dimensions don’t match, the composition \(A \circ B\) is undefined, and so is \(AB\).</p>
+
+        <h2>Algebraic properties: proved, not memorized</h2>
+        <p>Matrix multiplication is associative and distributive, but it is <em>not</em> commutative. These facts are used constantly in later chapters, so they must be proven here from the definitions. We prove each one at the level of individual entries or columns, using only properties of real-number arithmetic.</p>
+
+        <h3>Associativity: \((AB)C = A(BC)\)</h3>
+        <p>Let \(A\) be \(m \times n\), \(B\) be \(n \times p\), \(C\) be \(p \times q\). Both sides are \(m \times q\). We show they agree on every column. Let \(c_j\) be the \(j\)-th column of \(C\). Then:</p>
+        \[
+        \big((AB)C\big)_j = (AB)c_j = A(Bc_j) \quad \text{(by the composition definition applied twice)}
+        \]
+        \[
+        \big(A(BC)\big)_j = A\big((BC)_j\big) = A(Bc_j) \quad \text{(since the \(j\)-th column of \(BC\) is \(Bc_j\))}
+        \]
+        <p>Both expressions equal \(A(Bc_j)\). Since this holds for every column \(j\), the matrices are equal. Notice what made this work: the composition definition reduced associativity of matrix multiplication to associativity of <em>function application</em> — \(A(B(c_j))\) is unambiguous because function composition is associative. The entire proof is two lines once the definition is right.</p>
+
+        <h3>Distributivity: \(A(B + C) = AB + AC\) and \((A + B)C = AC + BC\)</h3>
+        <p>We prove the first; the second is analogous. Let \(B\) and \(C\) be \(n \times p\). For any column index \(j\), the \(j\)-th column of \(B + C\) is \(b_j + c_j\) (entrywise addition). Then:</p>
+        \[
+        \big(A(B + C)\big)_j = A(b_j + c_j)
+        \]
+        <p>Now use the fact that matrix–vector multiplication distributes over vector addition — which itself follows from the column-picture definition and distributivity in \(\mathbb{R}\):</p>
+        \[
+        A(b_j + c_j) = Ab_j + Ac_j = (AB)_j + (AC)_j = (AB + AC)_j
+        \]
+        <p>Every step is justified: the first equality is the definition of matrix–vector multiplication applied to a sum; the second is distributivity of scalar multiplication and addition in \(\mathbb{R}^m\) (vector space axioms from Chapter 1); the third is the definition of matrix addition. Column-by-column equality gives matrix equality.</p>
+
+        <h3>Non-commutativity: a concrete counterexample</h3>
+        <p>Matrix multiplication is <em>not</em> commutative in general. Even when both \(AB\) and \(BA\) are defined and square, they can differ. Take:</p>
+        \[
+        A = \begin{pmatrix} 1 & 2 \\ 0 & 1 \end{pmatrix}, \quad B = \begin{pmatrix} 1 & 0 \\ 1 & 1 \end{pmatrix}
+        \]
+        <p>Compute both products:</p>
+        \[
+        AB = \begin{pmatrix} 1 \cdot 1 + 2 \cdot 1 & 1 \cdot 0 + 2 \cdot 1 \\ 0 \cdot 1 + 1 \cdot 1 & 0 \cdot 0 + 1 \cdot 1 \end{pmatrix} = \begin{pmatrix} 3 & 2 \\ 1 & 1 \end{pmatrix}
+        \]
+        \[
+        BA = \begin{pmatrix} 1 \cdot 1 + 0 \cdot 0 & 1 \cdot 2 + 0 \cdot 1 \\ 1 \cdot 1 + 1 \cdot 0 & 1 \cdot 2 + 1 \cdot 1 \end{pmatrix} = \begin{pmatrix} 1 & 2 \\ 1 & 3 \end{pmatrix}
+        \]
+        <p>\(AB \neq BA\). Never assume commutativity unless you have proven it for your specific matrices (e.g., diagonal matrices commute with each other, and any matrix commutes with scalar multiples of the identity). This is the single most common algebraic error in linear algebra.</p>
+
+        <h2>The transpose: definition and four key identities</h2>
+        <p>For an \(m \times n\) matrix \(A\), the <strong>transpose</strong> \(A^\top\) is the \(n \times m\) matrix with \((A^\top)_{ij} = A_{ji}\). Rows become columns and vice versa. The transpose appears everywhere — in symmetric matrices (Chapter 1, Example 6), in orthogonal matrices (Chapter 7), in quadratic forms (Chapter 9), and in the SVD (Chapter 11). Four identities govern its behavior, and all four are worth proving now.</p>
+
+        <h3>Identity 1: \((A^\top)^\top = A\)</h3>
+        <p>Immediate from the definition: \(((A^\top)^\top)_{ij} = (A^\top)_{ji} = A_{ij}\). Two swaps return to the original.</p>
+
+        <h3>Identity 2: \((A + B)^\top = A^\top + B^\top\)</h3>
+        <p>Entrywise: \(((A + B)^\top)_{ij} = (A + B)_{ji} = A_{ji} + B_{ji} = (A^\top)_{ij} + (B^\top)_{ij} = (A^\top + B^\top)_{ij}\). Transpose distributes over addition.</p>
+
+        <h3>Identity 3: \((cA)^\top = cA^\top\)</h3>
+        <p>\(((cA)^\top)_{ij} = (cA)_{ji} = c A_{ji} = c (A^\top)_{ij}\). Scalars pass through the transpose unchanged.</p>
+
+        <h3>Identity 4: \((AB)^\top = B^\top A^\top\) (the reversal rule)</h3>
+        <p>This is the most important and most frequently misapplied identity. Let \(A\) be \(m \times n\) and \(B\) be \(n \times p\). Then \(AB\) is \(m \times p\), so \((AB)^\top\) is \(p \times m\). Also \(B^\top\) is \(p \times n\) and \(A^\top\) is \(n \times m\), so \(B^\top A^\top\) is \(p \times m\) — dimensions match. Now compare entries:</p>
+        \[
+        \big((AB)^\top\big)_{ij} = (AB)_{ji} = \sum_{k=1}^{n} A_{jk} B_{ki}
+        \]
+        \[
+        (B^\top A^\top)_{ij} = \sum_{k=1}^{n} (B^\top)_{ik} (A^\top)_{kj} = \sum_{k=1}^{n} B_{ki} A_{jk}
+        \]
+        <p>The two sums are identical term-by-term (real multiplication is commutative: \(A_{jk} B_{ki} = B_{ki} A_{jk}\)). So \((AB)^\top = B^\top A^\top\). Note the <strong>reversal</strong>: the order flips. This is why \((ABC)^\top = C^\top B^\top A^\top\), not \(A^\top B^\top C^\top\). Getting the order wrong is the most common transpose mistake on exams.</p>
+
+        <h2>Special matrices and their properties</h2>
+        <p>Certain classes of matrices appear repeatedly. We define them here and record the properties that make them special.</p>
+
+        <h3>The identity matrix</h3>
+        <p>The \(n \times n\) <strong>identity matrix</strong> \(I_n\) has 1s on the diagonal and 0s elsewhere. Its defining property is \(I_n x = x\) for every \(x \in \mathbb{R}^n\), which follows from the column picture: the columns of \(I_n\) are the standard basis vectors \(e_1, \dots, e_n\), so \(I_n x = x_1 e_1 + \cdots + x_n e_n = x\). Consequently, for any \(m \times n\) matrix \(A\):</p>
+        \[
+        AI_n = A \quad \text{and} \quad I_m A = A
+        \]
+        <p>(Note the subscripts: the identity must match the appropriate dimension.) The identity matrix is the multiplicative unit of matrix algebra, playing the same role that 1 plays in scalar arithmetic.</p>
+
+        <h3>Diagonal matrices</h3>
+        <p>A square matrix \(D\) is <strong>diagonal</strong> if \(D_{ij} = 0\) whenever \(i \neq j\). Diagonal matrices commute with each other: if \(D\) and \(E\) are both \(n \times n\) diagonal, then \((DE)_{ij} = D_{ii} E_{jj}\) when \(i = j\) and 0 otherwise, which equals \((ED)_{ij}\). Multiplying by a diagonal matrix on the left scales rows; multiplying on the right scales columns. This makes diagonal matrices computationally trivial and theoretically central — Chapters 6 and 11 are essentially about finding bases in which a matrix becomes diagonal (or nearly so).</p>
+
+        <h3>Symmetric and skew-symmetric matrices</h3>
+        <p>\(A\) is <strong>symmetric</strong> if \(A^\top = A\); <strong>skew-symmetric</strong> if \(A^\top = -A\). From Chapter 1, Example 6, symmetric matrices form a subspace. Skew-symmetric matrices also form a subspace (check: \((A+B)^\top = A^\top + B^\top = -A - B = -(A+B)\), and \((cA)^\top = cA^\top = -cA\)). Every square matrix decomposes uniquely as the sum of a symmetric and a skew-symmetric part:</p>
+        \[
+        A = \underbrace{\frac{A + A^\top}{2}}_{\text{symmetric}} + \underbrace{\frac{A - A^\top}{2}}_{\text{skew-symmetric}}
+        \]
+        <p>Verify: the sum is \((A + A^\top + A - A^\top)/2 = A\). The first term equals its transpose; the second equals the negative of its transpose. This decomposition is unique because if \(A = S + K = S' + K'\) with \(S, S'\) symmetric and \(K, K'\) skew, then \(S - S' = K' - K\) is both symmetric and skew-symmetric, hence zero (the only matrix satisfying \(M^\top = M\) and \(M^\top = -M\) is \(M = \mathbf{0}\)). This decomposition returns in Chapter 9 (quadratic forms depend only on the symmetric part).</p>
+
+        <h2>Inverses: definition, uniqueness, and computation preview</h2>
+        <p>An \(n \times n\) matrix \(A\) is <strong>invertible</strong> (or <strong>nonsingular</strong>) if there exists an \(n \times n\) matrix \(B\) such that \(AB = I_n\) and \(BA = I_n\). Such a \(B\) is called the <strong>inverse</strong> of \(A\), written \(A^{-1}\).</p>
+
+        <h3>Uniqueness of the inverse</h3>
+        <p>If \(B\) and \(C\) both satisfy the inverse conditions for \(A\), then \(B = C\). Proof:</p>
+        \[
+        B = BI_n = B(AC) = (BA)C = I_n C = C
+        \]
+        <p>Each step uses either the identity property or associativity (proven above). So “the inverse” is well-defined when it exists.</p>
+
+        <h3>Properties of inverses</h3>
+        <ul>
+          <li><strong>\((A^{-1})^{-1} = A\):</strong> immediate from the definition — \(A\) satisfies the inverse conditions for \(A^{-1}\).</li>
+          <li><strong>\((AB)^{-1} = B^{-1} A^{-1}\):</strong> check: \((AB)(B^{-1}A^{-1}) = A(BB^{-1})A^{-1} = AIA^{-1} = AA^{-1} = I\), and similarly from the other side. Note the reversal, analogous to the transpose rule.</li>
+          <li><strong>\((A^\top)^{-1} = (A^{-1})^\top\):</strong> take the transpose of \(AA^{-1} = I\): \((A^{-1})^\top A^\top = I^\top = I\). Similarly \(A^\top (A^{-1})^\top = I\). So \((A^{-1})^\top\) is the inverse of \(A^\top\).</li>
+        </ul>
+        <p>These three identities are used constantly in Chapters 6–11. Memorize them, but more importantly, be able to re-derive each one in two lines using associativity and the definition.</p>
+
+        <h3>When is a matrix invertible?</h3>
+        <p>We defer the full characterization to Chapter 5 (determinant nonzero, full rank, trivial null space — all equivalent). For now, note two necessary conditions: (1) \(A\) must be square (otherwise \(AB\) and \(BA\) cannot both be identity matrices of the same size); (2) the columns of \(A\) must be linearly independent (if \(Ac = \mathbf{0}\) for some \(c \neq \mathbf{0}\), then \(A\) cannot have a left inverse, since \(A^{-1}Ac = c \neq \mathbf{0}\) but also \(A^{-1}\mathbf{0} = \mathbf{0}\)). Chapter 4’s Gaussian elimination will give us an algorithmic test.</p>
+
+        <h2>Partitioned matrices: blocks behave like scalars</h2>
+        <p>Large matrices are often naturally divided into submatrices, or <strong>blocks</strong>. Writing a matrix in block form is not just notation — it reveals structure and simplifies both proofs and computations. The key insight is that <strong>block arithmetic obeys the same rules as scalar arithmetic, provided the block dimensions are conformable</strong>.</p>
+
+        <h3>Block addition and scalar multiplication</h3>
+        <p>If \(A\) and \(B\) are partitioned identically (same block grid), then addition and scaling are performed block-by-block:</p>
+        \[
+        \begin{pmatrix} A_{11} & A_{12} \\ A_{21} & A_{22} \end{pmatrix} + \begin{pmatrix} B_{11} & B_{12} \\ B_{21} & B_{22} \end{pmatrix} = \begin{pmatrix} A_{11} + B_{11} & A_{12} + B_{12} \\ A_{21} + B_{21} & A_{22} + B_{22} \end{pmatrix}
+        \]
+        <p>This is immediate from entrywise addition. No surprises.</p>
+
+        <h3>Block multiplication: the main result</h3>
+        <p>Let \(A\) be partitioned into blocks \(A_{ij}\) and \(B\) into blocks \(B_{jk}\), where the column partition of \(A\) matches the row partition of \(B\) (this is the conformability condition). Then:</p>
+        \[
+        (AB)_{ik} = \sum_{j} A_{ij} B_{jk}
+        \]
+        <p>This looks exactly like the scalar entrywise formula, but with blocks instead of scalars. Why does it work? Because matrix multiplication is defined column-by-column, and each column of \(AB\) is a linear combination of columns of \(A\) — when \(A\) is partitioned, those linear combinations respect the block structure. The proof is a careful but straightforward unpacking of the column definition; we illustrate with the most commonly used case.</p>
+
+        <h3>Worked example: \(2 \times 2\) block multiplication</h3>
+        <p>Let</p>
+        \[
+        A = \begin{pmatrix} A_{11} & A_{12} \\ A_{21} & A_{22} \end{pmatrix}, \quad B = \begin{pmatrix} B_{11} & B_{12} \\ B_{21} & B_{22} \end{pmatrix}
+        \]
+        <p>where \(A_{11}\) is \(m_1 \times n_1\), \(A_{12}\) is \(m_1 \times n_2\), \(B_{11}\) is \(n_1 \times p_1\), \(B_{21}\) is \(n_2 \times p_1\), etc., with \(n_1 + n_2\) matching appropriately. Then:</p>
+        \[
+        AB = \begin{pmatrix} A_{11}B_{11} + A_{12}B_{21} & A_{11}B_{12} + A_{12}B_{22} \\ A_{21}B_{11} + A_{22}B_{21} & A_{21}B_{12} + A_{22}B_{22} \end{pmatrix}
+        \]
+        <p>Each block product is well-defined because the conformability condition ensures inner dimensions match within each term. The formula is identical to scalar \(2 \times 2\) multiplication, with blocks replacing numbers. This is the power of partitioned matrices: complex multiplications decompose into smaller, structured pieces.</p>
+
+        <h3>Application: block inversion formula</h3>
+        <p>Suppose \(M = \begin{pmatrix} A & B \\ C & D \end{pmatrix}\) where \(A\) is invertible. Under suitable conditions (specifically, the <strong>Schur complement</strong> \(S = D - CA^{-1}B\) is invertible), the inverse is:</p>
+        \[
+        M^{-1} = \begin{pmatrix} A^{-1} + A^{-1}BS^{-1}CA^{-1} & -A^{-1}BS^{-1} \\ -S^{-1}CA^{-1} & S^{-1} \end{pmatrix}
+        \]
+        <p>We won’t derive this fully here (it’s a multi-step verification using block multiplication), but we note its significance: it reduces inverting a large matrix to inverting two smaller ones (\(A\) and \(S\)). This formula is foundational for the LU decomposition (Chapter 10) and appears in statistics (covariance matrix inversion), optimization (KKT systems), and numerical methods. The key takeaway: block structure turns hard problems into structured subproblems.</p>
+
+        <h3>Common block structures</h3>
+        <ul>
+          <li><strong>Block diagonal:</strong> \(\operatorname{diag}(A_1, A_2, \dots, A_k)\) has square blocks \(A_i\) on the diagonal and zeros elsewhere. Powers, exponentials, and inverses act block-by-block: \(\operatorname{diag}(A_1, \dots, A_k)^{-1} = \operatorname{diag}(A_1^{-1}, \dots, A_k^{-1})\) when each \(A_i\) is invertible.</li>
+          <li><strong>Block triangular:</strong> upper or lower block triangular matrices have invertibility determined by their diagonal blocks: \(\begin{pmatrix} A & B \\ 0 & D \end{pmatrix}\) is invertible iff \(A\) and \(D\) are invertible.</li>
+          <li><strong>Rank-one updates:</strong> \(A + uv^\top\) where \(u, v\) are vectors. The Sherman-Morrison formula gives \((A + uv^\top)^{-1}\) in terms of \(A^{-1}\) — another block-structure result disguised as a scalar formula.</li>
+        </ul>
+
+        <h2>Edge cases and common mistakes</h2>
+        <p><strong>Dimension mismatches.</strong> The most frequent error in matrix algebra is writing \(AB\) when \(A\) has \(n\) columns but \(B\) has \(m \neq n\) rows. Always verify inner dimensions before multiplying. In block arithmetic, this means checking that every block product \(A_{ij}B_{jk}\) is conformable — a single mismatched block invalidates the entire computation.</p>
+        <p><strong>Assuming commutativity.</strong> Even when \(AB\) and \(BA\) are both defined, they are generally unequal. Never write \(AB = BA\) without proof. Special cases where commutativity holds: \(A\) commutes with \(I\), with \(cI\), with \(A^k\), with any polynomial in \(A\), and with \(A^{-1}\) (if it exists). Diagonal matrices commute with each other. But these are exceptions, not rules.</p>
+        <p><strong>Transpose order errors.</strong> \((AB)^\top = B^\top A^\top\), not \(A^\top B^\top\). The reversal is non-negotiable. When working with long products, apply the rule iteratively: \((ABC)^\top = C^\top B^\top A^\top\). Write parentheses explicitly until the habit is automatic.</p>
+        <p><strong>Confusing \(A^{-1}\) with \(1/A\).</strong> There is no such thing as “dividing by a matrix.” The expression \(B/A\) is meaningless; write \(BA^{-1}\) or \(A^{-1}B\) depending on which side the inverse belongs. And remember: \(A^{-1}\) exists only for square, nonsingular matrices.</p>
+        <p><strong>Block conformability assumptions.</strong> When writing a block multiplication formula, always state the dimensions of each block. A formula that works for one partition may fail for another. The phrase “assuming conformable partitions” is not pedantry — it is the hypothesis of the theorem.</p>
+
+        <h2>What we built, and where it goes</h2>
+        <ul>
+          <li><strong>Matrix–vector multiplication</strong> is defined as a linear combination of columns: \(Ax = \sum x_i a_i\). This connects directly to span and column space.</li>
+          <li><strong>Matrix multiplication</strong> is defined by composition: the \(j\)-th column of \(AB\) is \(A\) times the \(j\)-th column of \(B\). Associativity and distributivity follow from this definition.</li>
+          <li><strong>Transpose</strong> satisfies four identities, most importantly \((AB)^\top = B^\top A^\top\) with order reversal.</li>
+          <li><strong>Inverses</strong> are unique when they exist, satisfy \((AB)^{-1} = B^{-1}A^{-1}\) and \((A^\top)^{-1} = (A^{-1})^\top\), and exist only for square nonsingular matrices.</li>
+          <li><strong>Partitioned matrices</strong> obey the same arithmetic rules as scalars under conformable partitions, enabling structured computation and proof.</li>
+        </ul>
+        <p>Pencil-and-paper checkpoint: can you derive \((AB)^\top = B^\top A^\top\) from the entrywise definition without looking? Can you compute a \(2 \times 2\) block product and verify each block’s dimensions? Can you explain why \(Ax\) is a linear combination of columns, not rows? If yes, the machinery is ready.</p>
+        <p>Chapter 4 puts this machinery to work: Gaussian elimination solves \(Ax = b\) by systematically transforming \(A\) into a form where the solution is visible. Every step of elimination is a matrix multiplication (by an elementary matrix), and every result from this chapter — associativity, invertibility, block structure — is used in the analysis. Chapter 5 then extracts rank, nullity, and determinant from the eliminated form, completing the bridge from abstract vector spaces to concrete computation.</p>
+
+      </article>
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch2/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">2. Linear Dependence and Independence of Vectors</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch4/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">4. Systems of Linear Equations and Gaussian Elimination</span>
+        </a>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
+</body>
+</html>
