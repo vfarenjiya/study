@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>8. Projections, Projection Matrices, and Idempotent Matrices — Linear Algebra (GATE DA) — iTube</title>
+  <meta name="description" content="Orthogonal projections derived from first principles, projection matrices characterized as symmetric idempotents, least squares connection established, with full worked examples and edge cases.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Linear Algebra (GATE DA)</a><span class="sep">/</span>
+        <span>Ch. 8</span>
+      </div>
+      <div class="eyebrow">Linear Algebra (GATE DA)</div>
+      <h1>8. Projections, Projection Matrices, and Idempotent Matrices</h1>
+      <div class="chapter-meta">
+        <span>Chapter 8 of 11</span>
+        <span class="read-badge">25 min read</span>
+      </div>
+      <article>
+
+        <h2>The question that motivates projections</h2>
+        <p>In Chapter 7 we learned to decompose \(\mathbb{R}^n\) into orthogonal subspaces: \(V = W \oplus W^\perp\). Every vector \(v \in V\) can be written uniquely as \(v = w + w^\perp\) with \(w \in W\) and \(w^\perp \in W^\perp\). But how do we <em>compute</em> \(w\) and \(w^\perp\) given a description of \(W\) (say, as the column space of a matrix \(A\))? The answer is the <strong>orthogonal projection</strong>, and it is the single most important computational tool in applied linear algebra.</p>
+        <p>Projections solve three fundamental problems at once:</p>
+        <ul>
+          <li><strong>Decomposition:</strong> Given \(v\) and subspace \(W\), find the closest point in \(W\) to \(v\) (the projection) and the residual error (the orthogonal component).</li>
+          <li><strong>Least squares:</strong> When \(Ax = b\) is inconsistent (\(b \notin \operatorname{Col}(A)\)), the best approximate solution minimizes \(\|Ax - b\|\); this is exactly the projection of \(b\) onto \(\operatorname{Col}(A)\).</li>
+          <li><strong>Idempotent operators:</strong> Projection matrices satisfy \(P^2 = P\) — applying them twice is the same as applying them once. This algebraic property characterizes projections completely and connects to statistics (hat matrices), signal processing (filters), and numerical methods (preconditioners).</li>
+        </ul>
+        <p>This chapter derives everything from the orthogonality condition established in Chapter 7, proving that the projection formula is not a trick but the unique solution to a geometric optimization problem.</p>
+
+        <h2>Orthogonal projection onto a subspace</h2>
+        <p>Let \(W\) be a subspace of \(\mathbb{R}^n\). The <strong>orthogonal projection</strong> of \(v \in \mathbb{R}^n\) onto \(W\) is the unique vector \(\hat{v} \in W\) such that \(v - \hat{v} \in W^\perp\). Equivalently, \(\hat{v}\) is the closest point in \(W\) to \(v\) (we prove this equivalence below).</p>
+
+        <h3>Existence and uniqueness</h3>
+        <p>From Chapter 7, \(\mathbb{R}^n = W \oplus W^\perp\): every \(v\) decomposes uniquely as \(v = w + w^\perp\) with \(w \in W\), \(w^\perp \in W^\perp\). Define \(\hat{v} = w\). Then \(v - \hat{v} = w^\perp \in W^\perp\), satisfying the definition. Uniqueness follows from the direct sum decomposition: if \(\hat{v}_1, \hat{v}_2 \in W\) both satisfy \(v - \hat{v}_i \in W^\perp\), then \(\hat{v}_1 - \hat{v}_2 \in W \cap W^\perp = \{\mathbf{0}\}\), so \(\hat{v}_1 = \hat{v}_2\).</p>
+
+        <h3>The projection minimizes distance</h3>
+        <p><strong>Theorem:</strong> \(\hat{v}\) is the unique minimizer of \(\|v - w\|\) over all \(w \in W\).</p>
+        <p><em>Proof:</em> For any \(w \in W\), write \(v - w = (v - \hat{v}) + (\hat{v} - w)\). Note \(v - \hat{v} \in W^\perp\) and \(\hat{v} - w \in W\), so these two vectors are orthogonal. By the Pythagorean theorem (Chapter 7):</p>
+        \[
+        \|v - w\|^2 = \|v - \hat{v}\|^2 + \|\hat{v} - w\|^2 \geq \|v - \hat{v}\|^2
+        \]
+        <p>with equality iff \(\|\hat{v} - w\| = 0\), i.e., \(w = \hat{v}\). So \(\hat{v}\) is the unique closest point. ✓</p>
+        <p>This is why orthogonal projection solves least squares: minimizing \(\|Ax - b\|\) over \(x\) is equivalent to finding the closest point in \(\operatorname{Col}(A)\) to \(b\), which is the projection of \(b\) onto \(\operatorname{Col}(A)\).</p>
+
+        <h2>The projection formula: derived from orthogonality</h2>
+        <p>Suppose \(W = \operatorname{Col}(A)\) where \(A\) is \(m \times n\) with linearly independent columns (full column rank). We want \(\hat{b} = A\hat{x}\) for some \(\hat{x} \in \mathbb{R}^n\), with \(b - A\hat{x} \perp \operatorname{Col}(A)\). Orthogonality to \(\operatorname{Col}(A)\) means orthogonality to every column of \(A\), which is equivalent to:</p>
+        \[
+        A^\top (b - A\hat{x}) = \mathbf{0}
+        \]
+        <p>(Recall from Chapter 7: \(z \perp \operatorname{Col}(A) \iff A^\top z = \mathbf{0}\).) Rearranging gives the <strong>normal equations</strong>:</p>
+        \[
+        A^\top A \hat{x} = A^\top b
+        \]
+        <p>Since \(A\) has full column rank, \(A^\top A\) is invertible (proof: if \(A^\top A x = \mathbf{0}\), then \(x^\top A^\top A x = \|Ax\|^2 = 0\), so \(Ax = \mathbf{0}\), so \(x = \mathbf{0}\) by independence). Therefore:</p>
+        \[
+        \hat{x} = (A^\top A)^{-1} A^\top b
+        \]
+        <p>and the projection is</p>
+        \[
+        \hat{b} = A\hat{x} = A(A^\top A)^{-1} A^\top b
+        \]
+        <p>The matrix \(P = A(A^\top A)^{-1} A^\top\) is the <strong>projection matrix</strong> onto \(\operatorname{Col}(A)\). It depends only on \(A\) (i.e., on the subspace \(W\)), not on \(b\).</p>
+
+        <h3>Worked example: projecting onto a line in \(\mathbb{R}^3\)</h3>
+        <p>Project \(b = (1, 2, 3)^\top\) onto the line spanned by \(a = (1, 1, 1)^\top\). Here \(A = a\) is \(3 \times 1\).</p>
+        <p><em>Step 1: Compute \(A^\top A\) and \(A^\top b\).</em></p>
+        \[
+        A^\top A = \begin{pmatrix} 1 & 1 & 1 \end{pmatrix} \begin{pmatrix} 1 \\ 1 \\ 1 \end{pmatrix} = 3
+        \]
+        \[
+        A^\top b = \begin{pmatrix} 1 & 1 & 1 \end{pmatrix} \begin{pmatrix} 1 \\ 2 \\ 3 \end{pmatrix} = 6
+        \]
+        <p><em>Step 2: Solve normal equation.</em> \(3\hat{x} = 6 \implies \hat{x} = 2\).</p>
+        <p><em>Step 3: Compute projection.</em> \(\hat{b} = A\hat{x} = 2(1,1,1)^\top = (2,2,2)^\top\).</p>
+        <p><em>Verify orthogonality:</em> \(b - \hat{b} = (-1, 0, 1)^\top\). Dot with \(a\): \((-1)(1) + 0(1) + 1(1) = 0\). ✓ Perpendicular.</p>
+        <p><em>Projection matrix:</em> \(P = \frac{1}{3}\begin{pmatrix} 1 \\ 1 \\ 1 \end{pmatrix}\begin{pmatrix} 1 & 1 & 1 \end{pmatrix} = \frac{1}{3}\begin{pmatrix} 1 & 1 & 1 \\ 1 & 1 & 1 \\ 1 & 1 & 1 \end{pmatrix}\). Check: \(Pb = \frac{1}{3}(6,6,6)^\top = (2,2,2)^\top\). ✓</p>
+
+        <h3>Special case: projection onto an orthonormal basis</h3>
+        <p>If \(W\) has an orthonormal basis \(\{q_1, \dots, q_k\}\), let \(Q = [q_1 \ \cdots \ q_k]\). Then \(Q^\top Q = I_k\) (orthonormal columns), so the projection formula simplifies dramatically:</p>
+        \[
+        P = Q(Q^\top Q)^{-1} Q^\top = QQ^\top
+        \]
+        <p>And the projection of \(b\) is</p>
+        \[
+        \hat{b} = QQ^\top b = \sum_{i=1}^{k} (q_i^\top b) q_i = \sum_{i=1}^{k} \langle b, q_i \rangle q_i
+        \]
+        <p>This is exactly the coordinate-extraction formula from Chapter 7: each coefficient is just the inner product \(\langle b, q_i \rangle\). No matrix inversion needed. This is why Gram-Schmidt (or QR factorization) is worth doing upfront: it converts a hard projection problem (invert \(A^\top A\)) into a trivial one (matrix-vector multiply).</p>
+
+        <h2>Properties of projection matrices</h2>
+        <p>The matrix \(P = A(A^\top A)^{-1} A^\top\) satisfies several key properties, each with geometric meaning:</p>
+
+        <h3>Property 1: Symmetry (\(P^\top = P\))</h3>
+        <p>\(P^\top = (A(A^\top A)^{-1} A^\top)^\top = A ((A^\top A)^{-1})^\top A^\top = A (A^\top A)^{-1} A^\top = P\), since \((A^\top A)^{-1}\) is symmetric (transpose of inverse = inverse of transpose, and \(A^\top A\) is symmetric). Geometric meaning: orthogonal projection is self-adjoint. This distinguishes <em>orthogonal</em> projections from oblique ones.</p>
+
+        <h3>Property 2: Idempotence (\(P^2 = P\))</h3>
+        <p>\(P^2 = A(A^\top A)^{-1} A^\top A (A^\top A)^{-1} A^\top = A(A^\top A)^{-1} (A^\top A) (A^\top A)^{-1} A^\top = A(A^\top A)^{-1} A^\top = P\). Geometric meaning: projecting a vector that's already in \(W\) leaves it unchanged. If \(v \in W\), then \(Pv = v\); applying \(P\) again gives \(P(Pv) = Pv = v\). Idempotence encodes "already projected."</p>
+
+        <h3>Property 3: Column space equals the target subspace</h3>
+        <p>\(\operatorname{Col}(P) = W\). Proof: \(Pb = A\hat{x} \in \operatorname{Col}(A) = W\), so \(\operatorname{Col}(P) \subseteq W\). Conversely, if \(w \in W\), then \(w = Ax\) for some \(x\), and \(Pw = PAx = A(A^\top A)^{-1} A^\top A x = Ax = w\), so \(w \in \operatorname{Col}(P)\). Thus \(\operatorname{Col}(P) = W\).</p>
+
+        <h3>Property 4: Null space equals the orthogonal complement</h3>
+        <p>\(\operatorname{Nul}(P) = W^\perp\). Proof: \(Pb = \mathbf{0} \iff A(A^\top A)^{-1} A^\top b = \mathbf{0} \iff A^\top b = \mathbf{0}\) (multiply by \((A^\top A)A^{-1}\)... more carefully: if \(Pb = 0\), then \(b^\top Pb = 0\), but \(b^\top Pb = \|Pb\|^2 = 0\)... actually simpler: \(Pb = 0 \implies A^\top b = (A^\top A)(A^\top A)^{-1} A^\top b = (A^\top A) \cdot 0 = 0\)? Wait — better: \(Pb = 0 \iff A\hat{x} = 0\) where \(\hat{x} = (A^\top A)^{-1} A^\top b\). Since \(A\) has full column rank, \(A\hat{x} = 0 \iff \hat{x} = 0 \iff A^\top b = 0 \iff b \perp \operatorname{Col}(A) = W\). So \(\operatorname{Nul}(P) = W^\perp\). ✓</p>
+
+        <h3>Property 5: Eigenvalues are 0 and 1</h3>
+        <p>If \(Pv = \lambda v\), then \(P^2 v = \lambda^2 v\), but also \(P^2 v = Pv = \lambda v\). So \(\lambda^2 = \lambda\), giving \(\lambda = 0\) or \(\lambda = 1\). Eigenvectors with \(\lambda = 1\) span \(W\); eigenvectors with \(\lambda = 0\) span \(W^\perp\). The trace of \(P\) equals \(\dim W\) (sum of eigenvalues = number of 1s = rank of \(P\)).</p>
+
+        <h2>Characterization: symmetric + idempotent = orthogonal projection</h2>
+        <p>We've shown that orthogonal projection matrices are symmetric and idempotent. The converse is equally important:</p>
+        <p><strong>Theorem:</strong> A matrix \(P\) is an orthogonal projection matrix (onto some subspace) if and only if \(P^\top = P\) and \(P^2 = P\).</p>
+        <p><em>Proof (\(\Leftarrow\)): </em>Let \(W = \operatorname{Col}(P)\). For any \(v\), write \(v = Pv + (v - Pv)\). We claim \(Pv \in W\) (obvious) and \(v - Pv \in W^\perp\). To show orthogonality: for any \(w \in W\), \(w = Pu\) for some \(u\), and</p>
+        \[
+        \langle v - Pv, w \rangle = (v - Pv)^\top Pu = v^\top Pu - v^\top P^\top Pu = v^\top Pu - v^\top P^2 u = v^\top Pu - v^\top Pu = 0
+        \]
+        <p>(using \(P^\top = P\) and \(P^2 = P\)). So \(v - Pv \perp W\), meaning \(Pv\) is the orthogonal projection of \(v\) onto \(W\). ✓</p>
+        <p>This characterization is powerful: to verify that a matrix is an orthogonal projection, check two simple algebraic conditions instead of deriving it from a subspace. In statistics, the "hat matrix" \(H = X(X^\top X)^{-1} X^\top\) in linear regression is recognized as a projection matrix precisely because it is symmetric and idempotent.</p>
+
+        <h2>Idempotent matrices beyond projections</h2>
+        <p>A matrix \(M\) satisfying \(M^2 = M\) is called <strong>idempotent</strong>. Not all idempotent matrices are orthogonal projections — only the symmetric ones are. Nonsymmetric idempotents correspond to <em>oblique</em> projections (projections along a direction not perpendicular to the target subspace).</p>
+
+        <h3>Properties of general idempotent matrices</h3>
+        <ul>
+          <li><strong>Eigenvalues are 0 or 1:</strong> Same proof as above: \(\lambda^2 = \lambda\).</li>
+          <li><strong>\(\operatorname{rank}(M) = \operatorname{tr}(M)\):</strong> Since eigenvalues are 0/1, trace = number of 1s = rank. (This holds for all idempotents, not just symmetric ones.)</li>
+          <li><strong>\(I - M\) is also idempotent:</strong> \((I-M)^2 = I - 2M + M^2 = I - 2M + M = I - M\). Geometrically, \(I - M\) projects onto \(\operatorname{Nul}(M)\) along \(\operatorname{Col}(M)\).</li>
+          <li><strong>\(\mathbb{R}^n = \operatorname{Col}(M) \oplus \operatorname{Nul}(M)\):</strong> Any \(v = Mv + (I-M)v\), with \(Mv \in \operatorname{Col}(M)\) and \((I-M)v \in \operatorname{Nul}(M)\) (since \(M(I-M)v = (M - M^2)v = 0\)). The sum is direct because if \(v \in \operatorname{Col}(M) \cap \operatorname{Nul}(M)\), then \(v = Mw\) and \(Mv = 0\), so \(0 = Mv = M^2 w = Mw = v\).</li>
+        </ul>
+        <p>For symmetric idempotents, \(\operatorname{Col}(M) \perp \operatorname{Nul}(M)\), making the decomposition orthogonal. For nonsymmetric ones, the decomposition is merely direct (not orthogonal).</p>
+
+        <h3>Worked example: a nonsymmetric idempotent</h3>
+        <p>Let \(M = \begin{pmatrix} 1 & 1 \\ 0 & 0 \end{pmatrix}\). Check: \(M^2 = \begin{pmatrix} 1 & 1 \\ 0 & 0 \end{pmatrix}\begin{pmatrix} 1 & 1 \\ 0 & 0 \end{pmatrix} = \begin{pmatrix} 1 & 1 \\ 0 & 0 \end{pmatrix} = M\). Idempotent ✓. But \(M^\top = \begin{pmatrix} 1 & 0 \\ 1 & 0 \end{pmatrix} \neq M\), so not symmetric → not an orthogonal projection.</p>
+        <p>\(\operatorname{Col}(M) = \operatorname{span}\{(1,0)^\top\}\) (x-axis). \(\operatorname{Nul}(M) = \{(x,y) : x + y = 0\} = \operatorname{span}\{(1,-1)^\top\}\). These are not orthogonal: \((1,0) \cdot (1,-1) = 1 \neq 0\). So \(M\) projects onto the x-axis <em>along</em> the line \(y = -x\), not perpendicularly. This is an oblique projection.</p>
+
+        <h2>Least squares: projections in action</h2>
+        <p>When \(Ax = b\) is inconsistent, the <strong>least squares solution</strong> \(\hat{x}\) minimizes \(\|Ax - b\|^2\). From the projection theory above, this is equivalent to solving the normal equations \(A^\top A \hat{x} = A^\top b\). The minimum residual is \(\|b - A\hat{x}\| = \|(I - P)b\|\), where \(P\) is the projection onto \(\operatorname{Col}(A)\).</p>
+
+        <h3>Geometric interpretation</h3>
+        <p>The least squares solution finds the point \(A\hat{x} \in \operatorname{Col}(A)\) closest to \(b\). The residual \(b - A\hat{x}\) is orthogonal to \(\operatorname{Col}(A)\), meaning it contains no information that could be captured by any choice of \(x\). All "explainable" variation in \(b\) is captured by \(A\hat{x}\); the rest is irreducible error.</p>
+
+        <h3>Worked example: least squares fit of a line</h3>
+        <p>Fit a line \(y = mx + c\) to data points \((0,1), (1,2), (2,2)\). Set up \(Ax = b\):</p>
+        \[
+        A = \begin{pmatrix} 0 & 1 \\ 1 & 1 \\ 2 & 1 \end{pmatrix}, \quad x = \begin{pmatrix} m \\ c \end{pmatrix}, \quad b = \begin{pmatrix} 1 \\ 2 \\ 2 \end{pmatrix}
+        \]
+        <p>Normal equations: \(A^\top A = \begin{pmatrix} 0 & 1 & 2 \\ 1 & 1 & 1 \end{pmatrix}\begin{pmatrix} 0 & 1 \\ 1 & 1 \\ 2 & 1 \end{pmatrix} = \begin{pmatrix} 5 & 3 \\ 3 & 3 \end{pmatrix}\). \(A^\top b = \begin{pmatrix} 0+2+4 \\ 1+2+2 \end{pmatrix} = \begin{pmatrix} 6 \\ 5 \end{pmatrix}\).</p>
+        <p>Solve \(\begin{pmatrix} 5 & 3 \\ 3 & 3 \end{pmatrix}\begin{pmatrix} m \\ c \end{pmatrix} = \begin{pmatrix} 6 \\ 5 \end{pmatrix}\). Determinant: \(15 - 9 = 6\). Inverse: \(\frac{1}{6}\begin{pmatrix} 3 & -3 \\ -3 & 5 \end{pmatrix}\). So</p>
+        \[
+        \begin{pmatrix} m \\ c \end{pmatrix} = \frac{1}{6}\begin{pmatrix} 3 & -3 \\ -3 & 5 \end{pmatrix}\begin{pmatrix} 6 \\ 5 \end{pmatrix} = \frac{1}{6}\begin{pmatrix} 18 - 15 \\ -18 + 25 \end{pmatrix} = \begin{pmatrix} 1/2 \\ 7/6 \end{pmatrix}
+        \]
+        <p>Best-fit line: \(y = \frac{1}{2}x + \frac{7}{6}\). Fitted values: \(A\hat{x} = (7/6, 5/3, 13/6)^\top \approx (1.17, 1.67, 2.17)^\top\). Residual: \(b - A\hat{x} = (-1/6, 1/3, -1/6)^\top\). Verify orthogonality: \(A^\top(b - A\hat{x}) = \mathbf{0}\) ✓ (by construction via normal equations).</p>
+
+        <h2>Edge cases and common mistakes</h2>
+        <p><strong>Mistake: using \(P = A(A^\top A)^{-1} A^\top\) when \(A\) lacks full column rank.</strong> If columns of \(A\) are dependent, \(A^\top A\) is singular and the formula breaks. Fix: use a basis for \(\operatorname{Col}(A)\) (e.g., pivot columns from RREF), or use the pseudoinverse \(A^+\) (Chapter 11), or use QR with column pivoting. The projection itself is always well-defined; only this particular formula requires independence.</p>
+        <p><strong>Mistake: confusing \(P\) with \((A^\top A)^{-1} A^\top\).</strong> The latter is the left inverse of \(A\) (maps \(\mathbb{R}^m \to \mathbb{R}^n\)); the former is the projection matrix (maps \(\mathbb{R}^m \to \mathbb{R}^m\)). Dimensions differ: \(P\) is \(m \times m\); \((A^\top A)^{-1} A^\top\) is \(n \times m\). Never substitute one for the other.</p>
+        <p><strong>Mistake: assuming all idempotent matrices are projections.</strong> Only <em>symmetric</em> idempotents are orthogonal projections. Nonsymmetric idempotents are oblique projections. Always check symmetry when claiming "projection matrix."</p>
+        <p><strong>Edge case: projection onto \(\{\mathbf{0}\}\).</strong> \(P = \mathbf{0}\). Symmetric ✓, idempotent ✓. Projects everything to zero. Trivial but consistent.</p>
+        <p><strong>Edge case: projection onto \(\mathbb{R}^n\).</strong> \(P = I\). Symmetric ✓, idempotent ✓. Leaves everything unchanged. Also trivial but consistent.</p>
+        <p><strong>Numerical caution:</strong> Forming \(A^\top A\) explicitly squares the condition number: \(\kappa(A^\top A) = \kappa(A)^2\). For ill-conditioned \(A\), this destroys numerical accuracy. Prefer QR factorization (Chapter 10) or SVD (Chapter 11) for computing least squares solutions in practice. The normal equations are pedagogically clean but numerically fragile.</p>
+
+        <h2>What we built, and where it goes</h2>
+        <ul>
+          <li>The <strong>orthogonal projection</strong> of \(v\) onto \(W\) is the unique closest point in \(W\), characterized by \(v - \hat{v} \perp W\).</li>
+          <li>The <strong>projection matrix</strong> \(P = A(A^\top A)^{-1} A^\top\) computes projections onto \(\operatorname{Col}(A)\); it is symmetric and idempotent.</li>
+          <li><strong>Symmetric + idempotent</strong> characterizes orthogonal projection matrices completely.</li>
+          <li><strong>Idempotent matrices</strong> (not necessarily symmetric) decompose \(\mathbb{R}^n = \operatorname{Col}(M) \oplus \operatorname{Nul}(M)\); symmetric ones make this decomposition orthogonal.</li>
+          <li><strong>Least squares</strong> is projection onto \(\operatorname{Col}(A)\); the normal equations encode the orthogonality condition.</li>
+        </ul>
+        <p>Pencil-and-paper checkpoint: can you derive the projection formula from the orthogonality condition \(A^\top(b - A\hat{x}) = 0\)? Can you verify that a given matrix is an orthogonal projection by checking symmetry and idempotence? Can you explain why \(P^2 = P\) encodes "already projected"? Can you set up and solve a least squares problem via normal equations?</p>
+        <p>Chapter 9 applies the spectral theorem (now geometrically grounded via projections) to classify <strong>quadratic forms</strong> — functions \(x^\top A x\) whose behavior is determined by the eigenvalues of symmetric \(A\). Chapter 10 uses the orthogonality infrastructure to build <strong>QR factorization</strong> via Householder reflections or Gram-Schmidt, providing numerically stable alternatives to the normal equations. Chapter 11 generalizes projections to arbitrary matrices via the <strong>SVD</strong>, where singular vectors provide orthonormal bases for both domain and codomain. Projections are the bridge from abstract geometry to computational practice.</p>
+
+      </article>
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch7/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">7. Orthogonal Vectors and Orthogonal Matrices</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch9/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">9. Quadratic Forms</span>
+        </a>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
+</body>
+</html>
