@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>9. Quadratic Forms — Linear Algebra (GATE DA) — iTube</title>
+  <meta name="description" content="Quadratic forms classified via eigenvalues and principal minors, Sylvester's Law of Inertia proved, geometric interpretation as conics/quadrics derived, with full worked examples.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Linear Algebra (GATE DA)</a><span class="sep">/</span>
+        <span>Ch. 9</span>
+      </div>
+      <div class="eyebrow">Linear Algebra (GATE DA)</div>
+      <h1>9. Quadratic Forms</h1>
+      <div class="chapter-meta">
+        <span>Chapter 9 of 11</span>
+        <span class="read-badge">22 min read</span>
+      </div>
+      <article>
+
+        <h2>From matrices to scalar functions</h2>
+        <p>Every symmetric matrix \(A\) defines a scalar-valued function on \(\mathbb{R}^n\):</p>
+        \[
+        Q(x) = x^\top A x = \sum_{i=1}^{n} \sum_{j=1}^{n} a_{ij} x_i x_j
+        \]
+        <p>This is a <strong>quadratic form</strong>: every term is either \(x_i^2\) (when \(i=j\)) or \(x_i x_j\) (when \(i \neq j\)). Quadratic forms appear everywhere — as energy functions in physics, covariance structures in statistics, objective functions in optimization, and curvature descriptors in geometry. The central question of this chapter is:</p>
+        <p><em>Given a symmetric matrix \(A\), what does the function \(Q(x) = x^\top A x\) look like? Does it always take positive values? Negative? Both? Where are its maxima and minima on the unit sphere?</em></p>
+        <p>The answer comes entirely from the eigenvalues of \(A\). The spectral theorem (Chapter 6) provides an orthogonal change of coordinates that eliminates all cross-terms \(x_i x_j\), reducing \(Q(x)\) to a weighted sum of squares. From that diagonal form, everything follows: definiteness classification, geometric shape, and optimization behavior.</p>
+
+        <h2>Symmetry is without loss of generality</h2>
+        <p>Before proceeding, note that every quadratic form arises from a <em>unique symmetric</em> matrix. If \(B\) is any square matrix (not necessarily symmetric), then</p>
+        \[
+        x^\top B x = x^\top \left( \frac{B + B^\top}{2} \right) x
+        \]
+        <p>because \(x^\top B x = (x^\top B x)^\top = x^\top B^\top x\) (scalar equals its transpose), so \(x^\top B x = \frac{1}{2} x^\top (B + B^\top) x\). The matrix \(A = \frac{B + B^\top}{2}\) is symmetric and produces the identical quadratic form. So we lose nothing by assuming symmetry from the start, and we gain the full power of the spectral theorem. Throughout this chapter, \(A\) is always real symmetric.</p>
+
+        <h2>Diagonalization via orthogonal change of variables</h2>
+        <p>By the spectral theorem (Chapter 6), there exists an orthogonal matrix \(Q\) and a diagonal matrix \(\Lambda = \operatorname{diag}(\lambda_1, \dots, \lambda_n)\) such that \(A = Q \Lambda Q^\top\). Substitute into the quadratic form:</p>
+        \[
+        Q(x) = x^\top A x = x^\top Q \Lambda Q^\top x = (Q^\top x)^\top \Lambda (Q^\top x)
+        \]
+        <p>Define new coordinates \(y = Q^\top x\). Since \(Q\) is orthogonal, this is a rotation/reflection of the coordinate system — it preserves lengths (\(\|y\| = \|x\|\)) and angles. In the \(y\)-coordinates:</p>
+        \[
+        Q(x) = y^\top \Lambda y = \lambda_1 y_1^2 + \lambda_2 y_2^2 + \cdots + \lambda_n y_n^2
+        \]
+        <p>All cross-terms have vanished. The quadratic form is now a <strong>weighted sum of squares</strong>, with weights equal to the eigenvalues of \(A\). This is the canonical form of a quadratic under orthogonal transformation.</p>
+
+        <h3>Worked example: eliminating cross-terms</h3>
+        <p>Consider \(Q(x) = 2x_1^2 + 2x_1 x_2 + 2x_2^2\). The symmetric matrix is \(A = \begin{pmatrix} 2 & 1 \\ 1 & 2 \end{pmatrix}\).</p>
+        <p><em>Eigenvalues:</em> \(\det(A - \lambda I) = (2-\lambda)^2 - 1 = \lambda^2 - 4\lambda + 3 = (\lambda-3)(\lambda-1)\). So \(\lambda_1 = 3\), \(\lambda_2 = 1\).</p>
+        <p><em>Eigenvectors (normalized):</em> For \(\lambda=3\): \(q_1 = \frac{1}{\sqrt{2}}(1,1)^\top\). For \(\lambda=1\): \(q_2 = \frac{1}{\sqrt{2}}(1,-1)^\top\). Form \(Q = \frac{1}{\sqrt{2}}\begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix}\).</p>
+        <p><em>New coordinates:</em> \(y = Q^\top x\), i.e., \(y_1 = \frac{x_1+x_2}{\sqrt{2}}\), \(y_2 = \frac{x_1-x_2}{\sqrt{2}}\).</p>
+        <p><em>Diagonal form:</em> \(Q(x) = 3y_1^2 + 1y_2^2\). No cross-term. ✓</p>
+        <p>In the original coordinates, the level sets \(Q(x) = c\) are tilted ellipses. In the \(y\)-coordinates, they are axis-aligned ellipses with semi-axes \(\sqrt{c/3}\) and \(\sqrt{c}\). The eigenvectors give the principal axes of the ellipse; the eigenvalues determine the stretching.</p>
+
+        <h2>Definiteness: classifying quadratic forms</h2>
+        <p>The signs of the eigenvalues completely determine the sign behavior of \(Q(x)\). We define five categories:</p>
+
+        <table style="width:100%; border-collapse:collapse; margin:1em 0;">
+          <tr style="border-bottom:1px solid var(--stone);">
+            <th style="text-align:left; padding:0.5em;">Classification</th>
+            <th style="text-align:left; padding:0.5em;">Eigenvalue Condition</th>
+            <th style="text-align:left; padding:0.5em;">Sign Behavior</th>
+          </tr>
+          <tr>
+            <td style="padding:0.5em;"><strong>Positive definite</strong></td>
+            <td style="padding:0.5em;">All \(\lambda_i > 0\)</td>
+            <td style="padding:0.5em;">\(Q(x) > 0\) for all \(x \neq \mathbf{0}\)</td>
+          </tr>
+          <tr>
+            <td style="padding:0.5em;"><strong>Positive semidefinite</strong></td>
+            <td style="padding:0.5em;">All \(\lambda_i \geq 0\), at least one \(= 0\)</td>
+            <td style="padding:0.5em;">\(Q(x) \geq 0\) for all \(x\); \(= 0\) for some \(x \neq \mathbf{0}\)</td>
+          </tr>
+          <tr>
+            <td style="padding:0.5em;"><strong>Negative definite</strong></td>
+            <td style="padding:0.5em;">All \(\lambda_i < 0\)</td>
+            <td style="padding:0.5em;">\(Q(x) < 0\) for all \(x \neq \mathbf{0}\)</td>
+          </tr>
+          <tr>
+            <td style="padding:0.5em;"><strong>Negative semidefinite</strong></td>
+            <td style="padding:0.5em;">All \(\lambda_i \leq 0\), at least one \(= 0\)</td>
+            <td style="padding:0.5em;">\(Q(x) \leq 0\) for all \(x\); \(= 0\) for some \(x \neq \mathbf{0}\)</td>
+          </tr>
+          <tr>
+            <td style="padding:0.5em;"><strong>Indefinite</strong></td>
+            <td style="padding:0.5em;">Some \(\lambda_i > 0\) and some \(\lambda_j < 0\)</td>
+            <td style="padding:0.5em;">\(Q(x)\) takes both positive and negative values</td>
+          </tr>
+        </table>
+
+        <h3>Why eigenvalues determine definiteness</h3>
+        <p>In the diagonal form \(Q = \sum \lambda_i y_i^2\), each term \(\lambda_i y_i^2\) has the sign of \(\lambda_i\) (since \(y_i^2 \geq 0\)). If all \(\lambda_i > 0\), the sum is positive whenever any \(y_i \neq 0\), i.e., whenever \(x \neq \mathbf{0}\) (orthogonal transformation preserves zero/nonzero). If some \(\lambda_i > 0\) and some \(\lambda_j < 0\), choosing \(y\) with only \(y_i \neq 0\) gives positive \(Q\); choosing \(y\) with only \(y_j \neq 0\) gives negative \(Q\). The other cases follow similarly.</p>
+
+        <h3>Worked example: classifying a \(3 \times 3\) form</h3>
+        <p>Let \(A = \begin{pmatrix} 2 & -1 & 0 \\ -1 & 2 & -1 \\ 0 & -1 & 2 \end{pmatrix}\). Eigenvalues: solve \(\det(A - \lambda I) = 0\). This is a tridiagonal Toeplitz matrix; eigenvalues are \(2 - 2\cos(k\pi/4)\) for \(k=1,2,3\), giving approximately \(0.586, 2, 3.414\). All positive → <strong>positive definite</strong>. Therefore \(x^\top A x > 0\) for all nonzero \(x\). Level sets are ellipsoids in \(\mathbb{R}^3\).</p>
+
+        <h2>Sylvester’s criterion: testing definiteness without eigenvalues</h2>
+        <p>Computing eigenvalues requires solving a degree-\(n\) polynomial. For small matrices or symbolic work, <strong>Sylvester’s criterion</strong> provides an alternative test using only determinants of submatrices.</p>
+
+        <h3>Leading principal minors</h3>
+        <p>The \(k\)-th <strong>leading principal minor</strong> of \(A\) is \(\Delta_k = \det(A_k)\), where \(A_k\) is the top-left \(k \times k\) submatrix of \(A\).</p>
+
+        <h3>Sylvester’s criterion for positive definiteness</h3>
+        <p><strong>Theorem:</strong> A real symmetric matrix \(A\) is positive definite if and only if all leading principal minors are positive: \(\Delta_k > 0\) for \(k = 1, 2, \dots, n\).</p>
+        <p><em>Proof sketch (\(\Rightarrow\)): </em>If \(A\) is positive definite, then for any nonzero \(z \in \mathbb{R}^k\), extending \(z\) to \(\mathbb{R}^n\) with zeros gives \(z^\top A_k z > 0\). So \(A_k\) is positive definite, hence \(\det(A_k) > 0\) (product of positive eigenvalues).</p>
+        <p><em>Proof sketch (\(\Leftarrow\)): </em>By induction using LDL\(^\top\) factorization (related to Chapter 10’s LU). If all \(\Delta_k > 0\), Gaussian elimination without pivoting succeeds with positive pivots, yielding \(A = LDL^\top\) with \(D = \operatorname{diag}(d_1, \dots, d_n)\) where \(d_k = \Delta_k / \Delta_{k-1} > 0\). Then \(x^\top A x = \sum d_i (L^\top x)_i^2 > 0\) for \(x \neq \mathbf{0}\). ✓</p>
+
+        <h3>Criteria for other definiteness classes</h3>
+        <ul>
+          <li><strong>Negative definite:</strong> \((-1)^k \Delta_k > 0\) for all \(k\) (equivalently, \(-A\) is positive definite).</li>
+          <li><strong>Positive semidefinite:</strong> All <em>principal</em> minors (not just leading) are \(\geq 0\). Caution: nonnegative leading principal minors alone are <em>not</em> sufficient for semidefiniteness. Counterexample: \(\begin{pmatrix} 0 & 0 \\ 0 & -1 \end{pmatrix}\) has \(\Delta_1 = 0, \Delta_2 = 0\), but is not PSD.</li>
+          <li><strong>Indefinite:</strong> Neither positive nor negative definite nor semidefinite. Often detected by finding two principal minors of opposite sign.</li>
+        </ul>
+
+        <h3>Worked example: Sylvester vs. eigenvalues</h3>
+        <p>Test \(A = \begin{pmatrix} 4 & 2 \\ 2 & 3 \end{pmatrix}\) for positive definiteness.</p>
+        <p><em>Sylvester:</em> \(\Delta_1 = 4 > 0\). \(\Delta_2 = 12 - 4 = 8 > 0\). Both positive → positive definite. ✓</p>
+        <p><em>Eigenvalues (verification):</em> \(\lambda^2 - 7\lambda + 8 = 0\), roots \(\frac{7 \pm \sqrt{17}}{2} \approx 5.56, 1.44\). Both positive. ✓ Agreement confirmed.</p>
+        <p>For this \(2 \times 2\) case, Sylvester was faster. For larger matrices, eigenvalue computation via numerical methods is often more reliable than computing many determinants.</p>
+
+        <h2>Sylvester’s Law of Inertia</h2>
+        <p>The diagonal form \(\sum \lambda_i y_i^2\) depends on the choice of orthogonal basis. But the <em>number</em> of positive, negative, and zero coefficients does not. This is <strong>Sylvester’s Law of Inertia</strong>:</p>
+        <p><strong>Theorem:</strong> Let \(A\) be real symmetric. For any invertible matrix \(C\), the quadratic form \(x^\top A x\) under the change \(x = Cy\) becomes \(y^\top (C^\top A C) y\). The number of positive, negative, and zero eigenvalues of \(C^\top A C\) equals that of \(A\). These three numbers \((n_+, n_-, n_0)\) are called the <strong>inertia</strong> of \(A\).</p>
+        <p>Note: \(C\) need not be orthogonal! Any invertible change of variables preserves inertia. This is stronger than the spectral theorem (which uses orthogonal \(Q\)). The proof uses the fact that congruence transformations \(A \mapsto C^\top A C\) preserve the signs of eigenvalues even though they change their magnitudes.</p>
+
+        <h3>Why inertia matters</h3>
+        <p>Inertia is a <em>coordinate-independent</em> property of the quadratic form itself, not of any particular matrix representation. Two symmetric matrices represent the same quadratic form up to change of variables if and only if they have the same inertia. This makes inertia the fundamental invariant for classifying quadratic forms up to equivalence.</p>
+
+        <h2>Geometry: level sets of quadratic forms</h2>
+        <p>The level set \(\{x : x^\top A x = c\}\) is a <strong>quadric surface</strong>. Its shape is determined by the signs of the eigenvalues (the inertia):</p>
+        <ul>
+          <li><strong>All \(\lambda_i > 0\), \(c > 0\):</strong> Ellipsoid. Semi-axis lengths are \(\sqrt{c/\lambda_i}\). Larger eigenvalue → shorter axis (tighter constraint).</li>
+          <li><strong>All \(\lambda_i < 0\), \(c < 0\):</strong> Ellipsoid (same shape, sign flip).</li>
+          <li><strong>Mixed signs, \(c \neq 0\):</strong> Hyperboloid. Number of sheets depends on sign pattern.</li>
+          <li><strong>Some \(\lambda_i = 0\):</strong> Degenerate quadric (cylinder, paraboloid, or pair of planes).</li>
+          <li><strong>\(c = 0\):</strong> Cone (if indefinite) or single point (if definite).</li>
+        </ul>
+        <p>In 2D, these reduce to conic sections: ellipses, hyperbolas, parabolas, and degenerate cases. The eigenvectors give the principal axes; the eigenvalues give the scaling along those axes.</p>
+
+        <h3>Worked example: identifying a conic</h3>
+        <p>Classify the curve \(3x^2 + 4xy + 3y^2 = 10\). Matrix: \(A = \begin{pmatrix} 3 & 2 \\ 2 & 3 \end{pmatrix}\). Eigenvalues: \(5\) and \(1\) (both positive). Diagonal form: \(5y_1^2 + y_2^2 = 10\), or \(\frac{y_1^2}{2} + \frac{y_2^2}{10} = 1\). This is an ellipse with semi-axes \(\sqrt{2}\) and \(\sqrt{10}\), oriented along the eigenvectors \((1,1)/\sqrt{2}\) and \((1,-1)/\sqrt{2}\). The cross-term \(4xy\) in the original coordinates corresponds to the tilt of the ellipse relative to the standard axes.</p>
+
+        <h2>Optimization: extrema on the unit sphere</h2>
+        <p>A fundamental result connects eigenvalues to constrained optimization:</p>
+        <p><strong>Theorem (Rayleigh-Ritz):</strong> For real symmetric \(A\),</p>
+        \[
+        \lambda_{\min} = \min_{\|x\|=1} x^\top A x, \qquad \lambda_{\max} = \max_{\|x\|=1} x^\top A x
+        \]
+        <p>The minimum is achieved at any unit eigenvector for \(\lambda_{\min}\); the maximum at any unit eigenvector for \(\lambda_{\max}\).</p>
+        <p><em>Proof:</em> In the orthonormal eigenbasis, \(x^\top A x = \sum \lambda_i y_i^2\) with \(\sum y_i^2 = 1\). This is a convex combination of the eigenvalues, so it lies between \(\lambda_{\min}\) and \(\lambda_{\max}\). The extremes are achieved when all weight is on the smallest/largest eigenvalue. ✓</p>
+        <p>This theorem is the foundation of PCA (principal component analysis): the direction of maximum variance is the eigenvector corresponding to the largest eigenvalue of the covariance matrix. It also underlies variational characterizations of eigenvalues (Courant-Fischer minimax principle) used in numerical algorithms.</p>
+
+        <h2>Edge cases and common mistakes</h2>
+        <p><strong>Mistake: applying Sylvester’s criterion to non-symmetric matrices.</strong> Sylvester’s criterion assumes symmetry. For nonsymmetric \(B\), apply it to \(\frac{B+B^\top}{2}\) instead. The quadratic form depends only on the symmetric part.</p>
+        <p><strong>Mistake: confusing leading principal minors with all principal minors for semidefiniteness.</strong> Positive definiteness requires only <em>leading</em> principal minors to be positive. Positive <em>semi</em>definiteness requires <em>all</em> principal minors (including non-leading ones) to be nonnegative. This distinction is subtle and frequently tested.</p>
+        <p><strong>Mistake: thinking diagonal entries determine definiteness.</strong> A matrix with all positive diagonal entries can be indefinite (e.g., \(\begin{pmatrix} 1 & 3 \\ 3 & 1 \end{pmatrix}\) has eigenvalues \(4\) and \(-2\)). Definiteness depends on eigenvalues, not diagonals.</p>
+        <p><strong>Edge case: zero matrix.</strong> \(Q(x) = 0\) for all \(x\). All eigenvalues zero. Positive semidefinite AND negative semidefinite (but not definite). Inertia: \((0, 0, n)\).</p>
+        <p><strong>Edge case: rank-deficient PSD matrices.</strong> Covariance matrices in statistics are often PSD but not PD (when variables are collinear). The null space corresponds to directions of zero variance. Optimization over such forms requires care (unbounded below in null directions unless constrained).</p>
+        <p><strong>Numerical caution:</strong> Testing definiteness via eigenvalues is numerically stable. Testing via Sylvester’s criterion can fail catastrophically for near-singular matrices (tiny perturbations flip signs of determinants). In practice, use Cholesky factorization attempt (succeeds iff PD) or eigenvalue decomposition with tolerance for semidefiniteness testing.</p>
+
+        <h2>What we built, and where it goes</h2>
+        <ul>
+          <li>A <strong>quadratic form</strong> \(x^\top A x\) reduces to \(\sum \lambda_i y_i^2\) via orthogonal diagonalization of symmetric \(A\).</li>
+          <li><strong>Definiteness</strong> (positive/negative definite, semidefinite, indefinite) is determined entirely by eigenvalue signs.</li>
+          <li><strong>Sylvester’s criterion</strong> tests positive definiteness via leading principal minors, avoiding eigenvalue computation.</li>
+          <li><strong>Sylvester’s Law of Inertia</strong> guarantees that the counts of positive/negative/zero eigenvalues are invariant under any invertible change of variables.</li>
+          <li><strong>Rayleigh-Ritz</strong> identifies eigenvalues as extrema of the quadratic form on the unit sphere.</li>
+        </ul>
+        <p>Pencil-and-paper checkpoint: given a \(3 \times 3\) symmetric matrix, can you classify its quadratic form via both eigenvalues and Sylvester’s criterion? Can you write the diagonal form explicitly and identify the geometric shape of its level sets? Can you state Rayleigh-Ritz and explain why it follows from the spectral decomposition?</p>
+        <p>Chapter 10 shifts from spectral theory to algorithmic factorization: <strong>LU decomposition</strong> expresses \(A = LU\) as a product of triangular matrices, enabling efficient solution of linear systems and serving as the computational backbone for many numerical methods. Chapter 11 unifies everything — eigenvalues, projections, quadratic forms, and factorizations — into the <strong>singular value decomposition</strong>, the most powerful tool in applied linear algebra. Quadratic forms are the bridge between pure spectral theory and applied optimization; the remaining chapters build the computational infrastructure around them.</p>
+
+      </article>
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch8/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">8. Projections, Projection Matrices, and Idempotent Matrices</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch10/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">10. LU Decomposition</span>
+        </a>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
+</body>
+</html>
