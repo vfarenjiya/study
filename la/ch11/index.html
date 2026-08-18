@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>11. Singular Value Decomposition — Linear Algebra (GATE DA) — iTube</title>
+  <meta name="description" content="Singular value decomposition derived from the spectral theorem, geometric interpretation, optimal low-rank approximation via Eckart-Young, pseudoinverse for least squares, and numerical rank determination.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Linear Algebra (GATE DA)</a><span class="sep">/</span>
+        <span>Ch. 11</span>
+      </div>
+      <div class="eyebrow">Linear Algebra (GATE DA)</div>
+      <h1>11. Singular Value Decomposition</h1>
+      <div class="chapter-meta">
+        <span>Chapter 11 of 11</span>
+        <span class="read-badge">26 min read</span>
+      </div>
+      <article>
+
+        <h2>The culmination of linear algebra</h2>
+        <p>Every preceding chapter has built toward this moment. Vector spaces and subspaces (Chapters 1–2) gave us the language. Matrix algebra and elimination (Chapters 3–4) gave us computation. Determinants, rank, and eigenvalues (Chapters 5–6) gave us invariants. Orthogonality, projections, and quadratic forms (Chapters 7–9) gave us geometry. LU decomposition (Chapter 10) gave us efficient factorization for square systems. But each of these tools has limitations: eigenvalues require square matrices; LU requires nonsingularity; Cholesky requires positive definiteness; even the spectral theorem applies only to symmetric matrices.</p>
+        <p>The <strong>singular value decomposition (SVD)</strong> removes all these restrictions. For <em>any</em> matrix \(A \in \mathbb{R}^{m \times n}\) — square or rectangular, full rank or rank-deficient, symmetric or not — there exist orthogonal matrices \(U \in \mathbb{R}^{m \times m}\) and \(V \in \mathbb{R}^{n \times n}\) and a diagonal matrix \(\Sigma \in \mathbb{R}^{m \times n}\) with nonnegative entries such that</p>
+        \[
+        A = U \Sigma V^\top
+        \]
+        <p>This single factorization encodes the complete geometric and algebraic structure of \(A\): its rank, its range and null space, its action as a mapping between Euclidean spaces, its optimal low-rank approximations, its pseudoinverse, and its sensitivity to perturbation. The SVD is the most important theorem in applied linear algebra, and this chapter derives it from everything we've built.</p>
+
+        <h2>Deriving the SVD from the spectral theorem</h2>
+        <p>The key insight is that while \(A\) itself may not be symmetric or square, the matrices \(A^\top A\) and \(AA^\top\) always are. Both are symmetric and positive semidefinite (Chapter 9): for any \(x\), \(x^\top (A^\top A) x = \|Ax\|^2 \geq 0\). By the spectral theorem (Chapter 6), both admit orthogonal eigendecompositions with nonnegative eigenvalues.</p>
+
+        <h3>Step 1: Eigenvalues of \(A^\top A\)</h3>
+        <p>Let \(A^\top A\) have eigenvalues \(\lambda_1 \geq \lambda_2 \geq \cdots \geq \lambda_n \geq 0\) with orthonormal eigenvectors \(v_1, \dots, v_n\). Define the <strong>singular values</strong> of \(A\) as \(\sigma_i = \sqrt{\lambda_i}\). These are real and nonnegative. Let \(r = \operatorname{rank}(A)\); then exactly \(r\) singular values are positive (since \(\operatorname{rank}(A^\top A) = \operatorname{rank}(A)\), proved in Chapter 5).</p>
+
+        <h3>Step 2: Constructing \(U\) from \(V\)</h3>
+        <p>For each \(i = 1, \dots, r\) (positive singular values), define</p>
+        \[
+        u_i = \frac{1}{\sigma_i} A v_i
+        \]
+        <p>We claim the \(u_i\) are orthonormal. Check:</p>
+        \[
+        u_i^\top u_j = \frac{1}{\sigma_i \sigma_j} v_i^\top A^\top A v_j = \frac{1}{\sigma_i \sigma_j} v_i^\top (\lambda_j v_j) = \frac{\lambda_j}{\sigma_i \sigma_j} v_i^\top v_j = \frac{\sigma_j^2}{\sigma_i \sigma_j} \delta_{ij} = \delta_{ij}
+        \]
+        <p>So \(\{u_1, \dots, u_r\}\) is an orthonormal set in \(\mathbb{R}^m\). Extend it to an orthonormal basis \(\{u_1, \dots, u_m\}\) of \(\mathbb{R}^m\) via Gram-Schmidt (Chapter 7). Form \(U = [u_1 \ \cdots \ u_m]\) and \(V = [v_1 \ \cdots \ v_n]\). Both are orthogonal matrices.</p>
+
+        <h3>Step 3: Verifying \(A = U \Sigma V^\top\)</h3>
+        <p>Define \(\Sigma\) as the \(m \times n\) matrix with \(\sigma_1, \dots, \sigma_r\) on the main diagonal and zeros elsewhere. We need to show \(AV = U\Sigma\), or equivalently \(Av_j = \sigma_j u_j\) for each \(j\). For \(j \leq r\): \(Av_j = \sigma_j u_j\) by definition of \(u_j\). For \(j > r\): \(\sigma_j = 0\), and \(Av_j = \mathbf{0}\) because \(v_j\) is an eigenvector of \(A^\top A\) with eigenvalue 0, so \(\|Av_j\|^2 = v_j^\top A^\top A v_j = 0\). So \(Av_j = \mathbf{0} = 0 \cdot u_j\). Column-by-column equality gives \(AV = U\Sigma\), hence \(A = U\Sigma V^\top\). ✓</p>
+
+        <h3>Uniqueness</h3>
+        <p>The singular values \(\sigma_i\) are uniquely determined by \(A\) (they are the square roots of eigenvalues of \(A^\top A\)). The singular vectors \(u_i, v_i\) are unique up to sign when singular values are distinct; for repeated singular values, the corresponding singular vector subspaces are unique but individual vectors within them are not. This mirrors the eigenvalue/eigenvector uniqueness story from Chapter 6.</p>
+
+        <h2>Geometric interpretation: rotation–scaling–rotation</h2>
+        <p>The factorization \(A = U \Sigma V^\top\) decomposes the action of \(A\) into three simple steps:</p>
+        <ol>
+          <li><strong>\(V^\top\):</strong> Rotate/reflect the input space \(\mathbb{R}^n\) so that the coordinate axes align with the right singular vectors \(v_i\).</li>
+          <li><strong>\(\Sigma\):</strong> Scale each coordinate axis by the corresponding singular value \(\sigma_i\), and embed/project between dimensions if \(m \neq n\).</li>
+          <li><strong>\(U\):</strong> Rotate/reflect the result into the output space \(\mathbb{R}^m\), aligning with the left singular vectors \(u_i\).</li>
+        </ol>
+        <p>In pictures: \(A\) maps the unit sphere in \(\mathbb{R}^n\) to an ellipsoid in \(\mathbb{R}^m\). The right singular vectors \(v_i\) are the pre-images of the ellipsoid's principal axes; the singular values \(\sigma_i\) are the semi-axis lengths; the left singular vectors \(u_i\) are the directions of those axes in the output space. This generalizes the spectral theorem's geometric picture (Chapter 6) from symmetric operators on a single space to arbitrary operators between two spaces.</p>
+
+        <h3>Worked example: SVD of a \(2 \times 3\) matrix</h3>
+        <p>Let \(A = \begin{pmatrix} 1 & 0 & 0 \\ 0 & 2 & 0 \end{pmatrix}\). Already nearly diagonal!</p>
+        <p><em>Compute \(A^\top A\):</em> \(\begin{pmatrix} 1 & 0 & 0 \\ 0 & 4 & 0 \\ 0 & 0 & 0 \end{pmatrix}\). Eigenvalues: \(4, 1, 0\). Singular values: \(\sigma_1 = 2, \sigma_2 = 1, \sigma_3 = 0\). Rank \(r = 2\).</p>
+        <p><em>Right singular vectors:</em> Eigenvectors of \(A^\top A\): \(v_1 = e_2, v_2 = e_1, v_3 = e_3\). So \(V = \begin{pmatrix} 0 & 1 & 0 \\ 1 & 0 & 0 \\ 0 & 0 & 1 \end{pmatrix}\).</p>
+        <p><em>Left singular vectors:</em> \(u_1 = \frac{1}{2}Av_1 = \frac{1}{2}(0,2)^\top = (0,1)^\top\). \(u_2 = \frac{1}{1}Av_2 = (1,0)^\top\). So \(U = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}\).</p>
+        <p><em>\(\Sigma\):</em> \(\begin{pmatrix} 2 & 0 & 0 \\ 0 & 1 & 0 \end{pmatrix}\).</p>
+        <p><em>Verify:</em> \(U\Sigma V^\top = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}\begin{pmatrix} 2 & 0 & 0 \\ 0 & 1 & 0 \end{pmatrix}\begin{pmatrix} 0 & 1 & 0 \\ 1 & 0 & 0 \\ 0 & 0 & 1 \end{pmatrix} = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}\begin{pmatrix} 0 & 2 & 0 \\ 1 & 0 & 0 \\ 0 & 0 & 0 \end{pmatrix} = \begin{pmatrix} 1 & 0 & 0 \\ 0 & 2 & 0 \end{pmatrix} = A\). ✓</p>
+        <p>Geometry: \(A\) stretches the \(y\)-axis by 2 and the \(x\)-axis by 1, then collapses the \(z\)-axis to zero. The SVD makes this explicit.</p>
+
+        <h2>The four fundamental subspaces via SVD</h2>
+        <p>The SVD provides orthonormal bases for all four fundamental subspaces (introduced in Chapters 1, 4, 7):</p>
+        <ul>
+          <li><strong>\(\operatorname{Col}(A)\):</strong> Spanned by \(\{u_1, \dots, u_r\}\) (left singular vectors for positive singular values).</li>
+          <li><strong>\(\operatorname{Nul}(A)\):</strong> Spanned by \(\{v_{r+1}, \dots, v_n\}\) (right singular vectors for zero singular values).</li>
+          <li><strong>\(\operatorname{Row}(A) = \operatorname{Col}(A^\top)\):</strong> Spanned by \(\{v_1, \dots, v_r\}\) (right singular vectors for positive singular values).</li>
+          <li><strong>\(\operatorname{Nul}(A^\top) = \operatorname{Col}(A)^\perp\):</strong> Spanned by \(\{u_{r+1}, \dots, u_m\}\) (left singular vectors for zero singular values).</li>
+        </ul>
+        <p>These bases are orthonormal, making projections onto each subspace trivial (Chapter 8): the projection onto \(\operatorname{Col}(A)\) is \(UU^\top\) restricted to the first \(r\) columns, etc. The dimension relationships are immediate: \(\dim \operatorname{Col}(A) = r = \dim \operatorname{Row}(A)\), \(\dim \operatorname{Nul}(A) = n - r\), \(\dim \operatorname{Nul}(A^\top) = m - r\), confirming rank-nullity (Chapter 5).</p>
+
+        <h2>Optimal low-rank approximation: the Eckart–Young theorem</h2>
+        <p>Perhaps the most practically important consequence of the SVD is that it provides the <em>best</em> rank-\(k\) approximation to any matrix, in both the spectral norm and Frobenius norm.</p>
+
+        <h3>Statement</h3>
+        <p><strong>Eckart–Young–Mirsky Theorem:</strong> Let \(A = U\Sigma V^\top\) have singular values \(\sigma_1 \geq \sigma_2 \geq \cdots \geq \sigma_r > 0\). Define the truncated SVD</p>
+        \[
+        A_k = \sum_{i=1}^{k} \sigma_i u_i v_i^\top = U_k \Sigma_k V_k^\top
+        \]
+        <p>where \(U_k, V_k\) contain the first \(k\) columns and \(\Sigma_k = \operatorname{diag}(\sigma_1, \dots, \sigma_k)\). Then for any matrix \(B\) with \(\operatorname{rank}(B) \leq k\):</p>
+        \[
+        \|A - A_k\|_2 = \min_{\operatorname{rank}(B) \leq k} \|A - B\|_2 = \sigma_{k+1}
+        \]
+        \[
+        \|A - A_k\|_F = \min_{\operatorname{rank}(B) \leq k} \|A - B\|_F = \sqrt{\sigma_{k+1}^2 + \cdots + \sigma_r^2}
+        \]
+        <p>where \(\|\cdot\|_2\) is the spectral norm (largest singular value) and \(\|\cdot\|_F\) is the Frobenius norm (\(\sqrt{\sum \sigma_i^2}\)).</p>
+
+        <h3>Why this matters</h3>
+        <p>The truncated SVD gives the <em>optimal</em> compression of \(A\) to rank \(k\). In data science, this is PCA: the best \(k\)-dimensional representation of high-dimensional data minimizes reconstruction error. In image processing, keeping the top \(k\) singular values compresses images with minimal visual loss. In numerical analysis, truncating small singular values regularizes ill-posed problems. The error is exactly quantified by the discarded singular values — no guesswork, no heuristics.</p>
+
+        <h3>Worked example: rank-1 approximation</h3>
+        <p>Using the \(2 \times 3\) matrix above with \(\sigma_1 = 2, \sigma_2 = 1\): the best rank-1 approximation is</p>
+        \[
+        A_1 = \sigma_1 u_1 v_1^\top = 2 \begin{pmatrix} 0 \\ 1 \end{pmatrix} \begin{pmatrix} 0 & 1 & 0 \end{pmatrix} = \begin{pmatrix} 0 & 0 & 0 \\ 0 & 2 & 0 \end{pmatrix}
+        \]
+        <p>Error: \(\|A - A_1\|_2 = \sigma_2 = 1\). Indeed, \(A - A_1 = \begin{pmatrix} 1 & 0 & 0 \\ 0 & 0 & 0 \end{pmatrix}\), whose largest singular value is 1. ✓ No other rank-1 matrix can approximate \(A\) with spectral-norm error less than 1.</p>
+
+        <h2>The pseudoinverse: solving any linear system</h2>
+        <p>When \(A\) is not square or not invertible, \(A^{-1}\) doesn't exist. The SVD defines the <strong>Moore–Penrose pseudoinverse</strong>:</p>
+        \[
+        A^+ = V \Sigma^+ U^\top
+        \]
+        <p>where \(\Sigma^+\) is the \(n \times m\) matrix with \(1/\sigma_i\) in positions \((i,i)\) for \(i = 1, \dots, r\) and zeros elsewhere. The pseudoinverse satisfies four Moore–Penrose conditions that generalize the inverse properties, and it provides:</p>
+        <ul>
+          <li><strong>Least squares solution:</strong> For inconsistent \(Ax = b\), \(x^+ = A^+ b\) minimizes \(\|Ax - b\|\) (and among all minimizers, has minimum norm).</li>
+          <li><strong>Minimum-norm solution:</strong> For consistent underdetermined systems, \(x^+ = A^+ b\) is the solution with smallest \(\|x\|\).</li>
+          <li><strong>Exact inverse when it exists:</strong> If \(A\) is square and invertible, \(A^+ = A^{-1}\).</li>
+        </ul>
+        <p>This unifies the least squares theory of Chapter 8 with the general case. The normal equations solution \(\hat{x} = (A^\top A)^{-1} A^\top b\) equals \(A^+ b\) when \(A\) has full column rank; the pseudoinverse extends this to rank-deficient cases where \(A^\top A\) is singular.</p>
+
+        <h3>Connection to projections</h3>
+        <p>The projection onto \(\operatorname{Col}(A)\) is \(P = AA^+ = U_r U_r^\top\) (where \(U_r\) contains the first \(r\) left singular vectors). The projection onto \(\operatorname{Row}(A)\) is \(A^+ A = V_r V_r^\top\). These are exactly the orthogonal projections from Chapter 8, now expressed in the SVD basis. The residual \(b - AA^+ b\) is orthogonal to \(\operatorname{Col}(A)\), confirming the least squares optimality.</p>
+
+        <h2>Numerical rank and conditioning</h2>
+        <p>In exact arithmetic, rank is an integer. In floating-point, tiny perturbations can change exact rank. The SVD provides the <strong>numerical rank</strong>: the number of singular values exceeding a tolerance \(\epsilon\) (typically \(\epsilon = \max(m,n) \cdot \sigma_1 \cdot \text{machine precision}\)). Singular values below \(\epsilon\) are treated as numerically zero.</p>
+        <p>The <strong>condition number</strong> of \(A\) is \(\kappa(A) = \sigma_1 / \sigma_r\) (ratio of largest to smallest nonzero singular value). Large \(\kappa\) means \(A\) is ill-conditioned: small changes in input produce large changes in output. When \(\kappa \approx 1/\text{machine precision}\), computed solutions have no reliable digits. The SVD reveals conditioning directly; LU and QR do not.</p>
+
+        <h3>Truncated pseudoinverse for regularization</h3>
+        <p>For ill-conditioned problems, using the full pseudoinverse amplifies noise (small \(\sigma_i\) give huge \(1/\sigma_i\)). The <strong>truncated pseudoinverse</strong> uses only singular values above a threshold:</p>
+        \[
+        A_k^+ = \sum_{i=1}^{k} \frac{1}{\sigma_i} v_i u_i^\top
+        \]
+        <p>This trades off exactness for stability, producing solutions with smaller norm and less noise amplification. This is Tikhonov regularization in disguise, and it is essential for inverse problems, deconvolution, and machine learning with correlated features.</p>
+
+        <h2>Connections to the entire book</h2>
+        <ul>
+          <li><strong>Chapters 1–2:</strong> SVD provides orthonormal bases for subspaces; singular vectors reveal dependence/independence structure.</li>
+          <li><strong>Chapters 3–4:</strong> SVD solves \(Ax=b\) for any \(A\), generalizing Gaussian elimination beyond square nonsingular systems.</li>
+          <li><strong>Chapter 5:</strong> Rank from SVD = number of positive singular values; nullity = number of zero singular values; rank-nullity verified directly.</li>
+          <li><strong>Chapter 6:</strong> For symmetric \(A\), singular values = \(|\lambda_i|\), and SVD coincides with spectral decomposition (up to signs).</li>
+          <li><strong>Chapters 7–8:</strong> Singular vectors are orthonormal; projections onto fundamental subspaces are \(U_r U_r^\top\) and \(V_r V_r^\top\).</li>
+          <li><strong>Chapter 9:</strong> Quadratic form \(x^\top A^\top A x = \|Ax\|^2 = \sum \sigma_i^2 (v_i^\top x)^2\); eigenvalues of \(A^\top A\) are \(\sigma_i^2\).</li>
+          <li><strong>Chapter 10:</strong> LU is faster for well-conditioned square systems; SVD is more robust for rank-deficient, rectangular, or ill-conditioned problems.</li>
+        </ul>
+
+        <h2>Edge cases and common mistakes</h2>
+        <p><strong>Mistake: confusing singular values with eigenvalues.</strong> Singular values are always nonnegative and defined for any matrix. Eigenvalues can be negative or complex and exist only for square matrices. For symmetric PSD matrices they coincide; otherwise they differ fundamentally.</p>
+        <p><strong>Mistake: using exact zero as the rank threshold numerically.</strong> Floating-point computation never produces exact zeros. Always use a tolerance relative to \(\sigma_1\) and machine precision. Libraries provide this automatically; hand-coded SVD must include it.</p>
+        <p><strong>Mistake: computing the full SVD when only a few singular values are needed.</strong> Full SVD costs \(\sim 21mn^2\) flops. Truncated SVD algorithms (Lanczos, randomized SVD) compute the top \(k\) singular triplets in \(O(mnk)\) — orders of magnitude faster for \(k \ll \min(m,n)\). Use truncated methods for large-scale PCA and low-rank approximation.</p>
+        <p><strong>Edge case: zero matrix.</strong> All singular values are zero. \(U, V\) can be any orthogonal matrices. Rank 0, pseudoinverse is zero matrix. Consistent.</p>
+        <p><strong>Edge case: rank-1 matrix.</strong> Only \(\sigma_1 > 0\). \(A = \sigma_1 u_1 v_1^\top\). Outer product structure is explicit. Common in recommender systems and NLP (latent semantic analysis).</p>
+
+        <h2>What we built across eleven chapters</h2>
+        <p>You began with the question "what is a vector?" and ended with the most powerful factorization in mathematics. The journey was:</p>
+        <ul>
+          <li><strong>Structure (Ch. 1–2):</strong> Vector spaces, subspaces, span, dependence, independence, basis, dimension.</li>
+          <li><strong>Computation (Ch. 3–4):</strong> Matrix algebra, Gaussian elimination, RREF, solving \(Ax=b\).</li>
+          <li><strong>Invariants (Ch. 5–6):</strong> Determinant, rank, nullity, eigenvalues, diagonalization, spectral theorem.</li>
+          <li><strong>Geometry (Ch. 7–9):</strong> Inner products, orthogonality, Gram-Schmidt, projections, idempotents, quadratic forms.</li>
+          <li><strong>Factorization (Ch. 10–11):</strong> LU for efficient solves, SVD for universal structure.</li>
+        </ul>
+        <p>Every concept connects to every other. Subspaces have dimensions (rank-nullity). Projections are symmetric idempotents (spectral theorem). Quadratic forms are classified by eigenvalues (definiteness). LU packages elimination as factorization. SVD unifies eigenvalues, projections, rank, and optimization into one decomposition. Linear algebra is not a collection of topics — it is a single coherent edifice, and you have now seen its complete architecture.</p>
+        <p>Pencil-and-paper checkpoint: given a small matrix, can you compute its SVD by finding eigenvectors of \(A^\top A\), constructing \(U\) from \(Av_i/\sigma_i\), and verifying \(A = U\Sigma V^\top\)? Can you write the best rank-\(k\) approximation and state its error? Can you express the pseudoinverse and explain why it gives minimum-norm least squares solutions?</p>
+        <p>This completes the book. You now possess the theoretical foundations and computational tools of linear algebra at the level required for GATE DA and beyond. Every formula was derived, every computation worked, every connection made explicit. Return to any chapter as needed; the cross-references form a web, not a line. Read forever, learn forever.</p>
+
+      </article>
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch10/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">10. LU Decomposition</span>
+        </a>
+        <div class="chapter-nav-empty"></div>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
+</body>
+</html>
