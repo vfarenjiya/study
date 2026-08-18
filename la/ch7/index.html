@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>7. Orthogonal Vectors and Orthogonal Matrices — Linear Algebra (GATE DA) — iTube</title>
+  <meta name="description" content="Inner products, norms, orthogonality, Gram-Schmidt process, orthogonal complements, and orthogonal matrices derived with full proofs and worked examples for exam preparation.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="icon" href="../../icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../../icons/icon-192.svg">
+  <meta name="theme-color" content="#1B1B1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="iTube">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>
+    (function(){
+      var saved = localStorage.getItem("itube-theme");
+      var theme = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body data-depth="2">
+  <header class="top">
+    <div class="wrap">
+      <a class="logo" href="../../index.html">i<span class="no">Tube</span></a>
+      <div class="top-actions">
+        <div class="font-controls" role="group" aria-label="Adjust text size">
+          <button id="font-dec-btn" title="Decrease text size" aria-label="Decrease text size">A−</button>
+          <span id="font-size-label">100%</span>
+          <button id="font-inc-btn" title="Increase text size" aria-label="Increase text size">A+</button>
+          <button id="font-reset-btn" class="font-reset" title="Reset text size" aria-label="Reset text size">RESET</button>
+        </div>
+        <button id="theme-btn" title="Toggle light/dark">◐</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap narrow">
+      <div class="breadcrumb">
+        <a href="../../index.html">iTube</a><span class="sep">/</span>
+        <a href="../index.html">Linear Algebra (GATE DA)</a><span class="sep">/</span>
+        <span>Ch. 7</span>
+      </div>
+      <div class="eyebrow">Linear Algebra (GATE DA)</div>
+      <h1>7. Orthogonal Vectors and Orthogonal Matrices</h1>
+      <div class="chapter-meta">
+        <span>Chapter 7 of 11</span>
+        <span class="read-badge">22 min read</span>
+      </div>
+      <article>
+
+        <h2>Why geometry needs more than vector spaces</h2>
+        <p>Chapters 1–6 built linear algebra without ever measuring length or angle. Vector spaces know about addition and scaling; subspaces know about containment; eigenvalues know about invariant directions. But none of these concepts can distinguish a unit vector from a long one, or tell whether two vectors meet at right angles. Geometry requires extra structure: a way to measure <em>how much two vectors point in the same direction</em>. That measurement is the <strong>inner product</strong>, and it is the foundation of everything in this chapter.</p>
+        <p>With an inner product, we get lengths, angles, orthogonality, orthogonal complements, and orthogonal matrices. We also get the <strong>Gram-Schmidt process</strong>, which converts any basis into an orthonormal one — the computational engine behind QR factorization (Chapter 10), least squares (Chapter 8), and the SVD (Chapter 11). The spectral theorem from Chapter 6 becomes geometrically transparent once we have this language: symmetric matrices are exactly those that scale along mutually perpendicular axes.</p>
+
+        <h2>The dot product and its axioms</h2>
+        <p>In \(\mathbb{R}^n\), the standard inner product is the <strong>dot product</strong>:</p>
+        \[
+        u \cdot v = u^\top v = \sum_{i=1}^{n} u_i v_i
+        \]
+        <p>This single formula encodes all Euclidean geometry. But to understand what makes it special (and what other inner products look like in function spaces, polynomial spaces, etc.), we extract its defining properties as axioms.</p>
+
+        <h3>Inner product axioms</h3>
+        <p>A function \(\langle \cdot, \cdot \rangle : V \times V \to \mathbb{R}\) is an <strong>inner product</strong> on a real vector space \(V\) if for all \(u, v, w \in V\) and \(c \in \mathbb{R}\):</p>
+        <ol>
+          <li><strong>Symmetry:</strong> \(\langle u, v \rangle = \langle v, u \rangle\).</li>
+          <li><strong>Linearity in the first argument:</strong> \(\langle cu + v, w \rangle = c\langle u, w \rangle + \langle v, w \rangle\). (Combined with symmetry, this gives linearity in the second argument too — bilinearity.)</li>
+          <li><strong>Positive definiteness:</strong> \(\langle v, v \rangle \geq 0\) for all \(v\), and \(\langle v, v \rangle = 0\) if and only if \(v = \mathbf{0}\).</li>
+        </ol>
+        <p>The dot product satisfies all three (verify: symmetry is commutativity of scalar multiplication; linearity is distributivity; positive definiteness follows from \(\sum v_i^2 \geq 0\) with equality iff all \(v_i = 0\)). Any function satisfying these axioms qualifies as an inner product, and every theorem we prove from these axioms applies to <em>all</em> inner product spaces — not just \(\mathbb{R}^n\).</p>
+
+        <h3>Norm and distance from the inner product</h3>
+        <p>The inner product induces a <strong>norm</strong> (length):</p>
+        \[
+        \|v\| = \sqrt{\langle v, v \rangle}
+        \]
+        <p>For the dot product, this is the familiar Euclidean length \(\sqrt{\sum v_i^2}\). The norm satisfies:</p>
+        <ul>
+          <li>\(\|v\| \geq 0\), with equality iff \(v = \mathbf{0}\) (from positive definiteness).</li>
+          <li>\(\|cv\| = |c|\,\|v\|\) (from bilinearity: \(\langle cv, cv \rangle = c^2 \langle v, v \rangle\)).</li>
+          <li><strong>Triangle inequality:</strong> \(\|u + v\| \leq \|u\| + \|v\|\). (Proved below via Cauchy-Schwarz.)</li>
+        </ul>
+        <p>The inner product also induces a <strong>distance</strong>: \(d(u, v) = \|u - v\|\). This turns \(V\) into a metric space, enabling convergence, continuity, and approximation — concepts essential for least squares and the SVD.</p>
+
+        <h2>The Cauchy-Schwarz inequality: the heart of inner product geometry</h2>
+        <p>The single most important inequality in inner product spaces relates the inner product to the norms:</p>
+        \[
+        |\langle u, v \rangle| \leq \|u\| \, \|v\|
+        \]
+        <p>with equality if and only if \(u\) and \(v\) are linearly dependent (one is a scalar multiple of the other).</p>
+
+        <h3>Derivation</h3>
+        <p>If \(v = \mathbf{0}\), both sides are zero and the inequality holds trivially. Assume \(v \neq \mathbf{0}\). For any scalar \(t \in \mathbb{R}\), positive definiteness gives:</p>
+        \[
+        0 \leq \langle u - tv, u - tv \rangle = \langle u, u \rangle - 2t\langle u, v \rangle + t^2 \langle v, v \rangle
+        \]
+        <p>(using symmetry and bilinearity to expand). This is a quadratic in \(t\): \(at^2 + bt + c \geq 0\) for all \(t\), where \(a = \|v\|^2 > 0\), \(b = -2\langle u, v \rangle\), \(c = \|u\|^2\). A quadratic that is everywhere nonnegative must have nonpositive discriminant:</p>
+        \[
+        b^2 - 4ac \leq 0 \implies 4\langle u, v \rangle^2 - 4\|v\|^2 \|u\|^2 \leq 0 \implies \langle u, v \rangle^2 \leq \|u\|^2 \|v\|^2
+        \]
+        <p>Taking square roots gives Cauchy-Schwarz. Equality holds iff the discriminant is zero, iff the quadratic has a double root, iff \(u - tv = \mathbf{0}\) for some \(t\), iff \(u\) and \(v\) are dependent. ✓</p>
+
+        <h3>Consequences</h3>
+        <ul>
+          <li><strong>Triangle inequality:</strong> \(\|u + v\|^2 = \|u\|^2 + 2\langle u, v \rangle + \|v\|^2 \leq \|u\|^2 + 2\|u\|\|v\| + \|v\|^2 = (\|u\| + \|v\|)^2\). Take square roots.</li>
+          <li><strong>Angle definition:</strong> For nonzero \(u, v\), define \(\cos \theta = \frac{\langle u, v \rangle}{\|u\|\|v\|}\). Cauchy-Schwarz guarantees \(-1 \leq \cos \theta \leq 1\), so \(\theta\) is well-defined.</li>
+          <li><strong>Continuity of the inner product:</strong> Small changes in \(u\) or \(v\) produce small changes in \(\langle u, v \rangle\). Essential for approximation theory.</li>
+        </ul>
+
+        <h2>Orthogonality: when the inner product vanishes</h2>
+        <p>Vectors \(u\) and \(v\) are <strong>orthogonal</strong> (written \(u \perp v\)) if \(\langle u, v \rangle = 0\). For the dot product in \(\mathbb{R}^2\), this means \(u_1 v_1 + u_2 v_2 = 0\), which corresponds to perpendicular arrows — but the definition works in any inner product space, including function spaces where "perpendicular" has no visual meaning.</p>
+
+        <h3>The Pythagorean theorem (generalized)</h3>
+        <p>If \(u \perp v\), then \(\|u + v\|^2 = \|u\|^2 + \|v\|^2\). Proof: expand \(\langle u+v, u+v \rangle = \|u\|^2 + 2\langle u,v \rangle + \|v\|^2 = \|u\|^2 + \|v\|^2\) since \(\langle u,v \rangle = 0\). This is the abstract version of the classical Pythagorean theorem, valid in any inner product space.</p>
+
+        <h3>Orthogonal sets are independent</h3>
+        <p><strong>Theorem:</strong> Any set of nonzero mutually orthogonal vectors is linearly independent.</p>
+        <p><em>Proof:</em> Let \(\{v_1, \dots, v_k\}\) be nonzero and pairwise orthogonal. Suppose \(c_1 v_1 + \cdots + c_k v_k = \mathbf{0}\). Take the inner product with \(v_j\):</p>
+        \[
+        \left\langle \sum_{i=1}^{k} c_i v_i, v_j \right\rangle = \sum_{i=1}^{k} c_i \langle v_i, v_j \rangle = c_j \langle v_j, v_j \rangle = c_j \|v_j\|^2
+        \]
+        <p>(all cross terms vanish by orthogonality). The left side is \(\langle \mathbf{0}, v_j \rangle = 0\). So \(c_j \|v_j\|^2 = 0\). Since \(v_j \neq \mathbf{0}\), \(\|v_j\|^2 > 0\), hence \(c_j = 0\). True for every \(j\), so all coefficients are zero. Independent. ✓</p>
+        <p>This is why orthogonal bases are so valuable: independence is automatic, no need to solve a system. An <strong>orthonormal</strong> set is an orthogonal set where every vector has unit norm (\(\|v_i\| = 1\)). Orthonormal bases make coordinate extraction trivial: if \(\{e_1, \dots, e_n\}\) is orthonormal, then for any \(v\),</p>
+        \[
+        v = \sum_{i=1}^{n} \langle v, e_i \rangle e_i
+        \]
+        <p>The coefficient of \(e_i\) is simply \(\langle v, e_i \rangle\) — no system solving required. This is the abstract version of reading off components in the standard basis.</p>
+
+        <h2>The Gram-Schmidt process: building orthonormal bases</h2>
+        <p>Given any basis \(\{v_1, \dots, v_n\}\) of an inner product space, the <strong>Gram-Schmidt process</strong> produces an orthonormal basis \(\{e_1, \dots, e_n\}\) with the same span at each step: \(\operatorname{span}(e_1, \dots, e_k) = \operatorname{span}(v_1, \dots, v_k)\) for every \(k\). This nested-span property is crucial for QR factorization and least squares.</p>
+
+        <h3>The algorithm, derived</h3>
+        <p>The idea is simple: at each step, subtract from the next vector its projection onto the already-built orthogonal subspace, then normalize.</p>
+        <p><em>Step 1:</em> Set \(u_1 = v_1\). Normalize: \(e_1 = u_1 / \|u_1\|\).</p>
+        <p><em>Step k:</em> Having built orthonormal \(\{e_1, \dots, e_{k-1}\}\), define</p>
+        \[
+        u_k = v_k - \sum_{j=1}^{k-1} \langle v_k, e_j \rangle e_j
+        \]
+        <p>This subtracts from \(v_k\) its component in each existing direction \(e_j\). By construction, \(u_k \perp e_j\) for all \(j &lt; k\) (verify: \(\langle u_k, e_i \rangle = \langle v_k, e_i \rangle - \sum_j \langle v_k, e_j \rangle \langle e_j, e_i \rangle = \langle v_k, e_i \rangle - \langle v_k, e_i \rangle = 0\), using orthonormality \(\langle e_j, e_i \rangle = \delta_{ji}\)). Then normalize: \(e_k = u_k / \|u_k\|\). If \(u_k = \mathbf{0}\), then \(v_k\) was in the span of the previous vectors — skip it (this happens when the input set is dependent; for a basis, it never does).</p>
+
+        <h3>Worked example: Gram-Schmidt in \(\mathbb{R}^3\)</h3>
+        <p>Apply Gram-Schmidt to \(v_1 = (1, 1, 0)\), \(v_2 = (1, 0, 1)\), \(v_3 = (0, 1, 1)\).</p>
+        <p><em>Step 1:</em> \(u_1 = (1,1,0)\), \(\|u_1\| = \sqrt{2}\), \(e_1 = \frac{1}{\sqrt{2}}(1,1,0)\).</p>
+        <p><em>Step 2:</em> \(\langle v_2, e_1 \rangle = \frac{1}{\sqrt{2}}(1 \cdot 1 + 0 \cdot 1 + 1 \cdot 0) = \frac{1}{\sqrt{2}}\). So</p>
+        \[
+        u_2 = (1,0,1) - \frac{1}{\sqrt{2}} \cdot \frac{1}{\sqrt{2}}(1,1,0) = (1,0,1) - \tfrac{1}{2}(1,1,0) = (\tfrac{1}{2}, -\tfrac{1}{2}, 1)
+        \]
+        <p>\(\|u_2\| = \sqrt{1/4 + 1/4 + 1} = \sqrt{3/2}\). \(e_2 = \sqrt{\frac{2}{3}}(\tfrac{1}{2}, -\tfrac{1}{2}, 1) = \frac{1}{\sqrt{6}}(1, -1, 2)\).</p>
+        <p><em>Step 3:</em> \(\langle v_3, e_1 \rangle = \frac{1}{\sqrt{2}}(0+1+0) = \frac{1}{\sqrt{2}}\). \(\langle v_3, e_2 \rangle = \frac{1}{\sqrt{6}}(0 - 1 + 2) = \frac{1}{\sqrt{6}}\). So</p>
+        \[
+        u_3 = (0,1,1) - \tfrac{1}{2}(1,1,0) - \tfrac{1}{6}(1,-1,2) = (0,1,1) - (\tfrac{1}{2}+\tfrac{1}{6}, \tfrac{1}{2}-\tfrac{1}{6}, \tfrac{2}{6}) = (-\tfrac{2}{3}, \tfrac{2}{3}, \tfrac{2}{3})
+        \]
+        <p>\(\|u_3\| = \sqrt{4/9 + 4/9 + 4/9} = \sqrt{12/9} = 2/\sqrt{3}\). \(e_3 = \frac{\sqrt{3}}{2}(-\tfrac{2}{3}, \tfrac{2}{3}, \tfrac{2}{3}) = \frac{1}{\sqrt{3}}(-1, 1, 1)\).</p>
+        <p><em>Result:</em> \(\{e_1, e_2, e_3\} = \left\{ \frac{1}{\sqrt{2}}(1,1,0), \frac{1}{\sqrt{6}}(1,-1,2), \frac{1}{\sqrt{3}}(-1,1,1) \right\}\) is orthonormal. Verify pairwise orthogonality and unit norms as an exercise. ✓</p>
+
+        <h2>Orthogonal complements</h2>
+        <p>For a subspace \(W \subseteq V\), the <strong>orthogonal complement</strong> is</p>
+        \[
+        W^\perp = \{v \in V : \langle v, w \rangle = 0 \text{ for all } w \in W\}
+        \]
+        <p>\(W^\perp\) is always a subspace (check: zero is orthogonal to everything; sums and scalar multiples preserve orthogonality by bilinearity).</p>
+
+        <h3>Fundamental properties</h3>
+        <ul>
+          <li><strong>\(W \cap W^\perp = \{\mathbf{0}\}\):</strong> If \(v \in W \cap W^\perp\), then \(\langle v, v \rangle = 0\), so \(v = \mathbf{0}\) by positive definiteness.</li>
+          <li><strong>\(\dim W + \dim W^\perp = \dim V\):</strong> Extend an orthonormal basis of \(W\) to an orthonormal basis of \(V\) via Gram-Schmidt. The added vectors span \(W^\perp\). Count dimensions.</li>
+          <li><strong>\((W^\perp)^\perp = W\)</strong> (for finite-dimensional \(V\)): Follows from the dimension formula and \(W \subseteq (W^\perp)^\perp\).</li>
+          <li><strong>Fundamental subspaces relation:</strong> For any matrix \(A\), \(\operatorname{Nul}(A) = \operatorname{Col}(A^\top)^\perp\) and \(\operatorname{Nul}(A^\top) = \operatorname{Col}(A)^\perp\). Proof: \(x \in \operatorname{Nul}(A) \iff Ax = \mathbf{0} \iff y^\top Ax = 0\) for all \(y \iff (A^\top y)^\top x = 0\) for all \(y \iff x \perp \operatorname{Col}(A^\top)\). This connects Chapter 4's null space and column space via orthogonality.</li>
+        </ul>
+
+        <h3>Worked example: orthogonal complement in \(\mathbb{R}^3\)</h3>
+        <p>Let \(W = \operatorname{span}\{(1, 2, 3)\} \subset \mathbb{R}^3\). Find \(W^\perp\).</p>
+        <p>\(v = (x,y,z) \in W^\perp \iff v \cdot (1,2,3) = 0 \iff x + 2y + 3z = 0\). This is a plane through the origin — a 2-dimensional subspace, consistent with \(\dim W + \dim W^\perp = 1 + 2 = 3\). A basis: solve \(x = -2y - 3z\); free variables \(y, z\). Basis vectors: \((-2, 1, 0)^\top\) and \((-3, 0, 1)^\top\). These span \(W^\perp\). ✓</p>
+
+        <h2>Orthogonal matrices: isometries of \(\mathbb{R}^n\)</h2>
+        <p>An \(n \times n\) matrix \(Q\) is <strong>orthogonal</strong> if \(Q^\top Q = I\) (equivalently, \(Q^{-1} = Q^\top\)). This single condition encodes profound geometric structure.</p>
+
+        <h3>Equivalent characterizations</h3>
+        <p>For an \(n \times n\) real matrix \(Q\), the following are equivalent:</p>
+        <ol>
+          <li>\(Q^\top Q = I\).</li>
+          <li>The columns of \(Q\) form an orthonormal set.</li>
+          <li>The rows of \(Q\) form an orthonormal set.</li>
+          <li>\(\|Qx\| = \|x\|\) for all \(x \in \mathbb{R}^n\) (norm preservation).</li>
+          <li>\(\langle Qx, Qy \rangle = \langle x, y \rangle\) for all \(x, y \in \mathbb{R}^n\) (inner product preservation).</li>
+        </ol>
+        <p><em>Proof sketch:</em> (1) ⟺ (2): \((Q^\top Q)_{ij} = q_i^\top q_j\), so \(Q^\top Q = I\) iff columns are orthonormal. (2) ⟺ (3): \(Q^\top Q = I \iff QQ^\top = I\) for square matrices (left inverse = right inverse). (4) ⟺ (5): Polarization identity \(\langle x, y \rangle = \frac{1}{4}(\|x+y\|^2 - \|x-y\|^2)\) shows inner products are determined by norms. (5) ⟹ (1): \(\langle Qx, Qy \rangle = x^\top Q^\top Q y = \langle x, y \rangle = x^\top y\) for all \(x,y\), so \(Q^\top Q = I\). (1) ⟹ (4): \(\|Qx\|^2 = x^\top Q^\top Q x = x^\top x = \|x\|^2\). ✓</p>
+        <p>Orthogonal matrices are exactly the <strong>isometries</strong> of \(\mathbb{R}^n\) that fix the origin: they preserve lengths, angles, distances, and orthogonality. Geometrically, they are rotations and reflections (and compositions thereof).</p>
+
+        <h3>Properties of orthogonal matrices</h3>
+        <ul>
+          <li><strong>\(\det(Q) = \pm 1\):</strong> \(\det(Q^\top Q) = \det(I) = 1\), so \(\det(Q)^2 = 1\). Rotations have \(\det = +1\); reflections have \(\det = -1\).</li>
+          <li><strong>Products and inverses are orthogonal:</strong> If \(Q_1, Q_2\) are orthogonal, \((Q_1 Q_2)^\top (Q_1 Q_2) = Q_2^\top Q_1^\top Q_1 Q_2 = Q_2^\top Q_2 = I\). And \((Q^{-1})^\top Q^{-1} = (Q^\top)^\top Q^\top = Q Q^\top = I\).</li>
+          <li><strong>Eigenvalues have modulus 1:</strong> If \(Qv = \lambda v\), then \(\|Qv\| = |\lambda|\|v\| = \|v\|\), so \(|\lambda| = 1\). Real eigenvalues are \(\pm 1\); complex eigenvalues come in conjugate pairs \(e^{\pm i\theta}\).</li>
+        </ul>
+
+        <h3>Worked example: verifying orthogonality</h3>
+        <p>Is \(Q = \frac{1}{\sqrt{2}}\begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix}\) orthogonal?</p>
+        <p><em>Method 1 (columns):</em> Column norms: \(\frac{1}{\sqrt{2}}\|(1,1)\| = 1\), \(\frac{1}{\sqrt{2}}\|(1,-1)\| = 1\). Dot product: \(\frac{1}{2}(1 \cdot 1 + 1 \cdot (-1)) = 0\). Orthonormal columns → orthogonal. ✓</p>
+        <p><em>Method 2 (matrix multiplication):</em> \(Q^\top Q = \frac{1}{2}\begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix}\begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix} = \frac{1}{2}\begin{pmatrix} 2 & 0 \\ 0 & 2 \end{pmatrix} = I\). ✓</p>
+        <p>This matrix is actually the normalized Hadamard matrix \(H_2\); it appears in signal processing and quantum computing. Its determinant is \(\frac{1}{2}(-1 - 1) = -1\), so it is a reflection.</p>
+
+        <h2>Edge cases and common mistakes</h2>
+        <p><strong>Mistake: confusing orthogonal with orthonormal.</strong> Orthogonal vectors are perpendicular but may have any length. Orthonormal vectors are orthogonal <em>and</em> unit length. Only orthonormal sets give the simple coordinate formula \(v = \sum \langle v, e_i \rangle e_i\). For merely orthogonal (non-unit) vectors, the formula requires division by \(\|e_i\|^2\).</p>
+        <p><strong>Mistake: assuming Gram-Schmidt preserves the original vectors.</strong> Gram-Schmidt produces <em>new</em> vectors with the same spans but different directions (except the first). The output is orthonormal; the input generally is not. Never confuse the two sets.</p>
+        <p><strong>Mistake: thinking orthogonal matrices preserve individual coordinates.</strong> They preserve <em>lengths</em> and <em>angles</em>, not coordinate values. \(Qx\) generally has completely different entries than \(x\); only \(\|Qx\| = \|x\|\) is guaranteed.</p>
+        <p><strong>Edge case: the zero vector and orthogonality.</strong> \(\mathbf{0}\) is orthogonal to every vector (\(\langle \mathbf{0}, v \rangle = 0\)), but \(\{\mathbf{0}\}\) is not an orthogonal set in the useful sense (orthogonal sets are defined to consist of nonzero vectors, ensuring independence). Always exclude zero when forming orthogonal bases.</p>
+        <p><strong>Numerical caution:</strong> Classical Gram-Schmidt is numerically unstable: rounding errors accumulate and destroy orthogonality. Modified Gram-Schmidt (re-orthogonalize against previously computed vectors) or Householder QR (Chapter 10) are preferred in practice. The loss of orthogonality in classical Gram-Schmidt is a classic numerical analysis exam topic.</p>
+
+        <h2>What we built, and where it goes</h2>
+        <ul>
+          <li>The <strong>inner product</strong> axiomatizes "how much two vectors align," inducing norms, distances, and angles.</li>
+          <li><strong>Cauchy-Schwarz</strong> bounds the inner product by norms, enabling the triangle inequality and angle definitions.</li>
+          <li><strong>Orthogonal</strong> vectors have zero inner product; nonzero orthogonal sets are automatically independent.</li>
+          <li><strong>Gram-Schmidt</strong> converts any basis to orthonormal, preserving nested spans.</li>
+          <li><strong>Orthogonal complements</strong> satisfy \(\dim W + \dim W^\perp = \dim V\) and link null spaces to column spaces.</li>
+          <li><strong>Orthogonal matrices</strong> preserve all geometric structure; they are the isometries of \(\mathbb{R}^n\).</li>
+        </ul>
+        <p>Pencil-and-paper checkpoint: can you derive Cauchy-Schwarz from the positivity axiom? Can you run Gram-Schmidt on three vectors in \(\mathbb{R}^3\) and verify orthonormality? Can you prove that orthogonal matrices preserve inner products, and explain why this implies norm preservation?</p>
+        <p>Chapter 8 uses orthogonality to build <strong>projection matrices</strong> — the operators that decompose vectors into components along and perpendicular to subspaces. Chapter 9 applies the spectral theorem (now geometrically grounded) to classify <strong>quadratic forms</strong>. Chapter 10 uses Gram-Schmidt implicitly in <strong>QR factorization</strong>, the stable alternative to LU for least squares. Chapter 11 generalizes everything to arbitrary matrices via the <strong>SVD</strong>, whose singular vectors are orthonormal bases for the domain and codomain. Orthogonality is the geometric spine of the entire subject.</p>
+
+      </article>
+      <div class="chapter-nav">
+        <a class="chapter-nav-link prev" href="../ch6/index.html">
+          <span class="chapter-nav-label">← Previous</span>
+          <span class="chapter-nav-title">6. Eigenvalues and Eigenvectors</span>
+        </a>
+        <a class="chapter-nav-link next" href="../ch8/index.html">
+          <span class="chapter-nav-label">Next →</span>
+          <span class="chapter-nav-title">8. Projections, Projection Matrices, and Idempotent Matrices</span>
+        </a>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 iTube. Read forever, free forever.</span>
+      <span>No video was harmed in the making of this platform.</span>
+    </div>
+  </footer>
+  <script src="../../theme.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script defer src="../../app.js"></script>
+</body>
+</html>
